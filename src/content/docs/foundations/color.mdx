@@ -6,6 +6,26 @@ description: Color tokens from the Actian foundations.
 import TokenTable from "../../../components/TokenTable.astro";
 import PageMetadata from "../../../components/PageMetadata.astro";
 import color from "../../../../vendor/foundations/dist/tokens/global-color.json";
+import dtcg from "../../../../vendor/tokens/tokens.json";
+
+export function flattenColorFamily(family, prefix) {
+  // Flatten a DTCG color family (e.g. tokens.color.primary) into table rows.
+  // Token name = "--zen-color-<prefix>-<dotted-key-path>".
+  // Leaves are { $type: "color", $value: "#hex", ... }.
+  const rows = [];
+  function walk(obj, parts) {
+    for (const [k, v] of Object.entries(obj)) {
+      if (v && typeof v === "object" && "$value" in v) {
+        const name = "--zen-color-" + [prefix, ...parts, k].join("-");
+        rows.push({ Token: name, Value: String(v.$value) });
+      } else if (v && typeof v === "object") {
+        walk(v, [...parts, k]);
+      }
+    }
+  }
+  walk(family, []);
+  return rows;
+}
 
 <PageMetadata
   slug="foundations.color"
@@ -15,6 +35,54 @@ import color from "../../../../vendor/foundations/dist/tokens/global-color.json"
 
 The Actian DS color tokens — three theme rails (Actian, FM, DS Kit).
 
+## Semantic tokens
+
+High-level intent tokens that resolve to raw scale values via the theme rails.
+
 {color.blocks.filter((b) => b.type === "table").map((b) => (
   <TokenTable headers={b.headers} rows={b.rows} showSwatch={true} />
 ))}
+
+## Brand & status scales
+
+Full primary / neutral / error / success / warning color ramps. Each row is a CSS variable consumable directly.
+
+### Primary
+
+<TokenTable headers={["Token", "Value"]} rows={flattenColorFamily(dtcg.color.primary, "primary")} showSwatch={true} />
+
+### Neutral
+
+<TokenTable headers={["Token", "Value"]} rows={flattenColorFamily(dtcg.color.neutral, "neutral")} showSwatch={true} />
+
+### Error
+
+<TokenTable headers={["Token", "Value"]} rows={flattenColorFamily(dtcg.color.error, "error")} showSwatch={true} />
+
+### Success
+
+<TokenTable headers={["Token", "Value"]} rows={flattenColorFamily(dtcg.color.success, "success")} showSwatch={true} />
+
+### Warning
+
+<TokenTable headers={["Token", "Value"]} rows={flattenColorFamily(dtcg.color.warning, "warning")} showSwatch={true} />
+
+## Semantic surfaces
+
+Per-surface tokens for backgrounds, text, icons, and annotation.
+
+### Backgrounds
+
+<TokenTable headers={["Token", "Value"]} rows={flattenColorFamily(dtcg.color.bg, "bg")} showSwatch={true} />
+
+### Text
+
+<TokenTable headers={["Token", "Value"]} rows={flattenColorFamily(dtcg.color.text, "text")} showSwatch={true} />
+
+### Icons
+
+<TokenTable headers={["Token", "Value"]} rows={flattenColorFamily(dtcg.color.icon, "icon")} showSwatch={true} />
+
+### Annotation
+
+<TokenTable headers={["Token", "Value"]} rows={flattenColorFamily(dtcg.color.annotation, "annotation")} showSwatch={true} />
