@@ -48,17 +48,31 @@ function stripFirstH1(body) {
   return body.replace(/^\s*#[^\n#][^\n]*\n+/, "");
 }
 
-function stripJekyllFrontmatterBlocks(body) {
+function convertJekyllFrontmatterToHeadings(body) {
   // vendor/content/dist/content.md is a concatenated bundle of source
-  // files where each retains Jekyll-style frontmatter: '---\ntitle: ...\n
-  // nav_order: ...\n---'. These render as visible H2-looking text when
-  // markdown-parsed. Strip them — preserve regular '---' horizontal rules.
+  // files where each retains Jekyll-style frontmatter at the top:
   //
-  // Heuristic: match a '---' fence pair that contains at least one of
-  // 'title:' or 'nav_order:' as a top-level YAML key.
+  //     ---
+  //     title: "Buttons"
+  //     nav_order: 4
+  //     ---
+  //
+  // The source MDs use that title: as the de facto section header — there
+  // is no '## Buttons' heading in the body. Naive stripping deletes the
+  // structure entirely. Instead, convert each frontmatter block into a
+  // proper '## Title' heading so the page hierarchy is preserved (and the
+  // right-rail TOC + cross-link anchors get usable slugs).
+  //
+  // Strictness:
+  //   - Opening '---' must be followed IMMEDIATELY by 'title:'; that
+  //     prevents matching the gap between an earlier HR '---' and a
+  //     later real frontmatter block.
+  //   - Body is bounded to ≤10 lines before the closing '---'.
   return body.replace(
-    /\n---\n([^\n]*\n)*?[ \t]*(title|nav_order|layout|parent):[^\n]*\n([^\n]*\n)*?---\n/g,
-    "\n",
+    /\n---\n[ \t]*title:[ \t]*"((?:[^"\\]|\\.)*)"[ \t]*\n(?:[^\n]*\n){0,10}---\n/g,
+    function (_, title) {
+      return "\n## " + title.replace(/\\(.)/g, "$1").trim() + "\n";
+    },
   );
 }
 
@@ -96,7 +110,7 @@ function main() {
       return;
     }
     var raw = fs.readFileSync(srcPath, "utf8");
-    var body = stripJekyllFrontmatterBlocks(stripFirstH1(raw));
+    var body = convertJekyllFrontmatterToHeadings(stripFirstH1(raw));
     var out = buildFrontmatter(page) + body;
     fs.writeFileSync(path.join(OUT_DIR, page.slug + ".md"), out);
     console.log("sync-vendored-md: wrote src/content/docs/" + page.slug + ".md");
