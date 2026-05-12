@@ -47,25 +47,82 @@ function escapeMdxPlaceholders(s) {
 }
 
 // content_guidelines.sections[].content[] items are objects with various
-// shapes (rule | note | do/dont | term[/definition] | examples). Map each
-// to a markdown line; bare strings pass through. Falsy/empty → null (filtered).
-function renderContentItem(item) {
-  if (item === null || item === undefined) return null;
-  if (typeof item === "string") return escapeMdxPlaceholders(item);
-  if (typeof item !== "object") return String(item);
-  if (item.rule) return escapeMdxPlaceholders(item.rule);
-  if (item.note) return "*" + escapeMdxPlaceholders(item.note) + "*";
-  if (item.do && item.dont) return "**Do:** " + escapeMdxPlaceholders(item.do) + " — **Don't:** " + escapeMdxPlaceholders(item.dont);
-  if (item.do) return "**Do:** " + escapeMdxPlaceholders(item.do);
-  if (item.dont) return "**Don't:** " + escapeMdxPlaceholders(item.dont);
-  if (item.term) return "**" + escapeMdxPlaceholders(item.term) + "**" + (item.definition ? ": " + escapeMdxPlaceholders(item.definition) : "");
-  if (item.examples) {
-    var ex = Array.isArray(item.examples) ? item.examples.join(", ") : String(item.examples);
-    return escapeMdxPlaceholders(ex);
+// shapes (rule | note | do/dont | term[/definition] | examples). Bucket
+// them by shape and emit the right component as JSX in the MDX.
+function renderContentSection(s) {
+  var pairs = [];   // [{ do, dont }, ...]
+  var dos = [];     // solo dos
+  var donts = [];   // solo donts
+  var rules = [];   // strings
+  var notes = [];   // strings
+  var terms = [];   // [{ term, definition }]
+  var examples = [];
+  var unknown = []; // for diagnostics
+
+  (s.content || []).forEach(function (item) {
+    if (typeof item === "string") { rules.push(item); return; }
+    if (item && typeof item === "object") {
+      if (item.do && item.dont) { pairs.push({ do: item.do, dont: item.dont }); return; }
+      if (item.do) { dos.push(item.do); return; }
+      if (item.dont) { donts.push(item.dont); return; }
+      if (item.rule) { rules.push(item.rule); return; }
+      if (item.note) { notes.push(item.note); return; }
+      if (item.term) { terms.push({ term: item.term, definition: item.definition }); return; }
+      if (item.examples) {
+        var ex = Array.isArray(item.examples) ? item.examples : [item.examples];
+        ex.forEach(function (e) { examples.push(String(e)); });
+        return;
+      }
+      unknown.push(item);
+    }
+  });
+
+  if (unknown.length) {
+    process.stderr.write("[generate] WARNING: unknown content_guideline shape(s) in section '"
+      + (s.heading || "") + "': " + JSON.stringify(unknown) + "\n");
   }
-  // Fallback for unknown shapes — show key:value pairs rather than [object Object].
-  var pairs = Object.entries(item).map(function (kv) { return kv[0] + ": " + escapeMdxPlaceholders(String(kv[1])); });
-  return pairs.length ? pairs.join("; ") : null;
+
+  var parts = [];
+  parts.push("### " + (s.heading || ""));
+
+  if (rules.length) {
+    parts.push(rules.map(function (r) { return "- " + escapeMdxPlaceholders(r); }).join("\n"));
+  }
+  if (pairs.length) {
+    var pairsJsx = pairs.map(function (p) {
+      return "{ do: " + JSON.stringify(escapeMdxPlaceholders(p.do))
+        + ", dont: " + JSON.stringify(escapeMdxPlaceholders(p.dont)) + " }";
+    }).join(", ");
+    parts.push("<DoDont pairs={[" + pairsJsx + "]} />");
+  }
+  if (dos.length) {
+    parts.push(dos.map(function (d) {
+      return "<DoDont do={" + JSON.stringify(escapeMdxPlaceholders(d)) + "} />";
+    }).join("\n\n"));
+  }
+  if (donts.length) {
+    parts.push(donts.map(function (d) {
+      return "<DoDont dont={" + JSON.stringify(escapeMdxPlaceholders(d)) + "} />";
+    }).join("\n\n"));
+  }
+  if (notes.length) {
+    parts.push(notes.map(function (n) {
+      return "<Callout variant=\"note\">\n" + escapeMdxPlaceholders(n) + "\n</Callout>";
+    }).join("\n\n"));
+  }
+  if (terms.length) {
+    var termsJsx = terms.map(function (t) {
+      return "{ term: " + JSON.stringify(escapeMdxPlaceholders(t.term))
+        + (t.definition ? ", definition: " + JSON.stringify(escapeMdxPlaceholders(t.definition)) : "")
+        + " }";
+    }).join(", ");
+    parts.push("<TermList items={[" + termsJsx + "]} />");
+  }
+  if (examples.length) {
+    parts.push("**Examples:** " + examples.map(function (e) { return "`" + e + "`"; }).join(", "));
+  }
+
+  return parts.join("\n\n");
 }
 
 function buildPage(slug, entry, guideline, defaults, registry) {
@@ -127,13 +184,7 @@ function buildPage(slug, entry, guideline, defaults, registry) {
 
     // Content guidelines: only from guideline (no category fallback)
     if (guideline && guideline.content_guidelines && Array.isArray(guideline.content_guidelines.sections)) {
-      sections.push("## Content guidelines\n\n" + guideline.content_guidelines.sections.map(function (s) {
-        var heading = "### " + (s.heading || "");
-        var content = Array.isArray(s.content)
-          ? s.content.map(renderContentItem).filter(Boolean).map(function (line) { return "- " + line; }).join("\n")
-          : (typeof s.content === "string" ? s.content : "");
-        return heading + "\n\n" + content;
-      }).join("\n\n"));
+      sections.push("## Content guidelines\n\n" + guideline.content_guidelines.sections.map(renderContentSection).join("\n\n"));
     }
 
     // Resources — Figma node + knowledge-source JSON. Always emit on non-stub
@@ -158,6 +209,9 @@ function buildPage(slug, entry, guideline, defaults, registry) {
     "AccessibilityRefs",
     "PageMetadata",
     "StubFooter",
+    "DoDont",
+    "Callout",
+    "TermList",
   ].map(function (name) {
     return 'import ' + name + ' from "../../../../components/' + name + '.astro";';
   }).join("\n");

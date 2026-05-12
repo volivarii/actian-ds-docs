@@ -3,10 +3,11 @@ title: Icons
 description: Icon tokens from the Actian foundations.
 ---
 
+import TokenScale from "../../../components/TokenScale.astro";
 import TokenTable from "../../../components/TokenTable.astro";
 import PageMetadata from "../../../components/PageMetadata.astro";
-import iconSizes from "../../../../vendor/foundations/dist/tokens/icons/icon-sizes.json";
 import iconColors from "../../../../vendor/foundations/dist/tokens/icons/icon-colors.json";
+import dtcg from "../../../../vendor/tokens/tokens.json";
 
 <PageMetadata
   slug="foundations.icons"
@@ -16,11 +17,14 @@ import iconColors from "../../../../vendor/foundations/dist/tokens/icons/icon-co
 
 Icon tokens for the Actian DS — sizes and colors.
 
-{[iconSizes, iconColors].map((file) => (
-  <section>
-    <h2>{file.title}</h2>
-    {(file.blocks || []).filter((b) => b.type === "table").map((b) => (
-      <TokenTable headers={b.headers} rows={b.rows} />
-    ))}
-  </section>
+## Sizes
+
+<TokenScale data={dtcg.icon} prefix="icon" />
+
+## Colors
+
+Icon color tokens are exposed under `color.icon` and rendered on the [Color](/foundations/color) page; the source block below preserves the foundations-authored grouping.
+
+{(iconColors.blocks || []).filter((b) => b.type === "table").map((b) => (
+  <TokenTable headers={b.headers} rows={b.rows} showSwatch={true} />
 ))}

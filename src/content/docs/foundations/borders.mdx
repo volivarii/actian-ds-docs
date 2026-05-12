@@ -3,11 +3,9 @@ title: Borders
 description: Border tokens from the Actian foundations.
 ---
 
-import TokenTable from "../../../components/TokenTable.astro";
+import TokenScale from "../../../components/TokenScale.astro";
 import PageMetadata from "../../../components/PageMetadata.astro";
-import radius from "../../../../vendor/foundations/dist/tokens/borders/radius.json";
-import width from "../../../../vendor/foundations/dist/tokens/borders/width.json";
-import styleComposite from "../../../../vendor/foundations/dist/tokens/borders/style-composite.json";
+import dtcg from "../../../../vendor/tokens/tokens.json";
 
 <PageMetadata
   slug="foundations.borders"
@@ -15,13 +13,22 @@ import styleComposite from "../../../../vendor/foundations/dist/tokens/borders/s
   schema={1}
 />
 
-Border tokens for the Actian DS — radius, width, and composite border styles.
+Border tokens for the Actian DS — radius, width, and border colors.
 
-{[radius, width, styleComposite].map((file) => (
-  <section>
-    <h2>{file.title}</h2>
-    {(file.blocks || []).filter((b) => b.type === "table").map((b) => (
-      <TokenTable headers={b.headers} rows={b.rows} showSwatch={true} />
-    ))}
-  </section>
-))}
+## Radius
+
+<TokenScale data={dtcg.border.radius} prefix="border-radius" />
+
+## Width
+
+<TokenScale data={dtcg.border.width} prefix="border-width" />
+
+## Border colors
+
+Semantic border-color tokens used across surfaces, fields, and states.
+
+<TokenScale
+  data={Object.fromEntries(Object.entries(dtcg.border).filter(([k]) => !["radius", "width"].includes(k)))}
+  prefix="border"
+  visualKind="color"
+/>

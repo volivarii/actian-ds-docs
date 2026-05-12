@@ -1,0 +1,89 @@
+---
+interface Props {
+  /**
+   * The DTCG sub-tree to render. E.g. tokens.color.primary, tokens.spacing,
+   * tokens.border.radius. Pass the object directly (don't make caller flatten).
+   */
+  data: any;
+
+  /**
+   * Token name prefix. Used to reconstruct CSS variable names.
+   * E.g. "color-primary" → tokens with names like --zen-color-primary-500.
+   * Pass without the "--zen-" prefix.
+   */
+  prefix: string;
+
+  /**
+   * Visual kind. If omitted, auto-detect from prefix.
+   */
+  visualKind?: "color" | "spacing" | "radius" | "border-width" | "none" | "auto";
+
+  /**
+   * Whether to show the visual column. Default: true if visualKind !== "none".
+   */
+  showVisual?: boolean;
+}
+
+const { data, prefix, visualKind = "auto", showVisual } = Astro.props;
+
+function flatten(obj: any, parts: string[] = []): Array<{ Token: string; Value: string }> {
+  const rows: Array<{ Token: string; Value: string }> = [];
+  for (const [k, v] of Object.entries(obj || {})) {
+    if (k.startsWith("$") || k.startsWith("_")) continue;
+    if (v && typeof v === "object" && "$value" in (v as object)) {
+      const name = "--zen-" + [prefix, ...parts, k].filter(Boolean).join("-");
+      rows.push({ Token: name, Value: String((v as any).$value) });
+    } else if (v && typeof v === "object") {
+      rows.push(...flatten(v, [...parts, k]));
+    }
+  }
+  return rows;
+}
+
+function autoKind(p: string): "color" | "spacing" | "radius" | "border-width" | "none" {
+  if (p.startsWith("color") || p === "focus-ring-error" || p === "focus-ring-primary") return "color";
+  if (p === "border-radius" || p.startsWith("border-radius")) return "radius";
+  if (p === "border-width" || p.startsWith("border-width")) return "border-width";
+  if (p.startsWith("spacing") || p.startsWith("size") || p.startsWith("icon")) return "spacing";
+  return "none";
+}
+
+const kind: "color" | "spacing" | "radius" | "border-width" | "none" =
+  visualKind === "auto" ? autoKind(prefix) : visualKind;
+const willShowVisual = showVisual ?? kind !== "none";
+const rows = flatten(data);
+---
+
+<table class="token-scale">
+  <thead>
+    <tr>
+      {willShowVisual && <th class="token-scale__visual-th" aria-label="visual"></th>}
+      <th>Token</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    {rows.map((row) => (
+      <tr>
+        {willShowVisual && (
+          <td class="token-scale__visual-cell">
+            {kind === "color" && (
+              <span class="token-chip" style={`background: var(${row.Token});`}></span>
+            )}
+            {kind === "spacing" && (
+              <span class="token-ruler" style={`width: var(${row.Token});`}></span>
+            )}
+            {kind === "radius" && (
+              <span class="token-radius" style={`border-radius: var(${row.Token});`}></span>
+            )}
+            {kind === "border-width" && (
+              <span class="token-border-width" style={`border-top-width: var(${row.Token});`}></span>
+            )}
+          </td>
+        )}
+        <td><code>{row.Token}</code></td>
+        <td><code>{row.Value}</code></td>
+      </tr>
+    ))}
+  </tbody>
+</table>

@@ -13,7 +13,9 @@ import elevation from "../../../../vendor/foundations/dist/tokens/elevation.json
   schema={1}
 />
 
-Elevation tokens (shadow scale) for surfaces in the Actian DS.
+{elevation.description && <p>{elevation.description}</p>}
+
+Elevation tokens (shadow scale) for surfaces in the Actian DS. Authored in foundations source — not yet present in the DTCG token export, so the table renders from the foundations block.
 
 {elevation.blocks.filter((b) => b.type === "table").map((b) => (
   <TokenTable headers={b.headers} rows={b.rows} />

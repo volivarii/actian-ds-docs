@@ -1,0 +1,31 @@
+---
+interface Props {
+  do?: string;
+  dont?: string;
+  /** Pair list form — for content_guidelines sections with multiple. */
+  pairs?: Array<{ do?: string; dont?: string }>;
+}
+const { do: doProse, dont: dontProse, pairs } = Astro.props;
+const items = pairs && pairs.length > 0
+  ? pairs
+  : (doProse || dontProse) ? [{ do: doProse, dont: dontProse }] : [];
+---
+
+<div class="dodont">
+  {items.map((p) => (
+    <div class="dodont__pair">
+      {p.do && (
+        <div class="dodont__col dodont__col--do">
+          <div class="dodont__label">✓ Do</div>
+          <div class="dodont__prose" set:html={p.do} />
+        </div>
+      )}
+      {p.dont && (
+        <div class="dodont__col dodont__col--dont">
+          <div class="dodont__label">✗ Don't</div>
+          <div class="dodont__prose" set:html={p.dont} />
+        </div>
+      )}
+    </div>
+  ))}
+</div>

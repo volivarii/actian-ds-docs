@@ -1,0 +1,18 @@
+---
+interface Props {
+  variant?: "note" | "warning" | "info" | "important";
+  title?: string;
+}
+const { variant = "note", title } = Astro.props;
+const ICON: Record<string, string> = { note: "ℹ", warning: "⚠", info: "ℹ", important: "★" };
+---
+
+<aside class={`callout callout--${variant}`}>
+  <div class="callout__head">
+    <span class="callout__icon" aria-hidden="true">{ICON[variant]}</span>
+    {title && <span class="callout__title">{title}</span>}
+  </div>
+  <div class="callout__body">
+    <slot />
+  </div>
+</aside>

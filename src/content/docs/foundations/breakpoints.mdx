@@ -3,9 +3,9 @@ title: Breakpoints
 description: Responsive breakpoint tokens from the Actian foundations.
 ---
 
-import TokenTable from "../../../components/TokenTable.astro";
+import TokenScale from "../../../components/TokenScale.astro";
 import PageMetadata from "../../../components/PageMetadata.astro";
-import breakpoints from "../../../../vendor/foundations/dist/tokens/breakpoints.json";
+import dtcg from "../../../../vendor/tokens/tokens.json";
 
 <PageMetadata
   slug="foundations.breakpoints"
@@ -15,6 +15,4 @@ import breakpoints from "../../../../vendor/foundations/dist/tokens/breakpoints.
 
 Responsive breakpoint tokens for the Actian DS.
 
-{breakpoints.blocks.filter((b) => b.type === "table").map((b) => (
-  <TokenTable headers={b.headers} rows={b.rows} />
-))}
+<TokenScale data={dtcg.breakpoint} prefix="breakpoint" visualKind="none" />

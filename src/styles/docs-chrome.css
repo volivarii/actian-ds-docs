@@ -372,3 +372,117 @@ footer .meta {
   color: var(--zen-color-icon-error, #dc3514);
   border-color: var(--zen-color-icon-error, #dc3514);
 }
+
+/* TokenScale — unified primitive (mirrors .token-visual-cell width). */
+.token-scale__visual-cell {
+  width: 56px;
+}
+.token-scale__visual-th {
+  width: 56px;
+}
+
+/* Do / Don't comparison block. */
+.dodont {
+  display: grid;
+  gap: 16px;
+  margin: 16px 0;
+}
+.dodont__pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+.dodont__col {
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--zen-border-default);
+}
+.dodont__col--do {
+  background: var(--zen-color-bg-success, #f0ffec);
+  border-color: var(--zen-color-icon-success, #098900);
+}
+.dodont__col--dont {
+  background: var(--zen-color-bg-error, #fff4ec);
+  border-color: var(--zen-color-icon-error, #dc3514);
+}
+.dodont__label {
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+.dodont__col--do .dodont__label {
+  color: var(--zen-color-icon-success, #098900);
+}
+.dodont__col--dont .dodont__label {
+  color: var(--zen-color-icon-error, #dc3514);
+}
+.dodont__prose {
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+/* Callout — note / warning / info / important. */
+.callout {
+  margin: 16px 0;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border-left: 3px solid;
+  background: var(--zen-color-bg-subtle);
+}
+.callout--note,
+.callout--info {
+  border-left-color: var(--zen-color-primary-500);
+  background: var(--zen-color-bg-info, var(--zen-color-bg-subtle));
+}
+.callout--warning {
+  border-left-color: var(--zen-color-icon-warning, #ef8d00);
+  background: var(--zen-color-bg-warning, #fff9e5);
+}
+.callout--important {
+  border-left-color: var(--zen-color-icon-error, #dc3514);
+  background: var(--zen-color-bg-error, #fff4ec);
+}
+.callout__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+.callout__icon {
+  display: inline-block;
+}
+.callout__title {
+  font-size: 13px;
+}
+.callout__body {
+  font-size: 13px;
+  line-height: 1.5;
+}
+.callout__body > :first-child {
+  margin-top: 0;
+}
+.callout__body > :last-child {
+  margin-bottom: 0;
+}
+
+/* Term list — vocabulary entries. */
+.termlist {
+  margin: 16px 0;
+  display: grid;
+  gap: 8px;
+}
+.termlist__term {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--zen-color-text-primary);
+}
+.termlist__def {
+  margin: 0 0 4px 0;
+  font-size: 13px;
+  color: var(--zen-color-text-secondary);
+  line-height: 1.45;
+}
