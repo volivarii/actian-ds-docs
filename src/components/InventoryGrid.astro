@@ -1,0 +1,73 @@
+---
+import dskit from "../../vendor/components/dist/registries/dskit.json";
+
+interface ComponentEntry {
+  key: string;
+  name: string;
+  category?: string;
+  variants?: Record<string, string[]>;
+  slug: string;
+}
+
+// BASE_URL prefix for component deep-links so they survive deploy under /actian-ds-docs/.
+const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+
+const ICON_NAME_PATTERNS = ["icon", "chevron", "arrow", "caret", "close", "plus", "minus", "check"];
+
+function isIcon(entry: any): boolean {
+  const name = (entry.name || "").toLowerCase();
+  if (ICON_NAME_PATTERNS.some(p => name === p || name.startsWith(p + "-") || name.includes(" " + p + " "))) return true;
+  return false;
+}
+
+const all: ComponentEntry[] = Object.entries(dskit.components).map(([slug, entry]: [string, any]) => ({
+  key: entry.key,
+  name: entry.name || slug,
+  category: entry.category,
+  variants: entry.variants,
+  slug,
+}));
+
+const icons = all.filter(isIcon);
+const nonIcons = all.filter(c => !isIcon(c));
+const categorized = nonIcons.filter(c => c.category);
+const uncategorized = nonIcons.filter(c => !c.category);
+---
+
+<section>
+  <h2>Icons ({icons.length})</h2>
+  <p>Single-glyph components. Use via Figma library; sizing + color via tokens.</p>
+  <div class="icons-gallery">
+    {icons.map(icon => (
+      <div title={icon.name}>
+        <code>{icon.name}</code>
+      </div>
+    ))}
+  </div>
+</section>
+
+<section>
+  <h2>Categorized ({categorized.length})</h2>
+  <p>Components with curated category placement; each has a full page.</p>
+  <div class="inventory-grid">
+    {categorized.map(c => (
+      <div class="inventory-row">
+        <a href={`${base}components/${c.slug}`}><strong>{c.name}</strong></a>
+        <div><code>{c.category}</code></div>
+      </div>
+    ))}
+  </div>
+</section>
+
+<section>
+  <h2>Uncategorized ({uncategorized.length})</h2>
+  <p>Not yet placed in a category. Page generation pending; raw registry entry available.</p>
+  <div class="inventory-grid">
+    {uncategorized.map(c => (
+      <div class="inventory-row">
+        <strong>{c.name}</strong>
+        <div><code>{c.key}</code></div>
+      </div>
+    ))}
+  </div>
+</section>

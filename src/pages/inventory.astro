@@ -1,0 +1,14 @@
+---
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import InventoryGrid from "../components/InventoryGrid.astro";
+import PageMetadata from "../components/PageMetadata.astro";
+import dskit from "../../vendor/components/dist/registries/dskit.json";
+
+const total = Object.keys(dskit.components).length;
+---
+
+<StarlightPage frontmatter={{ title: "Inventory", description: `All ${total} DS Kit components — filterable.` }}>
+  <PageMetadata slug="inventory" source="components/dist/registries/dskit.json" schema={1} />
+  <p>All <strong>{total}</strong> DS Kit components. Categorized entries link to full pages; uncategorized entries show registry metadata only.</p>
+  <InventoryGrid />
+</StarlightPage>
