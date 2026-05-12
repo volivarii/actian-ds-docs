@@ -11,6 +11,10 @@ export default defineConfig({
     starlight({
       title: "Actian Design System",
       description: "Foundations, components, accessibility, content — federated via actian-ds-knowledge.",
+      logo: {
+        src: "./src/assets/actian-logo.svg",
+        alt: "Actian",
+      },
       customCss: [
         "./src/styles/tokens.css",
         "./src/styles/starlight-overrides.css",

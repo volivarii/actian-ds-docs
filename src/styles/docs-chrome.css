@@ -7,21 +7,12 @@
  *   --zen-color-border-default       → --zen-border-default
  */
 
-/* Header brand mark */
+/* Header brand mark — Starlight renders the Actian logo (registered via
+ * astro.config.mjs `logo:`) alongside the title. Keep wordmark typography
+ * tight; the logo itself sizes via Starlight defaults. */
 .site-title {
   font-weight: 600;
   letter-spacing: -0.01em;
-}
-
-.site-title::before {
-  content: "";
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  margin-right: 8px;
-  background: var(--zen-color-primary-500);
-  border-radius: 3px;
-  vertical-align: middle;
 }
 
 /* Footer attribution */
