@@ -14,20 +14,24 @@
 
 :root {
   /* Type-system vars — consumed by Starlight overrides. */
-  --font-body: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-  --font-display: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-body:
+    "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui,
+    sans-serif;
+  --font-display:
+    "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui,
+    sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
 
   /* Documentation type scale — paced for technical reference. */
-  --type-display-1: 2.25rem;    /* hero H1 ~36px */
-  --type-display-2: 1.75rem;    /* page H1 ~28px */
-  --type-display-3: 1.375rem;   /* section H2 ~22px */
-  --type-h4: 1.0625rem;         /* subsection H3 ~17px */
-  --type-h5: 0.9375rem;         /* subsection H4 ~15px */
-  --type-body: 0.9375rem;       /* body ~15px */
-  --type-meta: 0.8125rem;       /* metadata ~13px */
-  --type-mono: 0.8125rem;       /* mono ~13px */
-  --type-micro: 0.6875rem;      /* micro/label ~11px */
+  --type-display-1: 2.25rem; /* hero H1 ~36px */
+  --type-display-2: 1.75rem; /* page H1 ~28px */
+  --type-display-3: 1.375rem; /* section H2 ~22px */
+  --type-h4: 1.0625rem; /* subsection H3 ~17px */
+  --type-h5: 0.9375rem; /* subsection H4 ~15px */
+  --type-body: 0.9375rem; /* body ~15px */
+  --type-meta: 0.8125rem; /* metadata ~13px */
+  --type-mono: 0.8125rem; /* mono ~13px */
+  --type-micro: 0.6875rem; /* micro/label ~11px */
 
   /* Leading + tracking — readable docs. */
   --leading-display: 1.2;
@@ -43,7 +47,8 @@
 }
 
 /* Body type — apply our scale */
-html, body {
+html,
+body {
   font-family: var(--font-body);
   font-optical-sizing: auto;
   -webkit-font-smoothing: antialiased;
@@ -88,11 +93,23 @@ html, body {
   font-weight: 600;
   letter-spacing: -0.005em;
   line-height: var(--leading-tight);
+  color: var(--zen-color-text-primary) !important;
 }
 
-.sl-markdown-content h3 { font-size: var(--type-h4); margin-top: 2em; margin-bottom: 0.5em; }
-.sl-markdown-content h4 { font-size: var(--type-h5); margin-top: 1.5em; margin-bottom: 0.4em; }
-.sl-markdown-content h5 { font-size: var(--type-body); margin-top: 1.25em; }
+.sl-markdown-content h3 {
+  font-size: var(--type-h4);
+  margin-top: 2em;
+  margin-bottom: 0.5em;
+}
+.sl-markdown-content h4 {
+  font-size: var(--type-h5);
+  margin-top: 1.5em;
+  margin-bottom: 0.4em;
+}
+.sl-markdown-content h5 {
+  font-size: var(--type-body);
+  margin-top: 1.25em;
+}
 
 /* Body prose */
 .sl-markdown-content p,
@@ -105,15 +122,26 @@ html, body {
 }
 
 /* Links — docs: subtle underline, primary on hover */
-.sl-markdown-content a:not(.component-card):not(.category-browse-card):not(.foundation-card):not(.feature-card):not(.stat-card) {
+.sl-markdown-content
+  a:not(.component-card):not(.category-browse-card):not(.foundation-card):not(
+    .feature-card
+  ):not(.stat-card) {
   color: var(--zen-color-primary-700, var(--zen-color-primary-500));
   text-decoration: underline;
   text-decoration-thickness: 1px;
-  text-decoration-color: var(--zen-color-primary-300, var(--zen-color-primary-500));
+  text-decoration-color: var(
+    --zen-color-primary-300,
+    var(--zen-color-primary-500)
+  );
   text-underline-offset: 3px;
-  transition: text-decoration-color 0.15s, color 0.15s;
+  transition:
+    text-decoration-color 0.15s,
+    color 0.15s;
 }
-.sl-markdown-content a:not(.component-card):not(.category-browse-card):not(.foundation-card):not(.feature-card):not(.stat-card):hover {
+.sl-markdown-content
+  a:not(.component-card):not(.category-browse-card):not(.foundation-card):not(
+    .feature-card
+  ):not(.stat-card):hover {
   color: var(--zen-color-primary-500);
   text-decoration-color: currentColor;
 }
@@ -144,12 +172,14 @@ html, body {
   letter-spacing: var(--track-meta);
   text-align: left;
   padding: 8px 12px;
-  border-bottom: 1px solid var(--zen-color-neutral-200, var(--zen-border-default));
+  border-bottom: 1px solid
+    var(--zen-color-neutral-200, var(--zen-border-default));
   color: var(--zen-color-text-secondary);
 }
 .sl-markdown-content table td {
   padding: 10px 12px;
-  border-bottom: 1px solid var(--zen-color-neutral-100, var(--zen-border-default));
+  border-bottom: 1px solid
+    var(--zen-color-neutral-100, var(--zen-border-default));
   vertical-align: middle;
   color: var(--zen-color-text-primary);
 }
