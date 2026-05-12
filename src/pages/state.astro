@@ -1,0 +1,84 @@
+---
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import PageMetadata from "../components/PageMetadata.astro";
+import EcosystemDiagram from "../components/EcosystemDiagram.astro";
+import vendored from "../../vendored.json";
+import dskit from "../../vendor/components/dist/registries/dskit.json";
+import categories from "../../vendor/components/dist/categories/categories.bundle.json";
+
+// state.json is generated at prebuild — fall back to empty if missing
+let state: any = { repos: [] };
+try {
+  state = (await import("../data/state.json")).default;
+} catch (e) {
+  // build continues with empty state
+}
+
+const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+
+const totalDsKit = Object.keys(dskit.components).length;
+const categorizedDsKit = Object.values(dskit.components).filter((c: any) => c.category).length;
+
+const authoringStatusByCategory = Object.entries(categories.categories || {}).reduce((acc: any, [slug, def]: [string, any]) => {
+  acc[slug] = def.authoring_status;
+  return acc;
+}, {} as Record<string, string>);
+---
+
+<StarlightPage frontmatter={{ title: "Ecosystem state", description: "Live state of the Actian DS three-repo ecosystem." }}>
+  <PageMetadata slug="state" source="(auto-built from GitHub API + vendor)" schema={1} />
+
+  <h2>Architecture</h2>
+  <EcosystemDiagram />
+
+  <h2>Versions</h2>
+  <table>
+    <thead><tr><th>Repo</th><th>Latest tag</th><th>Most-recent release</th></tr></thead>
+    <tbody>
+      {state.repos && state.repos.length > 0 ? state.repos.map((r: any) => (
+        <tr>
+          <td><strong>{r.label}</strong></td>
+          <td><code>{r.latest_tag || "—"}</code></td>
+          <td>{r.recent_releases && r.recent_releases[0] ? <a href={r.recent_releases[0].html_url}>{r.recent_releases[0].name || r.recent_releases[0].tag_name}</a> : "—"}</td>
+        </tr>
+      )) : <tr><td colspan="3"><em>state.json missing or fetch failed — see build logs</em></td></tr>}
+    </tbody>
+  </table>
+
+  <h2>Vendor pin (this build)</h2>
+  <ul>
+    <li>Knowledge resolved version: <code>{vendored.knowledge_repo_resolved_version}</code></li>
+    <li>Range: <code>{vendored.knowledge_repo_version_range}</code></li>
+    <li>Vendored at: <code>{vendored.vendored_at}</code></li>
+  </ul>
+
+  <h2>Coverage</h2>
+  <ul>
+    <li><strong>{categorizedDsKit}</strong> of <strong>{totalDsKit}</strong> DS Kit components categorized</li>
+    <li><strong>6</strong> categories with engineer-seeded structural defaults</li>
+    <li><strong>8</strong> foundation domains</li>
+    <li><strong>14</strong> accessibility sections indexed</li>
+  </ul>
+
+  <h2>Authoring status by category</h2>
+  <table>
+    <thead><tr><th>Category</th><th>Status</th></tr></thead>
+    <tbody>
+      {Object.entries(authoringStatusByCategory).map(([slug, status]) => (
+        <tr><td><a href={`${base}categories/${slug}`}>{slug}</a></td><td><code>{status}</code></td></tr>
+      ))}
+    </tbody>
+  </table>
+
+  <h2>Recent activity</h2>
+  {state.repos && state.repos.map((r: any) => r.recent_releases && r.recent_releases.length > 0 && (
+    <section>
+      <h3>{r.label}</h3>
+      <ul>
+        {r.recent_releases.map((rel: any) => (
+          <li><a href={rel.html_url}><code>{rel.tag_name}</code></a> — {rel.name || ""} <span style="color: var(--zen-color-text-secondary); font-family: var(--zen-font-family-mono);">({rel.published_at && rel.published_at.slice(0, 10)})</span></li>
+        ))}
+      </ul>
+    </section>
+  ))}
+</StarlightPage>

@@ -3,8 +3,8 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
-    "prebuild": "node scripts/generate-component-pages.cjs",
-    "predev": "node scripts/generate-component-pages.cjs",
+    "prebuild": "node scripts/fetch-state.cjs && node scripts/generate-component-pages.cjs",
+    "predev": "node scripts/fetch-state.cjs && node scripts/generate-component-pages.cjs",
     "dev": "astro dev",
     "start": "astro dev",
     "build": "astro build",
