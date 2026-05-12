@@ -1,0 +1,78 @@
+name: Vendor knowledge-repo snapshot
+
+on:
+  schedule:
+    - cron: '0 11 * * *'    # 11:00 UTC daily — 2hr after plugin's snapshot
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: 'Knowledge repo SHA (override; default resolves range)'
+        required: false
+        type: string
+      range:
+        description: 'Override the semver range from vendored.json'
+        required: false
+        type: string
+  repository_dispatch:
+    types: [knowledge-release]
+
+concurrency:
+  group: vendor
+  cancel-in-progress: false
+
+jobs:
+  vendor:
+    name: Pull knowledge-repo snapshot
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      - name: Mint App token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.BOT_APP_ID }}
+          private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+          owner: volivarii
+          repositories: actian-ds-knowledge,actian-ds-docs
+
+      - name: Pull snapshot
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          if [ -n "${{ inputs.sha }}" ]; then
+            node scripts/vendor/vendor-snapshot.cjs --sha "${{ inputs.sha }}"
+          else
+            node scripts/vendor/vendor-snapshot.cjs --range
+          fi
+
+      - name: Detect changes
+        id: changes
+        run: |
+          if git diff --quiet vendored.json vendor/; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Open or update PR
+        if: steps.changes.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          commit-message: |
+            vendor(knowledge): refresh to ${{ env.RESOLVED_VERSION }}
+          branch: vendor/auto-refresh
+          delete-branch: true
+          title: "vendor(knowledge): refresh"
+          body: |
+            Auto-generated vendor refresh from knowledge tag.
+            Review the diff under `vendor/` and `vendored.json`.
+          labels: vendor
