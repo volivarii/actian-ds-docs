@@ -320,3 +320,55 @@ footer .meta {
   border-top: 1px solid var(--zen-color-primary-500);
   vertical-align: middle;
 }
+
+/* Confidence chips — per-card signal from category-defaults.confidence:
+ * { anatomy: high|medium|low, variants: ..., motion: ..., a11y: ... }
+ * The value answers "how confident are we in this card's content?" —
+ * not whether a designer reviewed it (see project memory on the
+ * authoring_status vs confidence distinction). */
+.confidence-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 24px;
+  align-items: center;
+}
+.confidence-row__label {
+  font-size: 11px;
+  color: var(--zen-color-text-secondary);
+  font-family: var(--zen-font-family-mono, monospace);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-right: 4px;
+}
+.confidence-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-family: var(--zen-font-family-mono, monospace);
+  font-weight: 600;
+  line-height: 1.5;
+  border: 1px solid transparent;
+}
+.confidence-chip__field {
+  color: var(--zen-color-text-secondary);
+  font-weight: 500;
+}
+.confidence-chip--high {
+  background: var(--zen-color-bg-success, #f0ffec);
+  color: var(--zen-color-icon-success, #0a6e00);
+  border-color: var(--zen-color-icon-success, #098900);
+}
+.confidence-chip--medium {
+  background: var(--zen-color-bg-warning, #fff9e5);
+  color: var(--zen-color-icon-warning, #c47a00);
+  border-color: var(--zen-color-icon-warning, #ef8d00);
+}
+.confidence-chip--low {
+  background: var(--zen-color-bg-error, #fff4ec);
+  color: var(--zen-color-icon-error, #dc3514);
+  border-color: var(--zen-color-icon-error, #dc3514);
+}

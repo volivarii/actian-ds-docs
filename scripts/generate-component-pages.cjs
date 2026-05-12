@@ -158,7 +158,6 @@ function buildPage(slug, entry, guideline, defaults, registry) {
     "AccessibilityRefs",
     "PageMetadata",
     "StubFooter",
-    "StatusPill",
   ].map(function (name) {
     return 'import ' + name + ' from "../../../../components/' + name + '.astro";';
   }).join("\n");
@@ -168,12 +167,6 @@ function buildPage(slug, entry, guideline, defaults, registry) {
   // (Starlight does NOT base-rewrite raw markdown links with absolute paths.)
   var categoryLink = categorySlug
     ? '**Category:** <a href={`${import.meta.env.BASE_URL.replace(/\\/?$/, "/")}categories/' + categorySlug + '`}>' + categoryLabel + "</a>"
-    : "";
-
-  // Status pill — surrogate from category-defaults.authoring_status (no
-  // per-component status yet). Renders inline next to the category link.
-  var statusLine = (defaults && defaults.authoring_status)
-    ? '<StatusPill status="' + defaults.authoring_status + '" />'
     : "";
 
   var stubFooter = (isStub && categorySlug)
@@ -194,7 +187,7 @@ function buildPage(slug, entry, guideline, defaults, registry) {
     "  schema={1}",
     "/>",
     "",
-    categoryLink + (statusLine ? " &nbsp; " + statusLine : ""),
+    categoryLink,
     "",
     sections.join("\n\n"),
     "",
