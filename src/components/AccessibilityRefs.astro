@@ -1,0 +1,33 @@
+---
+import { createRequire } from "module";
+import path from "path";
+const require = createRequire(import.meta.url);
+const loader = require(
+  path.resolve(process.cwd(), "scripts/lib/category-defaults-loader.cjs"),
+);
+
+interface Props {
+  requirementRefs: Array<{ ref: string; note?: string }>;
+}
+const { requirementRefs } = Astro.props;
+
+const resolved = requirementRefs.map((r) => ({
+  ref: r,
+  section: loader.resolveAccessibilityRef(r.ref),
+}));
+---
+
+<ul>
+  {resolved.map(({ ref, section }) => (
+    <li>
+      {section ? (
+        <a href={`/accessibility#${ref.ref}`}>
+          <strong>{section.title}</strong>
+        </a>
+      ) : (
+        <strong>{ref.ref}</strong>
+      )}
+      {ref.note && <> — {ref.note}</>}
+    </li>
+  ))}
+</ul>

@@ -1,0 +1,15 @@
+---
+interface Props {
+  parts: Array<{ name: string; description: string }>;
+}
+const { parts } = Astro.props;
+---
+
+<table>
+  <thead><tr><th>Part</th><th>Description</th></tr></thead>
+  <tbody>
+    {parts.map((p) => (
+      <tr><td><strong>{p.name}</strong></td><td>{p.description}</td></tr>
+    ))}
+  </tbody>
+</table>

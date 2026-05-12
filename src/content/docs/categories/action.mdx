@@ -1,0 +1,42 @@
+---
+title: Action
+description: Buttons, links, sticky footers — components that perform an action when interacted with.
+---
+
+import Anatomy from "../../../components/Anatomy.astro";
+import VariantMatrix from "../../../components/VariantMatrix.astro";
+import MotionPattern from "../../../components/MotionPattern.astro";
+import AccessibilityRefs from "../../../components/AccessibilityRefs.astro";
+import PageMetadata from "../../../components/PageMetadata.astro";
+import defaults from "../../../../vendor/components/dist/categories/action-defaults.json";
+
+<PageMetadata
+  slug="categories.action"
+  source="components/dist/categories/action-defaults.json"
+  schema={1}
+/>
+
+**Confidence:**
+{Object.entries(defaults.confidence || {}).map(([k, v]) => (
+  <span><code>{k}</code>: <strong>{v}</strong>&nbsp;&nbsp;</span>
+))}
+
+## Anatomy
+
+<Anatomy parts={defaults.card_anatomy.parts} />
+
+## Variants
+
+<VariantMatrix variantAxes={defaults.card_component.variantAxes} />
+
+## Motion
+
+<MotionPattern patternRefs={defaults.card_motion.patternRefs} />
+
+## Accessibility
+
+<AccessibilityRefs requirementRefs={defaults.card_accessibility.requirementRefs} />
+
+## Design rationale
+
+See [`vendor/components/dist/categories/action.md`](https://github.com/volivarii/actian-ds-knowledge/blob/main/components/src/categories/action.md) for the full design rationale.
