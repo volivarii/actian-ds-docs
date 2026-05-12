@@ -1,50 +1,17 @@
 ---
 title: Feedback
-description: Status regions and live announcements — toasts, banners, inline alerts — that report system state to the user.
+description: "Status regions and live announcements — toasts, banners, inline alerts — that report system state to the user."
 ---
 
-import Anatomy from "../../../components/Anatomy.astro";
-import VariantMatrix from "../../../components/VariantMatrix.astro";
-import MotionPattern from "../../../components/MotionPattern.astro";
-import AccessibilityRefs from "../../../components/AccessibilityRefs.astro";
 import PageMetadata from "../../../components/PageMetadata.astro";
 import ComponentCard from "../../../components/ComponentCard.astro";
-import defaults from "../../../../vendor/components/dist/categories/feedback-defaults.json";
 import dskit from "../../../../vendor/components/dist/registries/dskit.json";
-export const guidelines = import.meta.glob("../../../../vendor/components/src/guidelines/*.json", { eager: true });
 
 <PageMetadata
   slug="categories.feedback"
   source="components/dist/categories/feedback-defaults.json"
   schema={1}
 />
-
-<div class="confidence-row">
-  <span class="confidence-row__label">Confidence</span>
-  {(() => {
-    const components = Object.entries(dskit.components).filter(([, e]) => e.category === "Feedback");
-    const total = components.length;
-    let curated = 0, withContent = 0;
-    components.forEach(([slug]) => {
-      const g = guidelines["../../../../vendor/components/src/guidelines/" + slug + ".json"];
-      if (g && !g._stub) {
-        curated++;
-        if (g.content_guidelines && Array.isArray(g.content_guidelines.sections) && g.content_guidelines.sections.length) withContent++;
-      }
-    });
-    const ratio = total > 0 ? withContent / total : 0;
-    const contentConf = ratio >= 0.5 ? "high" : ratio > 0 ? "medium" : "low";
-    const merged = { ...(defaults.confidence || {}), content: contentConf };
-    return Object.entries(merged).map(([k, v]) => (
-      <span class={`confidence-chip confidence-chip--${v}`}>
-        <span class="confidence-chip__field">{k}</span>
-        <span>{v}</span>
-      </span>
-    ));
-  })()}
-</div>
-
-## Components in this category
 
 <div class="component-card-grid">
   {Object.entries(dskit.components)
@@ -53,23 +20,3 @@ export const guidelines = import.meta.glob("../../../../vendor/components/src/gu
       <ComponentCard slug={slug} name={e.name || slug} category={e.category} categorySlug="feedback" />
     ))}
 </div>
-
-## Anatomy
-
-<Anatomy parts={defaults.card_anatomy.parts} />
-
-## Variants
-
-<VariantMatrix variantAxes={defaults.card_component.variantAxes} />
-
-## Motion
-
-<MotionPattern patternRefs={defaults.card_motion.patternRefs} />
-
-## Accessibility
-
-<AccessibilityRefs requirementRefs={defaults.card_accessibility.requirementRefs} />
-
-## Design rationale
-
-See [`vendor/components/dist/categories/feedback.md`](https://github.com/volivarii/actian-ds-knowledge/blob/main/components/src/categories/feedback.md) for the full design rationale.
