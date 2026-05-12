@@ -1,0 +1,31 @@
+import { defineConfig } from "astro/config";
+import starlight from "@astrojs/starlight";
+
+const SITE = process.env.SITE_URL || "https://volivarii.github.io/actian-ds-docs";
+const BASE = process.env.SITE_BASE || "/actian-ds-docs";
+
+export default defineConfig({
+  site: SITE,
+  base: BASE,
+  integrations: [
+    starlight({
+      title: "Actian Design System",
+      description: "Foundations, components, accessibility, content — federated via actian-ds-knowledge.",
+      customCss: [
+        "./src/styles/tokens.css",
+        "./src/styles/starlight-overrides.css",
+        "./src/styles/docs-chrome.css",
+      ],
+      sidebar: [
+        { label: "Foundations", autogenerate: { directory: "foundations" } },
+        { label: "Content guidelines", link: "/content" },
+        { label: "Accessibility", link: "/accessibility" },
+        { label: "Categories", autogenerate: { directory: "categories" } },
+        { label: "Components", autogenerate: { directory: "components" } },
+        { label: "Inventory", link: "/inventory" },
+        { label: "State", link: "/state" },
+        { label: "Migrations", link: "/migrations" },
+      ],
+    }),
+  ],
+});
