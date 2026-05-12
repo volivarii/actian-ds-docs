@@ -11,6 +11,11 @@ interface Props {
 }
 const { patternRefs } = Astro.props;
 
+// import.meta.env.BASE_URL respects astro.config.mjs `base` (e.g. "/actian-ds-docs")
+// so deep links survive deploy to a base-prefixed domain. Astro doesn't normalize
+// the trailing slash, so we force one with a regex to keep URL construction simple.
+const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+
 const resolved = patternRefs.map((r) => ({
   ref: r,
   pattern: loader.resolveMotionRef(r.ref),
@@ -21,7 +26,7 @@ const resolved = patternRefs.map((r) => ({
   <section>
     <h3>{pattern ? pattern.name : ref.ref}</h3>
     <p>
-      <a href={`/foundations/motion#${ref.ref}`}>
+      <a href={`${base}foundations/motion#${ref.ref}`}>
         Slug: <code>{ref.ref}</code>
       </a>
     </p>
