@@ -8,10 +8,10 @@
 // and meta files), and copies it into vendor/.
 //
 // Usage:
-//   node scripts/vendor/vendor-snapshot.js                      (pulls SHA from vendored.json)
-//   node scripts/vendor/vendor-snapshot.js --sha <sha>          (override SHA)
-//   node scripts/vendor/vendor-snapshot.js --range              (resolve range to latest tag)
-//   node scripts/vendor/vendor-snapshot.js --range <range>      (override range)
+//   node scripts/vendor/vendor-snapshot.cjs                      (pulls SHA from vendored.json)
+//   node scripts/vendor/vendor-snapshot.cjs --sha <sha>          (override SHA)
+//   node scripts/vendor/vendor-snapshot.cjs --range              (resolve range to latest tag)
+//   node scripts/vendor/vendor-snapshot.cjs --range <range>      (override range)
 //
 // The vendor/ tree is the docs site's read-only knowledge cache. The
 // vendor-snapshot.yml workflow runs this nightly + on knowledge-repo
