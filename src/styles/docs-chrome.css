@@ -48,13 +48,18 @@ footer .meta {
   display: inline-block;
   width: 48px;
   height: 0;
-  border-top: 1px solid var(--zen-color-neutral-700, var(--zen-color-text-primary));
+  border-top: 1px solid
+    var(--zen-color-neutral-700, var(--zen-color-text-primary));
   vertical-align: middle;
 }
 
 /* Token-scale table — refined. */
-.token-scale { font-variant-numeric: tabular-nums lining-nums; }
-.token-scale__visual-th { width: 56px; }
+.token-scale {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.token-scale__visual-th {
+  width: 56px;
+}
 .token-scale__visual-cell {
   width: 56px;
   padding-left: 4px !important;
@@ -63,7 +68,9 @@ footer .meta {
 /* ------------------------------------------------------------------
  * Anatomy — numbered parts list + diagram placeholder
  * ------------------------------------------------------------------ */
-.anatomy { margin: 16px 0 24px; }
+.anatomy {
+  margin: 16px 0 24px;
+}
 .anatomy__diagram {
   display: flex;
   align-items: center;
@@ -106,9 +113,12 @@ footer .meta {
   align-items: start;
   gap: 14px;
   padding: 10px 0;
-  border-bottom: 1px solid var(--zen-color-neutral-50, var(--zen-border-default));
+  border-bottom: 1px solid
+    var(--zen-color-neutral-50, var(--zen-border-default));
 }
-.anatomy__item:last-child { border-bottom: none; }
+.anatomy__item:last-child {
+  border-bottom: none;
+}
 .anatomy__num {
   display: inline-flex;
   align-items: center;
@@ -163,7 +173,9 @@ footer .meta {
   text-decoration: none !important;
   color: var(--zen-color-text-primary);
 }
-.a11y-refs__header a:hover { color: var(--zen-color-primary-500); }
+.a11y-refs__header a:hover {
+  color: var(--zen-color-primary-500);
+}
 .a11y-refs__wcag {
   display: inline-flex;
   gap: 6px;
@@ -205,7 +217,8 @@ footer .meta {
   margin: 8px 0 28px;
   align-items: center;
   padding-bottom: 16px;
-  border-bottom: 1px solid var(--zen-color-neutral-100, var(--zen-border-default));
+  border-bottom: 1px solid
+    var(--zen-color-neutral-100, var(--zen-border-default));
 }
 .confidence-row__label {
   font-size: 0.625rem;
@@ -251,7 +264,11 @@ footer .meta {
 /* ------------------------------------------------------------------
  * Do / Don't comparison
  * ------------------------------------------------------------------ */
-.dodont { display: grid; gap: 12px; margin: 16px 0 24px; }
+.dodont {
+  display: grid;
+  gap: 12px;
+  margin: 16px 0 24px;
+}
 .dodont__pair {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -278,9 +295,17 @@ footer .meta {
   margin-bottom: 6px;
   font-family: var(--font-mono, monospace);
 }
-.dodont__col--do .dodont__label { color: var(--zen-color-icon-success, #0a6e00); }
-.dodont__col--dont .dodont__label { color: var(--zen-color-icon-error, #dc3514); }
-.dodont__prose { font-size: 0.8125rem; line-height: 1.5; color: var(--zen-color-text-primary); }
+.dodont__col--do .dodont__label {
+  color: var(--zen-color-icon-success, #0a6e00);
+}
+.dodont__col--dont .dodont__label {
+  color: var(--zen-color-icon-error, #dc3514);
+}
+.dodont__prose {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--zen-color-text-primary);
+}
 
 /* ------------------------------------------------------------------
  * Callout
@@ -292,7 +317,8 @@ footer .meta {
   border-left: 3px solid;
   background: var(--zen-color-bg-subtle);
 }
-.callout--note, .callout--info {
+.callout--note,
+.callout--info {
   border-left-color: var(--zen-color-primary-500);
   background: var(--zen-color-primary-25, var(--zen-color-bg-subtle));
 }
@@ -310,11 +336,25 @@ footer .meta {
   gap: 8px;
   margin-bottom: 4px;
 }
-.callout__icon { font-size: 0.875rem; opacity: 0.7; }
-.callout__title { font-weight: 600; font-size: 0.8125rem; }
-.callout__body { font-size: 0.8125rem; line-height: 1.55; color: var(--zen-color-text-primary); }
-.callout__body > :first-child { margin-top: 0; }
-.callout__body > :last-child { margin-bottom: 0; }
+.callout__icon {
+  font-size: 0.875rem;
+  opacity: 0.7;
+}
+.callout__title {
+  font-weight: 600;
+  font-size: 0.8125rem;
+}
+.callout__body {
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--zen-color-text-primary);
+}
+.callout__body > :first-child {
+  margin-top: 0;
+}
+.callout__body > :last-child {
+  margin-bottom: 0;
+}
 
 /* ------------------------------------------------------------------
  * Term list
@@ -358,7 +398,9 @@ footer .meta {
   background: var(--zen-color-bg-default);
   text-decoration: none !important;
   color: var(--zen-color-text-primary);
-  transition: border-color 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
 }
 .component-card:hover {
   border-color: var(--zen-color-primary-500);
@@ -382,35 +424,19 @@ footer .meta {
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
-.component-card__stub { color: var(--zen-color-icon-warning, #ef8d00); }
+.component-card__stub {
+  color: var(--zen-color-icon-warning, #ef8d00);
+}
 
 /* ------------------------------------------------------------------
  * Hero — editorial homepage refinement
  * ------------------------------------------------------------------ */
-.sl-flex.hero {
-  align-items: center;
-  padding-block: 3rem 2rem;
-  border-bottom: 1px solid var(--zen-color-neutral-100, var(--zen-border-default));
-  margin-bottom: 2rem;
-}
-.hero h1 {
-  font-family: var(--font-display, serif) !important;
-  font-variation-settings: "SOFT" 30, "opsz" 144;
-  font-size: clamp(2.25rem, 5vw, var(--type-display-1)) !important;
-  font-weight: 500 !important;
-  letter-spacing: var(--track-display);
-  line-height: 1.05;
-}
 .hero .tagline {
-  font-size: 1.0625rem !important;
-  line-height: 1.5;
+  font-size: 1rem !important;
+  line-height: 1.55;
   color: var(--zen-color-text-secondary);
-  max-width: 48ch;
-  margin-block: 0.75rem 1.25rem;
-}
-.hero img {
-  max-width: 88px;
-  height: auto;
+  max-width: 56ch;
+  margin-block: 0.5rem 1rem;
 }
 
 /* ------------------------------------------------------------------
@@ -435,7 +461,9 @@ footer .meta {
 }
 .stat-card__number {
   font-family: var(--font-display, serif);
-  font-variation-settings: "SOFT" 30, "opsz" 96;
+  font-variation-settings:
+    "SOFT" 30,
+    "opsz" 96;
   font-size: 2rem;
   font-weight: 500;
   font-variant-numeric: tabular-nums lining-nums;
@@ -444,7 +472,9 @@ footer .meta {
   letter-spacing: -0.02em;
   margin-bottom: 6px;
 }
-.stat-card--accent .stat-card__number { color: var(--zen-color-primary-500); }
+.stat-card--accent .stat-card__number {
+  color: var(--zen-color-primary-500);
+}
 .stat-card__label {
   font-size: 0.6875rem;
   font-weight: 600;
@@ -496,7 +526,9 @@ footer .meta {
 .category-browse-card h3 {
   margin: 0;
   font-family: var(--font-display, serif) !important;
-  font-variation-settings: "SOFT" 30, "opsz" 32;
+  font-variation-settings:
+    "SOFT" 30,
+    "opsz" 32;
   font-size: 1.125rem !important;
   font-weight: 500 !important;
   letter-spacing: -0.01em !important;
@@ -545,12 +577,13 @@ footer .meta {
   border-color: var(--zen-color-primary-500);
 }
 .foundation-card--color {
-  background:
-    linear-gradient(135deg,
-      var(--zen-color-primary-50) 0%,
-      var(--zen-color-success-50) 33%,
-      var(--zen-color-warning-50) 66%,
-      var(--zen-color-error-50) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--zen-color-primary-50) 0%,
+    var(--zen-color-success-50) 33%,
+    var(--zen-color-warning-50) 66%,
+    var(--zen-color-error-50) 100%
+  );
 }
 .foundation-card__icon {
   font-size: 1.75rem;
@@ -587,7 +620,9 @@ footer .meta {
   color: var(--zen-color-text-primary);
   transition: background 0.15s;
 }
-.feature-card:hover { background: var(--zen-color-bg-subtle); }
+.feature-card:hover {
+  background: var(--zen-color-bg-subtle);
+}
 .feature-card h3 {
   margin: 0 0 4px 0 !important;
   font-family: var(--font-body, sans-serif) !important;
@@ -638,7 +673,10 @@ footer .meta {
   padding: 12px 14px;
   background: var(--zen-color-bg-default);
 }
-.inventory-row strong { font-weight: 500; font-size: 0.875rem; }
+.inventory-row strong {
+  font-weight: 500;
+  font-size: 0.875rem;
+}
 .inventory-row code {
   font-size: 0.625rem;
   color: var(--zen-color-text-secondary);
@@ -665,4 +703,122 @@ footer .meta {
   color: var(--zen-color-text-secondary);
   background: transparent !important;
   padding: 0 !important;
+}
+
+/* ------------------------------------------------------------------
+ * Hero title — Starlight's splash template renders <h1> outside
+ * .sl-markdown-content, so typography.css selectors don't catch it.
+ * Style it explicitly.
+ * ------------------------------------------------------------------ */
+.hero h1 {
+  font-family: var(--font-body) !important;
+  font-size: clamp(1.875rem, 4vw, 2.5rem) !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.015em !important;
+  line-height: 1.15 !important;
+  color: var(--zen-color-text-primary) !important;
+  margin: 0 0 0.5em 0 !important;
+}
+
+/* Hero image — Starlight emits 400x400; constrain. */
+.hero img {
+  max-width: 64px !important;
+  max-height: 64px !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+/* Hero layout — sit logo above text on splash. */
+.hero {
+  align-items: flex-start !important;
+  padding-block: 2.5rem 1.5rem !important;
+  border-bottom: 1px solid
+    var(--zen-color-neutral-100, var(--zen-border-default));
+  margin-bottom: 2rem !important;
+}
+.hero .stack {
+  gap: 0.875rem !important;
+}
+.hero .actions {
+  gap: 0.5rem !important;
+}
+
+/* Hero CTA buttons — primary/secondary refinement */
+.hero .action.primary {
+  background: var(--zen-color-primary-500) !important;
+  border-color: var(--zen-color-primary-500) !important;
+  color: #fff !important;
+  font-family: var(--font-body) !important;
+  font-weight: 500 !important;
+  font-size: 0.875rem !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 4px !important;
+}
+.hero .action.primary:hover {
+  background: var(
+    --zen-color-primary-700,
+    var(--zen-color-primary-500)
+  ) !important;
+  border-color: var(
+    --zen-color-primary-700,
+    var(--zen-color-primary-500)
+  ) !important;
+}
+.hero .action.secondary,
+.hero .action.minimal {
+  background: var(--zen-color-bg-default) !important;
+  border: 1px solid var(--zen-color-neutral-200, var(--zen-border-default)) !important;
+  color: var(--zen-color-text-primary) !important;
+  font-family: var(--font-body) !important;
+  font-weight: 500 !important;
+  font-size: 0.875rem !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 4px !important;
+}
+.hero .action.secondary:hover,
+.hero .action.minimal:hover {
+  border-color: var(--zen-color-primary-500) !important;
+  color: var(--zen-color-primary-700, var(--zen-color-primary-500)) !important;
+}
+
+/* ------------------------------------------------------------------
+ * Search button kbd badge — Starlight's ⌘K hint uses a dark token
+ * that doesn't pick up our overrides. Style it explicitly.
+ * ------------------------------------------------------------------ */
+site-search button kbd,
+button[data-open-modal] kbd {
+  background: var(--zen-color-bg-default) !important;
+  color: var(--zen-color-text-secondary) !important;
+  border: 1px solid var(--zen-color-neutral-200, var(--zen-border-default)) !important;
+  font-family: var(--font-mono, monospace) !important;
+  font-size: 0.6875rem !important;
+  padding: 1px 4px !important;
+  border-radius: 3px !important;
+}
+
+/* Search button overall refinement (override the previous !important block) */
+button[data-open-modal] {
+  background: var(--zen-color-bg-subtle) !important;
+  color: var(--zen-color-text-secondary) !important;
+  border: 1px solid var(--zen-color-neutral-100, var(--zen-border-default)) !important;
+  border-radius: 6px !important;
+  font-family: var(--font-body, system-ui) !important;
+}
+
+/* ------------------------------------------------------------------
+ * Homepage spacing fix — first h2 should not have a top border
+ * (avoids the awkward hairline above "At a glance" right after hero)
+ * ------------------------------------------------------------------ */
+.sl-markdown-content > h2:first-child,
+.sl-markdown-content > div + h2 {
+  border-top: none !important;
+  padding-top: 0 !important;
+  margin-top: 1.5em !important;
+}
+
+/* But subsequent h2's keep the divider (the docs convention). */
+.sl-markdown-content > h2 ~ h2 {
+  border-top: 1px solid var(--zen-color-neutral-100, var(--zen-border-default)) !important;
+  padding-top: 1.25em !important;
+  margin-top: 2.5em !important;
 }

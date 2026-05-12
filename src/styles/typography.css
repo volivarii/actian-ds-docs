@@ -1,49 +1,42 @@
 /*
- * typography.css — Editorial type system for Actian DS docs.
+ * typography.css — Documentation type system for Actian DS docs.
  *
- *   Display  → Fraunces (variable serif, opsz + soft axes)
- *              Used for h1/h2 in markdown content + hero tagline + stat numbers.
- *              Editorial gravitas; characterful; not generic.
+ *   Body + Display → IBM Plex Sans (variable / static weights)
+ *                    The canonical design-system-docs pair (Carbon uses it);
+ *                    distinctive without portfolio drama. Modern grotesque
+ *                    with slight humanist warmth.
+ *   Mono           → IBM Plex Mono — paired sibling for tokens + code.
  *
- *   Body     → Hanken Grotesk (variable grotesque sans)
- *              Used for body, h3-h6, sidebar, chrome. Geometric without being
- *              cold; distinguishable from Inter; range 300–800.
- *
- *   Mono     → JetBrains Mono (variable)
- *              Used for tokens, code, status pills, technical labels.
- *
- * Self-hosted via Google Fonts (no API key needed). Variable axes preferred
- * to avoid loading multiple static weights.
+ * Self-hosted via Google Fonts; no API key needed.
  */
 
-@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..900,0..100&family=Hanken+Grotesk:wght@300..800&family=JetBrains+Mono:wght@400..700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
 
 :root {
-  /* Public type-system vars — consumed by Starlight overrides. */
-  --font-display: "Fraunces", "Iowan Old Style", Georgia, serif;
-  --font-body: "Hanken Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  /* Type-system vars — consumed by Starlight overrides. */
+  --font-body: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-display: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
 
-  /* Editorial type scale — paced for technical documentation. */
-  --type-display-1: 2.625rem;   /* hero H1 ~42px */
-  --type-display-2: 2rem;       /* page H1 ~32px */
-  --type-display-3: 1.5rem;     /* section H2 ~24px */
-  --type-h4: 1.125rem;          /* subsection H3 ~18px */
-  --type-h5: 1rem;              /* subsection H4 ~16px */
+  /* Documentation type scale — paced for technical reference. */
+  --type-display-1: 2.25rem;    /* hero H1 ~36px */
+  --type-display-2: 1.75rem;    /* page H1 ~28px */
+  --type-display-3: 1.375rem;   /* section H2 ~22px */
+  --type-h4: 1.0625rem;         /* subsection H3 ~17px */
+  --type-h5: 0.9375rem;         /* subsection H4 ~15px */
   --type-body: 0.9375rem;       /* body ~15px */
   --type-meta: 0.8125rem;       /* metadata ~13px */
   --type-mono: 0.8125rem;       /* mono ~13px */
   --type-micro: 0.6875rem;      /* micro/label ~11px */
 
-  /* Leading + tracking — editorial. */
-  --leading-display: 1.1;
+  /* Leading + tracking — readable docs. */
+  --leading-display: 1.2;
   --leading-body: 1.6;
   --leading-tight: 1.35;
-  --track-display: -0.02em;     /* tight kerning on serif heads */
-  --track-meta: 0.06em;          /* opened on UPPERCASE labels */
+  --track-display: -0.01em;
+  --track-meta: 0.06em;
 }
 
-/* Reset Starlight's vars to use our editorial stack. */
 :root {
   --sl-font: var(--font-body);
   --sl-font-mono: var(--font-mono);
@@ -52,42 +45,41 @@
 /* Body type — apply our scale */
 html, body {
   font-family: var(--font-body);
-  font-feature-settings: "ss01", "cv11";   /* Hanken stylistic alts */
   font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /*
- * Display headings — Fraunces with optical sizing tuned for size.
- * SOFT axis at ~30 gives a slight humanist warmth without overcooking
- * the serifs. opsz tracks size automatically via font-optical-sizing.
+ * Display headings — IBM Plex Sans medium with tight tracking.
+ * No Fraunces — documentation aesthetic, not editorial.
  */
 .sl-markdown-content h1,
-.sl-markdown-content h2 {
-  font-family: var(--font-display);
-  font-variation-settings: "SOFT" 30, "opsz" 96;
-  font-weight: 500;
+.sl-markdown-content h2,
+.content-panel h1 {
+  font-family: var(--font-body);
+  font-weight: 600;
   letter-spacing: var(--track-display);
   line-height: var(--leading-display);
-  font-feature-settings: "lnum", "ss01";
+  color: var(--zen-color-text-primary) !important;
 }
 
-.sl-markdown-content h1 {
+.sl-markdown-content h1,
+.content-panel h1 {
   font-size: var(--type-display-2);
   margin-top: 0;
   margin-bottom: 0.5em;
-  color: var(--zen-color-primary-900, var(--zen-color-text-primary)) !important;
 }
 
 .sl-markdown-content h2 {
   font-size: var(--type-display-3);
   margin-top: 2.5em;
   margin-bottom: 0.5em;
-  padding-top: 1em;
+  padding-top: 1.25em;
   border-top: 1px solid var(--zen-color-neutral-100, var(--zen-border-default));
-  color: var(--zen-color-text-primary) !important;
 }
 
-/* H3+ use body grotesque with weight bump. */
+/* H3+ — body grotesque, weight bumped. */
 .sl-markdown-content h3,
 .sl-markdown-content h4,
 .sl-markdown-content h5,
@@ -102,7 +94,7 @@ html, body {
 .sl-markdown-content h4 { font-size: var(--type-h5); margin-top: 1.5em; margin-bottom: 0.4em; }
 .sl-markdown-content h5 { font-size: var(--type-body); margin-top: 1.25em; }
 
-/* Body prose — comfortable leading, no over-tight color. */
+/* Body prose */
 .sl-markdown-content p,
 .sl-markdown-content ul,
 .sl-markdown-content ol,
@@ -112,7 +104,7 @@ html, body {
   color: var(--zen-color-text-primary);
 }
 
-/* Links — editorial: underline-from-text by default, accent on hover. */
+/* Links — docs: subtle underline, primary on hover */
 .sl-markdown-content a:not(.component-card):not(.category-browse-card):not(.foundation-card):not(.feature-card):not(.stat-card) {
   color: var(--zen-color-primary-700, var(--zen-color-primary-500));
   text-decoration: underline;
@@ -126,7 +118,7 @@ html, body {
   text-decoration-color: currentColor;
 }
 
-/* Inline code — editorial: subtle background, monospace, slight shrink */
+/* Inline code */
 .sl-markdown-content code:not(pre code) {
   font-family: var(--font-mono);
   font-size: 0.875em;
@@ -136,7 +128,7 @@ html, body {
   color: var(--zen-color-text-primary);
 }
 
-/* Tables — editorial: tabular figures, thin rules, no zebra. */
+/* Tables — tabular figures, thin rules */
 .sl-markdown-content table {
   font-size: var(--type-meta);
   font-variant-numeric: tabular-nums lining-nums;
@@ -164,14 +156,13 @@ html, body {
 .sl-markdown-content table tr:last-child td {
   border-bottom: none;
 }
-/* Token cells — tighter mono. */
 .sl-markdown-content table td code {
   font-size: var(--type-mono);
   background: transparent;
   padding: 0;
 }
 
-/* Site title (header brand) — small caps style, tight. */
+/* Site title (header brand) */
 .site-title {
   font-family: var(--font-body) !important;
   font-weight: 600 !important;
