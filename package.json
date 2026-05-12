@@ -3,8 +3,8 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
-    "prebuild": "node scripts/fetch-state.cjs && node scripts/generate-component-pages.cjs",
-    "predev": "node scripts/fetch-state.cjs && node scripts/generate-component-pages.cjs",
+    "prebuild": "node scripts/fetch-state.cjs && node scripts/sync-vendored-md.cjs && node scripts/generate-component-pages.cjs",
+    "predev": "node scripts/fetch-state.cjs && node scripts/sync-vendored-md.cjs && node scripts/generate-component-pages.cjs",
     "dev": "astro dev",
     "start": "astro dev",
     "build": "astro build",
@@ -14,9 +14,7 @@
   "dependencies": {
     "@astrojs/starlight": "^0.39.2",
     "astro": "^6.3.1",
-    "marked": "^18.0.3",
-    "marked-custom-heading-id": "^2.0.17",
-    "marked-gfm-heading-id": "^4.1.4",
+    "remark-custom-header-id": "^1.0.0",
     "sharp": "^0.34.5"
   }
 }

@@ -1,5 +1,6 @@
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
+import remarkCustomHeaderId from "remark-custom-header-id";
 
 const SITE = process.env.SITE_URL || "https://volivarii.github.io/actian-ds-docs";
 const BASE = process.env.SITE_BASE || "/actian-ds-docs";
@@ -7,6 +8,12 @@ const BASE = process.env.SITE_BASE || "/actian-ds-docs";
 export default defineConfig({
   site: SITE,
   base: BASE,
+  markdown: {
+    // Parse `## Title {#slug}` anchor syntax used by vendored MDs
+    // (accessibility.md, content.md). Plugin emits proper id attributes
+    // so Starlight's right-rail TOC and cross-link anchors work.
+    remarkPlugins: [remarkCustomHeaderId],
+  },
   integrations: [
     starlight({
       title: "Actian Design System",
