@@ -6,7 +6,10 @@ description: WCAG 2.2 AA guidance for the Actian DS.
 import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
 import PageMetadata from "../components/PageMetadata.astro";
 import a11yContent from "../../vendor/accessibility/accessibility.md?raw";
-import { marked } from "marked";
+import { Marked } from "marked";
+import customHeadingId from "marked-custom-heading-id";
+
+export const renderMd = (text) => new Marked().use(customHeadingId()).parse(text);
 
 <StarlightPage frontmatter={{ title: "Accessibility", description: "WCAG 2.2 AA guidance for the Actian DS." }}>
   <PageMetadata
@@ -14,5 +17,5 @@ import { marked } from "marked";
     source="accessibility/accessibility.md"
     schema={1}
   />
-  <Fragment set:html={marked.parse(a11yContent)} />
+  <Fragment set:html={renderMd(a11yContent)} />
 </StarlightPage>

@@ -6,7 +6,10 @@ description: Voice, terminology, UI copy patterns — Actian DS content.
 import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
 import PageMetadata from "../components/PageMetadata.astro";
 import contentMd from "../../vendor/content/dist/content.md?raw";
-import { marked } from "marked";
+import { Marked } from "marked";
+import customHeadingId from "marked-custom-heading-id";
+
+export const renderMd = (text) => new Marked().use(customHeadingId()).parse(text);
 
 <StarlightPage frontmatter={{ title: "Content guidelines", description: "Voice, terminology, UI copy patterns — Actian DS content." }}>
   <PageMetadata
@@ -14,5 +17,5 @@ import { marked } from "marked";
     source="content/dist/content.md"
     schema={1}
   />
-  <Fragment set:html={marked.parse(contentMd)} />
+  <Fragment set:html={renderMd(contentMd)} />
 </StarlightPage>
