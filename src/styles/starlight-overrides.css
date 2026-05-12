@@ -132,3 +132,20 @@ site-search button {
 .sl-markdown-content table {
   max-width: none;
 }
+
+/* Widen the main content pane — 45rem default is too narrow for our
+ * token tables (swatch + token name + value columns). The right-rail
+ * TOC stays docked on the right (Starlight default) and remains sticky. */
+:root {
+  --sl-content-width: 64rem;          /* was 45rem */
+  --sl-sidebar-width: 18.75rem;       /* keep default; readable */
+}
+
+/* Relax the prose cap now that the column is wider. Token tables and
+ * component anatomy/variant tables still set max-width: none below. */
+.sl-markdown-content p,
+.sl-markdown-content ul,
+.sl-markdown-content ol,
+.sl-markdown-content blockquote {
+  max-width: 90ch;                    /* was 70ch */
+}
