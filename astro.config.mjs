@@ -16,6 +16,7 @@ export default defineConfig({
         "./src/styles/starlight-overrides.css",
         "./src/styles/docs-chrome.css",
       ],
+      pagefind: true,
       sidebar: [
         { label: "Foundations", items: [{ autogenerate: { directory: "foundations" } }] },
         { label: "Content guidelines", link: "/content" },
