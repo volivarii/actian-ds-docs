@@ -48,6 +48,20 @@ function stripFirstH1(body) {
   return body.replace(/^\s*#[^\n#][^\n]*\n+/, "");
 }
 
+function stripJekyllFrontmatterBlocks(body) {
+  // vendor/content/dist/content.md is a concatenated bundle of source
+  // files where each retains Jekyll-style frontmatter: '---\ntitle: ...\n
+  // nav_order: ...\n---'. These render as visible H2-looking text when
+  // markdown-parsed. Strip them — preserve regular '---' horizontal rules.
+  //
+  // Heuristic: match a '---' fence pair that contains at least one of
+  // 'title:' or 'nav_order:' as a top-level YAML key.
+  return body.replace(
+    /\n---\n([^\n]*\n)*?[ \t]*(title|nav_order|layout|parent):[^\n]*\n([^\n]*\n)*?---\n/g,
+    "\n",
+  );
+}
+
 function buildFrontmatter(page) {
   var twinHref = "/actian-ds-docs/" + page.slug + ".md";
   return [
@@ -82,7 +96,7 @@ function main() {
       return;
     }
     var raw = fs.readFileSync(srcPath, "utf8");
-    var body = stripFirstH1(raw);
+    var body = stripJekyllFrontmatterBlocks(stripFirstH1(raw));
     var out = buildFrontmatter(page) + body;
     fs.writeFileSync(path.join(OUT_DIR, page.slug + ".md"), out);
     console.log("sync-vendored-md: wrote src/content/docs/" + page.slug + ".md");
