@@ -17,6 +17,9 @@ export default defineConfig({
         "./src/styles/docs-chrome.css",
       ],
       pagefind: true,
+      components: {
+        ThemeSelect: "./src/components/empty.astro",
+      },
       sidebar: [
         { label: "Foundations", items: [{ autogenerate: { directory: "foundations" } }] },
         { label: "Content guidelines", link: "/content" },

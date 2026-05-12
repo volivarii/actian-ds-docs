@@ -36,10 +36,49 @@
 
   /* Typography */
   --sl-font: var(--zen-font-family-text, system-ui, sans-serif);
-  --sl-font-mono: var(--zen-font-family-mono, ui-monospace, "SF Mono", monospace);
+  --sl-font-mono: var(
+    --zen-font-family-mono,
+    ui-monospace,
+    "SF Mono",
+    monospace
+  );
 
   /* Focus ring — demonstrates a11y baked in */
   --sl-color-focus: var(--zen-focus-ring-primary, var(--zen-color-primary-500));
+
+  /* Search bar — tone down from dark default to match light Actian theme. */
+  --sl-color-bg-search: var(--zen-color-bg-subtle);
+  --sl-color-search-text: var(--zen-color-text-primary);
+  --sl-color-search-icon: var(--zen-color-text-secondary);
+}
+
+/* Search button (header) — override Starlight's dark default. */
+button[data-open-modal],
+.sl-flex.action,
+site-search button {
+  background: var(--zen-color-bg-subtle) !important;
+  color: var(--zen-color-text-primary) !important;
+  border: 1px solid var(--zen-border-default);
+}
+
+/* Sidebar — make group labels and single-link entries readable.
+ * Starlight renders group headings as <span class="group-label">
+ * and top-level link entries as <a class="large"> (Content guidelines,
+ * Accessibility, Inventory, State, Migrations).
+ */
+.sidebar-content .group-label,
+.sidebar-content .top-level > li > a.large {
+  color: var(--zen-color-text-primary);
+  font-weight: 600;
+  opacity: 1;
+}
+
+.sidebar-content .top-level > li > a.large:not([aria-current="page"]) {
+  color: var(--zen-color-text-primary);
+}
+
+.sidebar-content .top-level > li > a.large:hover {
+  color: var(--zen-color-primary-500);
 }
 
 /* Light only in MVP — dark mode is Phase 2. */
