@@ -17,6 +17,7 @@ export default defineConfig({
       },
       customCss: [
         "./src/styles/tokens.css",
+        "./src/styles/typography.css",
         "./src/styles/starlight-overrides.css",
         "./src/styles/docs-chrome.css",
       ],

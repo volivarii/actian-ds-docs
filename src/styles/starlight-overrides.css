@@ -1,151 +1,148 @@
-/* Starlight → Actian token mapping.
+/*
+ * starlight-overrides.css — Map Starlight design vars to the Actian token
+ * scale + apply editorial layout rules.
  *
- * Starlight uses a small set of design tokens (--sl-color-*, --sl-text-*,
- * --sl-space-*). We override them to pull from the canonical Actian
- * token scale. Token names verified against vendor/tokens/tokens.css.
+ * Type system lives in typography.css (loaded first).
+ * Card/component chrome lives in docs-chrome.css (loaded last).
  *
- * Substitutions vs original plan (vendor tokens differ from expected names):
- *   --zen-color-theme-primary        → --zen-color-primary-500
- *   --zen-color-background-bg-default → --zen-color-bg-default
- *   --zen-color-background-bg-grey-1 → --zen-color-bg-subtle
- *   --zen-color-background-bg-grey-2 → --zen-color-bg-muted
- *   --zen-color-border-default       → --zen-border-default
- *   --zen-text-font-family-default   → --zen-font-family-text
- *   --zen-text-font-family-mono      → --zen-font-family-mono
- *   --zen-color-focus-ring-default   → --zen-focus-ring-primary
+ * Substitution notes (vendor tokens differ from original plan names):
+ *   --zen-color-theme-primary   → --zen-color-primary-500
+ *   --zen-color-bg-default      → kept
+ *   --zen-color-bg-subtle       → kept (was bg-grey-1)
+ *   --zen-color-bg-muted        → kept (was bg-grey-2)
+ *   --zen-border-default        → kept (no `color-` infix)
+ *   --zen-focus-ring-primary    → kept (no `color-` infix)
  */
 
 :root {
-  /* Accent — Actian theme primary */
+  /* Accent — single decisive Actian blue. */
   --sl-color-accent: var(--zen-color-primary-500);
-  --sl-color-accent-high: var(--zen-color-primary-500);
-  --sl-color-accent-low: var(--zen-color-primary-500);
-  --sl-color-text-accent: var(--zen-color-primary-500);
+  --sl-color-accent-high: var(--zen-color-primary-700, var(--zen-color-primary-500));
+  --sl-color-accent-low: var(--zen-color-primary-300, var(--zen-color-primary-500));
+  --sl-color-text-accent: var(--zen-color-primary-700, var(--zen-color-primary-500));
 
-  /* Body text */
+  /* Body text. */
   --sl-color-text: var(--zen-color-text-primary);
   --sl-color-text-secondary: var(--zen-color-text-secondary);
   --sl-color-text-invert: #fff;
 
-  /* Backgrounds */
+  /* Backgrounds — editorial: white page, hairline chrome. */
   --sl-color-bg: var(--zen-color-bg-default);
-  --sl-color-bg-nav: var(--zen-color-bg-subtle);
-  --sl-color-bg-sidebar: var(--zen-color-bg-subtle);
+  --sl-color-bg-nav: var(--zen-color-bg-default);
+  --sl-color-bg-sidebar: var(--zen-color-bg-default);
   --sl-color-bg-inline-code: var(--zen-color-bg-muted);
-  --sl-color-hairline: var(--zen-border-default);
+  --sl-color-hairline: var(--zen-color-neutral-100, var(--zen-border-default));
 
-  /* Typography */
-  --sl-font: var(--zen-font-family-text, system-ui, sans-serif);
-  --sl-font-mono: var(
-    --zen-font-family-mono,
-    ui-monospace,
-    "SF Mono",
-    monospace
-  );
-
-  /* Focus ring — demonstrates a11y baked in */
+  /* Focus ring — Actian primary. */
   --sl-color-focus: var(--zen-focus-ring-primary, var(--zen-color-primary-500));
 
-  /* Search bar — tone down from dark default to match light Actian theme. */
+  /* Search bar — light, blends with header. */
   --sl-color-bg-search: var(--zen-color-bg-subtle);
   --sl-color-search-text: var(--zen-color-text-primary);
   --sl-color-search-icon: var(--zen-color-text-secondary);
+
+  /* Layout — wide pane for token tables; sidebar gets a touch more room. */
+  --sl-content-width: 64rem;
+  --sl-sidebar-width: 16rem;
+  --sl-nav-height: 3.75rem;
+
+  /* Editorial prose cap. */
+  --prose-max-width: 70ch;
 }
 
-/* Search button (header) — override Starlight's dark default. */
+/* Header — refined: tighter, hairline border, branded. */
+header.header {
+  border-bottom: 1px solid var(--zen-color-neutral-100, var(--zen-border-default));
+  background: var(--zen-color-bg-default);
+  backdrop-filter: saturate(180%) blur(8px);
+}
+
+/* Search button — refined chrome. */
 button[data-open-modal],
 .sl-flex.action,
 site-search button {
   background: var(--zen-color-bg-subtle) !important;
-  color: var(--zen-color-text-primary) !important;
-  border: 1px solid var(--zen-border-default);
+  color: var(--zen-color-text-secondary) !important;
+  border: 1px solid var(--zen-color-neutral-100, var(--zen-border-default)) !important;
+  border-radius: 6px !important;
+  font-family: var(--font-body, system-ui) !important;
+  font-size: 0.8125rem !important;
 }
 
-/* Sidebar visibility — three populations to make readable:
- *   1) Group headers (Foundations/Categories/Components):
- *      <summary><span class="group-label"><span class="large">Label</span></span></summary>
- *   2) Top-level single links (Content guidelines/Accessibility/Inventory/State/Migrations):
- *      <a class="large">Label</a>
- *   3) Nested items in autogenerate groups (Borders, Breakpoints, ..., Action, Data Display, ...):
- *      <a href="..."><span>Label</span></a>  (no special class)
- *
- * Starlight's defaults render all three with low opacity / muted color;
- * we restore primary text color for non-active items.
- */
-
-/* 1 + 2: group labels and top-level links — make them solid + bold. */
+/* Sidebar — tighter, editorial. */
+.sidebar-content {
+  font-size: 0.8125rem;
+}
 .sidebar-content .group-label .large,
 .sidebar-content .top-level > li > a.large {
   color: var(--zen-color-text-primary) !important;
   font-weight: 600 !important;
+  font-size: 0.6875rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
   opacity: 1 !important;
 }
 
-/* 3: nested <a> inside <details><ul> — these are the per-foundation,
- * per-category, per-component links. Restore primary contrast for
- * inactive items. */
+/* Nested sidebar items — comfortable, readable. */
 .sidebar-content details ul > li > a:not([aria-current="page"]) {
-  color: var(--zen-color-text-primary);
+  color: var(--zen-color-text-secondary);
+  font-size: 0.8125rem;
   opacity: 1;
+  transition: color 0.12s;
 }
-
 .sidebar-content details ul > li > a:not([aria-current="page"]):hover {
   color: var(--zen-color-primary-500);
 }
 
-/* Active page (current page) stays in the accent surface — Starlight's
- * default visual works for this; keep its background but ensure label
- * color contrasts. */
+/* Active page — branded chip. */
 .sidebar-content a[aria-current="page"] {
   color: #fff !important;
+  background: var(--zen-color-primary-500) !important;
+  font-weight: 500 !important;
 }
 
-/* Force visible page/section titles — Starlight's default inverts in some
- * inheritance paths, leaving h1/h2/h3 effectively transparent on light bg. */
-.sl-markdown-content h1,
-.sl-markdown-content h2,
-.sl-markdown-content h3,
-.sl-markdown-content h4,
-.sl-markdown-content h5,
-.sl-markdown-content h6,
-.content-panel h1 {
-  color: var(--zen-color-text-primary) !important;
-}
-
-/* Light only in MVP — dark mode is Phase 2. */
-:root[data-theme="dark"] {
-  /* Same tokens for now; explicit override placeholder for Phase 2. */
-  --sl-color-bg: var(--zen-color-bg-default);
-  --sl-color-text: var(--zen-color-text-primary);
-}
-
-/* 70ch prose cap — universal pattern (Polaris, Atlassian, Spectrum).
- * Keeps line length readable on wide displays without forcing narrow content. */
+/* Prose width — token tables and matrices override below. */
 .sl-markdown-content p,
 .sl-markdown-content ul,
 .sl-markdown-content ol,
 .sl-markdown-content blockquote {
-  max-width: 70ch;
+  max-width: var(--prose-max-width);
 }
-
-/* Tables stay full-width — token tables benefit from horizontal room. */
 .sl-markdown-content table {
   max-width: none;
 }
 
-/* Widen the main content pane — 45rem default is too narrow for our
- * token tables (swatch + token name + value columns). The right-rail
- * TOC stays docked on the right (Starlight default) and remains sticky. */
-:root {
-  --sl-content-width: 64rem;          /* was 45rem */
-  --sl-sidebar-width: 18.75rem;       /* keep default; readable */
+/* Right-rail TOC — refined: tight, hairline. */
+.right-sidebar {
+  border-left: 1px solid var(--zen-color-neutral-100, var(--zen-border-default));
+}
+starlight-toc nav {
+  font-size: 0.75rem;
+}
+starlight-toc h2 {
+  font-family: var(--font-body, system-ui);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--zen-color-text-secondary);
 }
 
-/* Relax the prose cap now that the column is wider. Token tables and
- * component anatomy/variant tables still set max-width: none below. */
-.sl-markdown-content p,
-.sl-markdown-content ul,
-.sl-markdown-content ol,
-.sl-markdown-content blockquote {
-  max-width: 90ch;                    /* was 70ch */
+/* Light only in MVP. */
+:root[data-theme="dark"] {
+  --sl-color-bg: var(--zen-color-bg-default);
+  --sl-color-text: var(--zen-color-text-primary);
+}
+
+/* Selection — branded. */
+::selection {
+  background: var(--zen-color-primary-100, var(--zen-color-bg-subtle));
+  color: var(--zen-color-primary-900, var(--zen-color-text-primary));
+}
+
+/* Focus visible — Actian primary ring. */
+*:focus-visible {
+  outline: 2px solid var(--zen-color-primary-500);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
