@@ -1,4 +1,4 @@
-name: Build
+name: Build and Deploy
 
 on:
   push:
@@ -42,3 +42,21 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: dist
+
+  # Deploy must live in the same workflow as the artifact upload — the
+  # deploy-pages action reads artifacts from the current workflow run,
+  # and workflow_run-triggered deploys can't see upstream artifacts.
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment
