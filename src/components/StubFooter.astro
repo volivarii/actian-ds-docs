@@ -1,0 +1,13 @@
+---
+interface Props {
+  category: string;
+}
+const { category } = Astro.props;
+
+// BASE_URL prefix so deep links survive base-prefixed deploys.
+const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+---
+
+<aside class="stub-footer">
+  Generated from <a href={`${base}categories/${category}`}>{category}</a> category baseline — guideline curation pending. Component-specific content will replace these defaults once authored.
+</aside>
