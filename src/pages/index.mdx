@@ -1,0 +1,42 @@
+---
+title: Actian Design System
+description: Foundations, components, accessibility, content — federated via actian-ds-knowledge.
+template: splash
+hero:
+  tagline: AI-native design system. Three repos, one substrate. Consumed by Figma + Cursor + Claude Code.
+  actions:
+    - text: Browse foundations
+      link: /foundations/spacing
+      variant: primary
+    - text: See the inventory
+      link: /inventory
+---
+
+import EcosystemDiagram from "../components/EcosystemDiagram.astro";
+import dskit from "../../vendor/components/dist/registries/dskit.json";
+import vendored from "../../vendored.json";
+
+## The federated ecosystem
+
+<EcosystemDiagram />
+
+Knowledge owns content. Plugin and docs are sibling consumers. Both rebuild on knowledge tag.
+
+## Headline stats
+
+- **{Object.keys(dskit.components).length}** DS Kit components, **{Object.values(dskit.components).filter((c) => c.category).length}** categorized
+- **6** categories with engineer-seeded structural defaults
+- **8** foundation domains (color, spacing, typography, elevation, motion, icons, borders, breakpoints)
+- **14** accessibility sections indexed
+- Knowledge pinned at **{vendored.knowledge_repo_resolved_version}**
+
+export const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+
+## Where to go
+
+- <a href={`${base}foundations/spacing`}>Foundations</a> — tokens by domain
+- <a href={`${base}categories/action`}>Categories</a> — per-category structural baselines
+- <a href={`${base}inventory`}>Inventory</a> — all 322 DS Kit components filterable
+- <a href={`${base}accessibility`}>Accessibility</a> — WCAG 2.2 AA guidance
+- <a href={`${base}state`}>State</a> — live ecosystem state
+- <a href={`${base}migrations`}>Migrations</a> — schema + version transitions

@@ -1,0 +1,51 @@
+---
+title: About
+description: How the Actian DS three-repo ecosystem works.
+---
+
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import EcosystemDiagram from "../components/EcosystemDiagram.astro";
+import PageMetadata from "../components/PageMetadata.astro";
+
+<StarlightPage frontmatter={{ title: "About", description: "How the Actian DS three-repo ecosystem works." }}>
+  <PageMetadata slug="about" source="(hand-authored)" schema={1} />
+
+  ## The three-repo ecosystem
+
+  <EcosystemDiagram />
+
+  **[actian-ds-knowledge](https://github.com/volivarii/actian-ds-knowledge)** owns the design system content as a federation of Markdown + JSON files. Foundations, accessibility, content guidelines, component metadata. JSON Schemas govern the shape; CI derives dist artifacts; tags are cut deliberately on substantive changes.
+
+  **[Actian-DS-Claude-plugin](https://github.com/volivarii/Actian-DS-Claude-plugin)** is the Claude Code plugin that designers use inside Figma. It vendor-pulls knowledge content, reads it via a manifest, and powers Figma-rendered briefs, audits, and FM→hifi conversions.
+
+  **[actian-ds-docs](https://github.com/volivarii/actian-ds-docs)** is this site. It vendor-pulls the same knowledge content via the same pattern and renders it as a navigable static site.
+
+  ## How content flows
+
+  ```
+  1. Edit happens in knowledge — frontmatter MD or JSON, validated by JSON Schema
+  2. PR merges; CI derives dist; new tag cut on substantive changes
+  3. Plugin + docs each poll on nightly cron (09:00 UTC / 11:00 UTC). Manual
+     workflow_dispatch is the same-day escape hatch.
+  4. Each opens an auto-PR via the shared `actian-ds-bot` App identity
+  5. CI green → auto-merge → propagation:
+     - Plugin: marketplace cache refreshes
+     - Docs: GitHub Pages redeploys
+  6. Typical lag from knowledge edit to designer-visible: under 24h via cron,
+     under 15 min if someone triggers workflow_dispatch.
+  ```
+
+  ## Convention: leaf XOR namespace
+
+  Every manifest key in `knowledge/paths-manifest.json` is either a file (leaf) or a prefix of nested children (namespace), never both. The convention is enforced by `tests/manifest-convention.test.js` in the knowledge repo. See the v0.5.1 release for the rationale.
+
+  ## What's in MVP, what's not
+
+  This site is the MVP — **72** rich component pages, foundations, categories, accessibility, content guidelines, inventory, state, migrations.
+
+  Not in MVP (Phase 2 candidates): theming switcher UI, FM Kit + Meta Kit pages, Pages CMS, dark mode, brief-publishing integration, MCP endpoint, Algolia search, dedicated Actian-controlled domain.
+
+  ## Authoring
+
+  Edits happen in `volivarii/actian-ds-knowledge`. See the [authoring guide](https://github.com/volivarii/actian-ds-knowledge/blob/main/AUTHORING.md) in that repo.
+</StarlightPage>
