@@ -1,0 +1,18 @@
+---
+title: Content guidelines
+description: Voice, terminology, UI copy patterns — Actian DS content.
+---
+
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import PageMetadata from "../components/PageMetadata.astro";
+import contentMd from "../../vendor/content/dist/content.md?raw";
+import { marked } from "marked";
+
+<StarlightPage frontmatter={{ title: "Content guidelines", description: "Voice, terminology, UI copy patterns — Actian DS content." }}>
+  <PageMetadata
+    slug="content"
+    source="content/dist/content.md"
+    schema={1}
+  />
+  <Fragment set:html={marked.parse(contentMd)} />
+</StarlightPage>

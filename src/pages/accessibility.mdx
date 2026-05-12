@@ -1,0 +1,18 @@
+---
+title: Accessibility
+description: WCAG 2.2 AA guidance for the Actian DS.
+---
+
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import PageMetadata from "../components/PageMetadata.astro";
+import a11yContent from "../../vendor/accessibility/accessibility.md?raw";
+import { marked } from "marked";
+
+<StarlightPage frontmatter={{ title: "Accessibility", description: "WCAG 2.2 AA guidance for the Actian DS." }}>
+  <PageMetadata
+    slug="accessibility"
+    source="accessibility/accessibility.md"
+    schema={1}
+  />
+  <Fragment set:html={marked.parse(a11yContent)} />
+</StarlightPage>
