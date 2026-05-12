@@ -1,0 +1,44 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Drift guards
+        run: node scripts/validation/validate-build.cjs
+
+      - name: Unit tests
+        run: |
+          node --test tests/lib/paths.test.cjs
+          node --test tests/lib/category-defaults-loader.test.cjs
+          node --test tests/validation/validate-build.test.cjs
+
+      - name: Build site
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SITE_URL: https://volivarii.github.io/actian-ds-docs
+          SITE_BASE: /actian-ds-docs
+        run: npm run build
+
+      - name: Upload artifact
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
