@@ -1,0 +1,160 @@
+---
+title: Actian Design System
+description: Foundations, components, accessibility, content — federated via actian-ds-knowledge.
+template: splash
+hero:
+  tagline: AI-native design system. Three repos, one substrate. Consumed by Figma + Claude Code + Cursor.
+  image:
+    file: ../../assets/actian-logo.svg
+  actions:
+    - text: Browse foundations
+      link: /foundations/color/
+      icon: right-arrow
+      variant: primary
+    - text: Components
+      link: /components/action/button/
+      icon: external
+    - text: GitHub
+      link: https://github.com/volivarii/actian-ds-docs
+      icon: external
+      variant: minimal
+---
+
+import dskit from "../../../vendor/components/dist/registries/dskit.json";
+import categories from "../../../vendor/components/dist/categories/categories.bundle.json";
+import vendored from "../../../vendored.json";
+import EcosystemDiagram from "../../components/EcosystemDiagram.astro";
+
+export const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+export const totalDsKit = Object.keys(dskit.components).length;
+export const categorizedDsKit = Object.values(dskit.components).filter((c) => c.category).length;
+
+## At a glance
+
+<div class="stats-row">
+  <div class="stat-card">
+    <div class="stat-card__number">{totalDsKit}</div>
+    <div class="stat-card__label">DS Kit components</div>
+    <div class="stat-card__sub">{categorizedDsKit} categorized · {totalDsKit - categorizedDsKit} on the inventory</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card__number">{Object.keys(categories.categories || {}).length}</div>
+    <div class="stat-card__label">Categories</div>
+    <div class="stat-card__sub">Engineer-seeded baselines</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card__number">8</div>
+    <div class="stat-card__label">Foundation domains</div>
+    <div class="stat-card__sub">color · spacing · typography · motion · …</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card__number">14</div>
+    <div class="stat-card__label">A11y sections</div>
+    <div class="stat-card__sub">WCAG 2.2 AA indexed</div>
+  </div>
+  <div class="stat-card stat-card--accent">
+    <div class="stat-card__number">{vendored.knowledge_repo_resolved_version}</div>
+    <div class="stat-card__label">Knowledge pin</div>
+    <div class="stat-card__sub">Vendored from actian-ds-knowledge</div>
+  </div>
+</div>
+
+## Browse by category
+
+<div class="category-browse-grid">
+  {Object.entries(categories.categories || {}).map(([key, def]) => {
+    const slug = def.slug || key;
+    const label = def.label || key;
+    const count = Object.values(dskit.components).filter((c) => c.category === label).length;
+    return (
+      <a class="category-browse-card" href={`${base}categories/${slug}/`}>
+        <h3>{label}</h3>
+        <p>{count} component{count === 1 ? "" : "s"} · structural baseline</p>
+        <span class="category-browse-count">/categories/{slug}</span>
+      </a>
+    );
+  })}
+</div>
+
+## Foundations
+
+<div class="foundations-grid">
+  <a class="foundation-card foundation-card--color" href={`${base}foundations/color/`}>
+    <span class="foundation-card__icon">🎨</span>
+    <span class="foundation-card__label">Color</span>
+  </a>
+  <a class="foundation-card" href={`${base}foundations/spacing/`}>
+    <span class="foundation-card__icon">↔︎</span>
+    <span class="foundation-card__label">Spacing</span>
+  </a>
+  <a class="foundation-card" href={`${base}foundations/typography/`}>
+    <span class="foundation-card__icon">𝐀</span>
+    <span class="foundation-card__label">Typography</span>
+  </a>
+  <a class="foundation-card" href={`${base}foundations/elevation/`}>
+    <span class="foundation-card__icon">▦</span>
+    <span class="foundation-card__label">Elevation</span>
+  </a>
+  <a class="foundation-card" href={`${base}foundations/motion/`}>
+    <span class="foundation-card__icon">⟶</span>
+    <span class="foundation-card__label">Motion</span>
+  </a>
+  <a class="foundation-card" href={`${base}foundations/icons/`}>
+    <span class="foundation-card__icon">✦</span>
+    <span class="foundation-card__label">Icons</span>
+  </a>
+  <a class="foundation-card" href={`${base}foundations/borders/`}>
+    <span class="foundation-card__icon">▢</span>
+    <span class="foundation-card__label">Borders</span>
+  </a>
+  <a class="foundation-card" href={`${base}foundations/breakpoints/`}>
+    <span class="foundation-card__icon">⌗</span>
+    <span class="foundation-card__label">Breakpoints</span>
+  </a>
+</div>
+
+## Where else to go
+
+<div class="feature-row">
+  <a class="feature-card" href={`${base}accessibility/`}>
+    <h3>Accessibility</h3>
+    <p>WCAG 2.2 AA guidance, contrast, keyboard nav, ARIA patterns.</p>
+  </a>
+  <a class="feature-card" href={`${base}content/`}>
+    <h3>Content guidelines</h3>
+    <p>Voice, terminology, UI copy patterns.</p>
+  </a>
+  <a class="feature-card" href={`${base}inventory/`}>
+    <h3>Inventory</h3>
+    <p>All {totalDsKit} DS Kit components — icons gallery, categorized + uncategorized.</p>
+  </a>
+  <a class="feature-card" href={`${base}state/`}>
+    <h3>State</h3>
+    <p>Live ecosystem state — versions, vendor pin, coverage.</p>
+  </a>
+  <a class="feature-card" href={`${base}migrations/`}>
+    <h3>Migrations</h3>
+    <p>Schema transitions, parallel-change discipline.</p>
+  </a>
+  <a class="feature-card" href={`${base}about/`}>
+    <h3>About</h3>
+    <p>How the three-repo ecosystem works.</p>
+  </a>
+</div>
+
+## The federated ecosystem
+
+<EcosystemDiagram />
+
+Knowledge owns content. Plugin and docs are sibling consumers. Both rebuild on knowledge tag.
+
+## AI-native by default
+
+Every page is also available as raw markdown for AI agents:
+
+- [`llms.txt`](/actian-ds-docs/llms.txt) — agent-readable site index
+- [`llms-full.txt`](/actian-ds-docs/llms-full.txt) — full content dump (6080 lines)
+- `<page>.md` — every page has a `.md` twin (e.g. `/foundations/color.md`)
+- `<meta name="actian-ds-*">` — slug, source, version, schema on every page
+
+Designed for Claude Code, Cursor, and skill-based agents to consume the system without scraping HTML.

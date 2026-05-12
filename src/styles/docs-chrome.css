@@ -486,3 +486,115 @@ footer .meta {
   color: var(--zen-color-text-secondary);
   line-height: 1.45;
 }
+
+/* Homepage stats row — at-a-glance numbers above the fold. */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin: 16px 0 32px;
+}
+.stat-card {
+  padding: 16px;
+  border: 1px solid var(--zen-border-default);
+  border-radius: 10px;
+  background: var(--zen-color-bg-default);
+}
+.stat-card--accent {
+  background: var(--zen-color-bg-info, var(--zen-color-bg-subtle));
+  border-color: var(--zen-color-primary-500);
+}
+.stat-card__number {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--zen-color-primary-500);
+  line-height: 1.1;
+  margin-bottom: 4px;
+}
+.stat-card__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--zen-color-text-primary);
+  margin-bottom: 4px;
+}
+.stat-card__sub {
+  font-size: 11px;
+  color: var(--zen-color-text-secondary);
+  font-family: var(--zen-font-family-mono, monospace);
+}
+
+/* Homepage foundations grid — quick visual entries into the 8 foundations. */
+.foundations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin: 16px 0 32px;
+}
+.foundation-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px 12px;
+  border: 1px solid var(--zen-border-default);
+  border-radius: 10px;
+  background: var(--zen-color-bg-default);
+  text-decoration: none;
+  color: var(--zen-color-text-primary);
+  transition: border-color 0.15s, background 0.15s, transform 0.15s;
+}
+.foundation-card:hover {
+  border-color: var(--zen-color-primary-500);
+  background: var(--zen-color-bg-subtle);
+  transform: translateY(-1px);
+}
+.foundation-card--color {
+  background: linear-gradient(135deg,
+    var(--zen-color-primary-50) 0%,
+    var(--zen-color-success-50) 33%,
+    var(--zen-color-warning-50) 66%,
+    var(--zen-color-error-50) 100%);
+}
+.foundation-card__icon {
+  font-size: 28px;
+  line-height: 1;
+}
+.foundation-card__label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Homepage feature row — links to Accessibility / Content / Inventory / etc. */
+.feature-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+  margin: 16px 0 32px;
+}
+.feature-card {
+  display: block;
+  padding: 14px 16px;
+  border: 1px solid var(--zen-border-default);
+  border-radius: 10px;
+  background: var(--zen-color-bg-default);
+  text-decoration: none;
+  color: var(--zen-color-text-primary);
+  transition: border-color 0.15s, background 0.15s;
+}
+.feature-card:hover {
+  border-color: var(--zen-color-primary-500);
+  background: var(--zen-color-bg-subtle);
+}
+.feature-card h3 {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  color: var(--zen-color-text-primary);
+}
+.feature-card p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--zen-color-text-secondary);
+  line-height: 1.4;
+  max-width: none;
+}
