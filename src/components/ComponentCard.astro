@@ -1,0 +1,20 @@
+---
+interface Props {
+  slug: string;
+  name: string;
+  category: string;
+  categorySlug: string;
+  description?: string;
+  isStub?: boolean;
+}
+const { slug, name, category, categorySlug, description, isStub } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+---
+
+<a class="component-card" href={`${base}components/${categorySlug}/${slug}`}>
+  <div class="component-card__name">{name}</div>
+  {description && <div class="component-card__desc">{description}</div>}
+  <div class="component-card__cat">
+    {category}{isStub && <span class="component-card__stub"> · stub</span>}
+  </div>
+</a>

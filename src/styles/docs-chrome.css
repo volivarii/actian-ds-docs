@@ -64,3 +64,84 @@ footer .meta {
   grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
   gap: 12px;
 }
+
+/* Component card grid — used on homepage + category index pages. */
+.component-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+  margin-bottom: 24px;
+}
+.component-card {
+  display: block;
+  padding: 12px 14px;
+  border: 1px solid var(--zen-border-default);
+  border-radius: 8px;
+  background: var(--zen-color-bg-default);
+  text-decoration: none;
+  color: var(--zen-color-text-primary);
+  transition: border-color 0.15s, background 0.15s;
+}
+.component-card:hover {
+  border-color: var(--zen-color-primary-500);
+  background: var(--zen-color-bg-subtle);
+}
+.component-card__name {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+.component-card__desc {
+  font-size: 12px;
+  color: var(--zen-color-text-secondary);
+  line-height: 1.4;
+  margin-bottom: 6px;
+}
+.component-card__cat {
+  font-size: 11px;
+  color: var(--zen-color-text-secondary);
+  font-family: var(--zen-font-family-mono, monospace);
+}
+.component-card__stub {
+  color: var(--zen-color-icon-warning, #ef8d00);
+}
+
+/* Category browse grid — homepage. */
+.category-browse-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+.category-browse-card {
+  display: block;
+  padding: 16px;
+  border: 1px solid var(--zen-border-default);
+  border-radius: 12px;
+  background: var(--zen-color-bg-default);
+  text-decoration: none;
+  color: var(--zen-color-text-primary);
+  transition: border-color 0.15s, background 0.15s;
+}
+.category-browse-card:hover {
+  border-color: var(--zen-color-primary-500);
+  background: var(--zen-color-bg-subtle);
+}
+.category-browse-card h3 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+}
+.category-browse-card p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--zen-color-text-secondary);
+  line-height: 1.4;
+}
+.category-browse-count {
+  font-size: 11px;
+  color: var(--zen-color-text-secondary);
+  font-family: var(--zen-font-family-mono, monospace);
+  margin-top: 8px;
+  display: block;
+}

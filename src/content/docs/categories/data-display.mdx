@@ -8,7 +8,9 @@ import VariantMatrix from "../../../components/VariantMatrix.astro";
 import MotionPattern from "../../../components/MotionPattern.astro";
 import AccessibilityRefs from "../../../components/AccessibilityRefs.astro";
 import PageMetadata from "../../../components/PageMetadata.astro";
+import ComponentCard from "../../../components/ComponentCard.astro";
 import defaults from "../../../../vendor/components/dist/categories/data-display-defaults.json";
+import dskit from "../../../../vendor/components/dist/registries/dskit.json";
 
 <PageMetadata
   slug="categories.data-display"
@@ -20,6 +22,16 @@ import defaults from "../../../../vendor/components/dist/categories/data-display
 {Object.entries(defaults.confidence || {}).map(([k, v]) => (
   <span><code>{k}</code>: <strong>{v}</strong>&nbsp;&nbsp;</span>
 ))}
+
+## Components in this category
+
+<div class="component-card-grid">
+  {Object.entries(dskit.components)
+    .filter(([slug, e]) => e.category === "Data Display")
+    .map(([slug, e]) => (
+      <ComponentCard slug={slug} name={e.name || slug} category={e.category} categorySlug="data-display" />
+    ))}
+</div>
 
 ## Anatomy
 

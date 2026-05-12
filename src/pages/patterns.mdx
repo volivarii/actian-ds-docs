@@ -1,0 +1,17 @@
+---
+title: Patterns
+description: Composite UX patterns combining multiple components — coming soon.
+---
+
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import PageMetadata from "../components/PageMetadata.astro";
+
+<StarlightPage frontmatter={{ title: "Patterns", description: "Composite UX patterns combining multiple components — coming soon." }}>
+  <PageMetadata slug="patterns" source="(roadmap placeholder)" schema={1} />
+
+  Patterns are reusable UX recipes composed of multiple components — for example, "data table with filter rail + bulk-action toolbar + empty state" is a Pattern, not a Component.
+
+  This section is a roadmap placeholder. Patterns will be added once the component layer stabilizes.
+
+  Initial candidates: empty states, error states, loading states, pagination, search-with-filters, bulk actions, confirmation flows.
+</StarlightPage>

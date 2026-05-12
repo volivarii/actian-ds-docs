@@ -118,3 +118,17 @@ site-search button {
   --sl-color-bg: var(--zen-color-bg-default);
   --sl-color-text: var(--zen-color-text-primary);
 }
+
+/* 70ch prose cap — universal pattern (Polaris, Atlassian, Spectrum).
+ * Keeps line length readable on wide displays without forcing narrow content. */
+.sl-markdown-content p,
+.sl-markdown-content ul,
+.sl-markdown-content ol,
+.sl-markdown-content blockquote {
+  max-width: 70ch;
+}
+
+/* Tables stay full-width — token tables benefit from horizontal room. */
+.sl-markdown-content table {
+  max-width: none;
+}

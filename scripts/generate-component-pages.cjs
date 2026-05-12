@@ -77,51 +77,56 @@ function buildPage(slug, entry, guideline, defaults) {
 
   var sections = [];
 
-  // Anatomy: from guideline (curated) or category-defaults (fallback)
-  if (guideline && guideline.anatomy && Array.isArray(guideline.anatomy.parts) && guideline.anatomy.parts.length) {
-    sections.push("## Anatomy\n\n<Anatomy parts={" + jsLit(guideline.anatomy.parts) + "} />");
-  } else if (defaults && defaults.card_anatomy && Array.isArray(defaults.card_anatomy.parts) && defaults.card_anatomy.parts.length) {
-    sections.push("## Anatomy\n\n<Anatomy parts={" + jsLit(defaults.card_anatomy.parts) + "} />");
-  }
-
-  // Variants: prefer registry.variants (the live shape from Figma sync) over guideline
-  if (entry.variants && Object.keys(entry.variants).length) {
-    var axes = Object.entries(entry.variants).map(function (pair) {
-      return { axis: pair[0], values: pair[1] };
-    });
-    sections.push("## Variants\n\n<VariantMatrix variantAxes={" + jsLit(axes) + "} />");
-  } else if (defaults && defaults.card_component && Array.isArray(defaults.card_component.variantAxes) && defaults.card_component.variantAxes.length) {
-    sections.push("## Variants\n\n<VariantMatrix variantAxes={" + jsLit(defaults.card_component.variantAxes) + "} />");
-  }
-
-  // Motion: prefer guideline.behavior.motion.pattern; fall back to category-defaults
-  if (guideline && guideline.behavior && guideline.behavior.motion && guideline.behavior.motion.pattern) {
-    var slugStr = guideline.behavior.motion.pattern;
-    sections.push("## Motion\n\n<MotionPattern patternRefs={" + jsLit([{ ref: slugStr }]) + "} />");
-  } else if (defaults && defaults.card_motion && Array.isArray(defaults.card_motion.patternRefs)) {
-    sections.push("## Motion\n\n<MotionPattern patternRefs={" + jsLit(defaults.card_motion.patternRefs) + "} />");
-  }
-
-  // Accessibility: prefer guideline.accessibility; fall back to category-defaults refs
-  if (guideline && guideline.accessibility) {
-    if (typeof guideline.accessibility === "string") {
-      sections.push("## Accessibility\n\n" + guideline.accessibility);
-    } else if (Array.isArray(guideline.accessibility.requirementRefs)) {
-      sections.push("## Accessibility\n\n<AccessibilityRefs requirementRefs={" + jsLit(guideline.accessibility.requirementRefs) + "} />");
+  // Stub pages: render ONLY title + category link + StubFooter (handled below).
+  // Skip all section emission so the page reads clean instead of showing
+  // empty Anatomy/Variants/Motion/Accessibility headers.
+  if (!isStub) {
+    // Anatomy: from guideline (curated) or category-defaults (fallback)
+    if (guideline && guideline.anatomy && Array.isArray(guideline.anatomy.parts) && guideline.anatomy.parts.length) {
+      sections.push("## Anatomy\n\n<Anatomy parts={" + jsLit(guideline.anatomy.parts) + "} />");
+    } else if (defaults && defaults.card_anatomy && Array.isArray(defaults.card_anatomy.parts) && defaults.card_anatomy.parts.length) {
+      sections.push("## Anatomy\n\n<Anatomy parts={" + jsLit(defaults.card_anatomy.parts) + "} />");
     }
-  } else if (defaults && defaults.card_accessibility && Array.isArray(defaults.card_accessibility.requirementRefs)) {
-    sections.push("## Accessibility\n\n<AccessibilityRefs requirementRefs={" + jsLit(defaults.card_accessibility.requirementRefs) + "} />");
-  }
 
-  // Content guidelines: only from guideline (no category fallback)
-  if (guideline && guideline.content_guidelines && Array.isArray(guideline.content_guidelines.sections)) {
-    sections.push("## Content guidelines\n\n" + guideline.content_guidelines.sections.map(function (s) {
-      var heading = "### " + (s.heading || "");
-      var content = Array.isArray(s.content)
-        ? s.content.map(renderContentItem).filter(Boolean).map(function (line) { return "- " + line; }).join("\n")
-        : (typeof s.content === "string" ? s.content : "");
-      return heading + "\n\n" + content;
-    }).join("\n\n"));
+    // Variants: prefer registry.variants (the live shape from Figma sync) over guideline
+    if (entry.variants && Object.keys(entry.variants).length) {
+      var axes = Object.entries(entry.variants).map(function (pair) {
+        return { axis: pair[0], values: pair[1] };
+      });
+      sections.push("## Variants\n\n<VariantMatrix variantAxes={" + jsLit(axes) + "} />");
+    } else if (defaults && defaults.card_component && Array.isArray(defaults.card_component.variantAxes) && defaults.card_component.variantAxes.length) {
+      sections.push("## Variants\n\n<VariantMatrix variantAxes={" + jsLit(defaults.card_component.variantAxes) + "} />");
+    }
+
+    // Motion: prefer guideline.behavior.motion.pattern; fall back to category-defaults
+    if (guideline && guideline.behavior && guideline.behavior.motion && guideline.behavior.motion.pattern) {
+      var slugStr = guideline.behavior.motion.pattern;
+      sections.push("## Motion\n\n<MotionPattern patternRefs={" + jsLit([{ ref: slugStr }]) + "} />");
+    } else if (defaults && defaults.card_motion && Array.isArray(defaults.card_motion.patternRefs)) {
+      sections.push("## Motion\n\n<MotionPattern patternRefs={" + jsLit(defaults.card_motion.patternRefs) + "} />");
+    }
+
+    // Accessibility: prefer guideline.accessibility; fall back to category-defaults refs
+    if (guideline && guideline.accessibility) {
+      if (typeof guideline.accessibility === "string") {
+        sections.push("## Accessibility\n\n" + guideline.accessibility);
+      } else if (Array.isArray(guideline.accessibility.requirementRefs)) {
+        sections.push("## Accessibility\n\n<AccessibilityRefs requirementRefs={" + jsLit(guideline.accessibility.requirementRefs) + "} />");
+      }
+    } else if (defaults && defaults.card_accessibility && Array.isArray(defaults.card_accessibility.requirementRefs)) {
+      sections.push("## Accessibility\n\n<AccessibilityRefs requirementRefs={" + jsLit(defaults.card_accessibility.requirementRefs) + "} />");
+    }
+
+    // Content guidelines: only from guideline (no category fallback)
+    if (guideline && guideline.content_guidelines && Array.isArray(guideline.content_guidelines.sections)) {
+      sections.push("## Content guidelines\n\n" + guideline.content_guidelines.sections.map(function (s) {
+        var heading = "### " + (s.heading || "");
+        var content = Array.isArray(s.content)
+          ? s.content.map(renderContentItem).filter(Boolean).map(function (line) { return "- " + line; }).join("\n")
+          : (typeof s.content === "string" ? s.content : "");
+        return heading + "\n\n" + content;
+      }).join("\n\n"));
+    }
   }
 
   var imports = [
@@ -132,7 +137,7 @@ function buildPage(slug, entry, guideline, defaults) {
     "PageMetadata",
     "StubFooter",
   ].map(function (name) {
-    return 'import ' + name + ' from "../../../components/' + name + '.astro";';
+    return 'import ' + name + ' from "../../../../components/' + name + '.astro";';
   }).join("\n");
 
   // BASE_URL-aware category link: emit as inline MDX expression so the
@@ -176,12 +181,10 @@ function main() {
   var registry = JSON.parse(fs.readFileSync(registryPath, "utf8"));
   var guidelinesDir = path.join(PATHS.vendor, "components", "src", "guidelines");
 
-  if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, { recursive: true });
-
-  // Clear stale pages first — vendor refresh may have dropped slugs.
-  fs.readdirSync(OUT_DIR).forEach(function (f) {
-    if (f.endsWith(".mdx")) fs.unlinkSync(path.join(OUT_DIR, f));
-  });
+  // Wipe + recreate — generated content is gitignored. Recursive blow-away
+  // also handles old flat-layout MDX files left over from pre-nesting builds.
+  fs.rmSync(OUT_DIR, { recursive: true, force: true });
+  fs.mkdirSync(OUT_DIR, { recursive: true });
 
   loader._resetCache();
   var written = 0;
@@ -204,7 +207,10 @@ function main() {
     var defaults = loader.loadDefaultsForCategory(entry.category);
 
     var mdx = buildPage(slug, entry, guideline, defaults);
-    var outPath = path.join(OUT_DIR, slug + ".mdx");
+    var categorySlug = slugifyCategory(entry.category);
+    var categoryDir = path.join(OUT_DIR, categorySlug);
+    if (!fs.existsSync(categoryDir)) fs.mkdirSync(categoryDir, { recursive: true });
+    var outPath = path.join(categoryDir, slug + ".mdx");
     fs.writeFileSync(outPath, mdx);
     written++;
   });
