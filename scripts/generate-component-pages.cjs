@@ -36,6 +36,38 @@ function jsLit(value) {
   return JSON.stringify(value);
 }
 
+// Wrap <placeholder> spans in code ticks so MDX doesn't try to parse them
+// as JSX tags. Knowledge content uses '<assetNames>'-style placeholders in
+// rule prose ("Search in <assetNames>"); without this, MDX bails on
+// "Expected a closing tag for `<assetNames>`".
+function escapeMdxPlaceholders(s) {
+  if (typeof s !== "string") return s;
+  // Convert <foo>, <foo-bar>, <FooBar>, <a.b> into `<foo>` etc.
+  return s.replace(/<([a-zA-Z][\w.-]*)>/g, "`<$1>`");
+}
+
+// content_guidelines.sections[].content[] items are objects with various
+// shapes (rule | note | do/dont | term[/definition] | examples). Map each
+// to a markdown line; bare strings pass through. Falsy/empty → null (filtered).
+function renderContentItem(item) {
+  if (item === null || item === undefined) return null;
+  if (typeof item === "string") return escapeMdxPlaceholders(item);
+  if (typeof item !== "object") return String(item);
+  if (item.rule) return escapeMdxPlaceholders(item.rule);
+  if (item.note) return "*" + escapeMdxPlaceholders(item.note) + "*";
+  if (item.do && item.dont) return "**Do:** " + escapeMdxPlaceholders(item.do) + " — **Don't:** " + escapeMdxPlaceholders(item.dont);
+  if (item.do) return "**Do:** " + escapeMdxPlaceholders(item.do);
+  if (item.dont) return "**Don't:** " + escapeMdxPlaceholders(item.dont);
+  if (item.term) return "**" + escapeMdxPlaceholders(item.term) + "**" + (item.definition ? ": " + escapeMdxPlaceholders(item.definition) : "");
+  if (item.examples) {
+    var ex = Array.isArray(item.examples) ? item.examples.join(", ") : String(item.examples);
+    return escapeMdxPlaceholders(ex);
+  }
+  // Fallback for unknown shapes — show key:value pairs rather than [object Object].
+  var pairs = Object.entries(item).map(function (kv) { return kv[0] + ": " + escapeMdxPlaceholders(String(kv[1])); });
+  return pairs.length ? pairs.join("; ") : null;
+}
+
 function buildPage(slug, entry, guideline, defaults) {
   var title = entry.name || slug;
   var description = (guideline && guideline.description) || `Component documentation for ${title}.`;
@@ -86,8 +118,8 @@ function buildPage(slug, entry, guideline, defaults) {
     sections.push("## Content guidelines\n\n" + guideline.content_guidelines.sections.map(function (s) {
       var heading = "### " + (s.heading || "");
       var content = Array.isArray(s.content)
-        ? s.content.map(function (line) { return "- " + line; }).join("\n")
-        : String(s.content || "");
+        ? s.content.map(renderContentItem).filter(Boolean).map(function (line) { return "- " + line; }).join("\n")
+        : (typeof s.content === "string" ? s.content : "");
       return heading + "\n\n" + content;
     }).join("\n\n"));
   }
