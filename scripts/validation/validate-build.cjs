@@ -31,7 +31,11 @@ var KNOWN_CATEGORY_SLUGS = [
   "overlays",
 ];
 
-var UNICODE_OPERATORS = ["⇒", "→", "≤", "≥", "≠", "≡", "∈", "∉"];
+// `→` deliberately excluded — used as a narrative arrow in prose AND in
+// code-block comments/checklists across the knowledge content. Math
+// operators below are flagged only inside fenced code blocks (see
+// validateAsciiOperators) where they'd indicate real ASCII-vs-Unicode drift.
+var UNICODE_OPERATORS = ["⇒", "≤", "≥", "≠", "≡", "∈", "∉"];
 
 function validateMotionRefs() {
   loader._resetCache();
@@ -79,14 +83,24 @@ function walkMdFiles(dir, results) {
   return results;
 }
 
+// Scoped to fenced code blocks (``` ... ```) per design memo: the guard
+// catches drift in *code values*, not WCAG-style prose or descriptive
+// arrows in tables. Iterating line-by-line with a `inCodeBlock` flag is
+// enough for our content shapes (no nested fences in knowledge MDs).
 function validateAsciiOperators() {
   var mdFiles = walkMdFiles(PATHS.vendor);
   var violations = [];
   mdFiles.forEach(function (file) {
     var content = fs.readFileSync(file, "utf8");
-    UNICODE_OPERATORS.forEach(function (op) {
-      var lines = content.split("\n");
-      lines.forEach(function (line, i) {
+    var lines = content.split("\n");
+    var inCodeBlock = false;
+    lines.forEach(function (line, i) {
+      if (/^\s*```/.test(line)) {
+        inCodeBlock = !inCodeBlock;
+        return;
+      }
+      if (!inCodeBlock) return;
+      UNICODE_OPERATORS.forEach(function (op) {
         if (line.indexOf(op) !== -1) {
           violations.push({
             file: path.relative(PATHS.vendor, file),
