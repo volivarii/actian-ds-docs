@@ -11,6 +11,7 @@ import PageMetadata from "../../../components/PageMetadata.astro";
 import ComponentCard from "../../../components/ComponentCard.astro";
 import defaults from "../../../../vendor/components/dist/categories/action-defaults.json";
 import dskit from "../../../../vendor/components/dist/registries/dskit.json";
+export const guidelines = import.meta.glob("../../../../vendor/components/src/guidelines/*.json", { eager: true });
 
 <PageMetadata
   slug="categories.action"
@@ -20,12 +21,27 @@ import dskit from "../../../../vendor/components/dist/registries/dskit.json";
 
 <div class="confidence-row">
   <span class="confidence-row__label">Confidence</span>
-  {Object.entries(defaults.confidence || {}).map(([k, v]) => (
-    <span class={`confidence-chip confidence-chip--${v}`}>
-      <span class="confidence-chip__field">{k}</span>
-      <span>{v}</span>
-    </span>
-  ))}
+  {(() => {
+    const components = Object.entries(dskit.components).filter(([, e]) => e.category === "Action");
+    const total = components.length;
+    let curated = 0, withContent = 0;
+    components.forEach(([slug]) => {
+      const g = guidelines["../../../../vendor/components/src/guidelines/" + slug + ".json"];
+      if (g && !g._stub) {
+        curated++;
+        if (g.content_guidelines && Array.isArray(g.content_guidelines.sections) && g.content_guidelines.sections.length) withContent++;
+      }
+    });
+    const ratio = total > 0 ? withContent / total : 0;
+    const contentConf = ratio >= 0.5 ? "high" : ratio > 0 ? "medium" : "low";
+    const merged = { ...(defaults.confidence || {}), content: contentConf };
+    return Object.entries(merged).map(([k, v]) => (
+      <span class={`confidence-chip confidence-chip--${v}`}>
+        <span class="confidence-chip__field">{k}</span>
+        <span>{v}</span>
+      </span>
+    ));
+  })()}
 </div>
 
 ## Components in this category

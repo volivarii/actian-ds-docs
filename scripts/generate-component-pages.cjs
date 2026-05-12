@@ -169,6 +169,26 @@ function buildPage(slug, entry, guideline, defaults, registry) {
     ? '**Category:** <a href={`${import.meta.env.BASE_URL.replace(/\\/?$/, "/")}categories/' + categorySlug + '`}>' + categoryLabel + "</a>"
     : "";
 
+  // Confidence chips — inherit 4 fields (anatomy/variants/motion/a11y) from
+  // category-defaults, plus a synthesized `content` field per-component:
+  //   - high   : curated guideline with content_guidelines.sections present
+  //   - medium : curated guideline, but no content_guidelines block
+  //   - low    : stub / missing guideline
+  var contentConfidence = "low";
+  if (guideline && !guideline._stub) {
+    contentConfidence = (guideline.content_guidelines && Array.isArray(guideline.content_guidelines.sections) && guideline.content_guidelines.sections.length)
+      ? "high"
+      : "medium";
+  }
+  var confidenceLine = "";
+  if (defaults && defaults.confidence) {
+    var merged = Object.assign({}, defaults.confidence, { content: contentConfidence });
+    var pairs = Object.entries(merged).map(function (kv) {
+      return '<span class={`confidence-chip confidence-chip--' + kv[1] + '`}><span class="confidence-chip__field">' + kv[0] + '</span><span>' + kv[1] + '</span></span>';
+    }).join("\n  ");
+    confidenceLine = '<div class="confidence-row">\n  <span class="confidence-row__label">Confidence</span>\n  ' + pairs + '\n</div>';
+  }
+
   var stubFooter = (isStub && categorySlug)
     ? '<StubFooter category="' + categorySlug + '" />'
     : "";
@@ -188,6 +208,8 @@ function buildPage(slug, entry, guideline, defaults, registry) {
     "/>",
     "",
     categoryLink,
+    "",
+    confidenceLine,
     "",
     sections.join("\n\n"),
     "",
