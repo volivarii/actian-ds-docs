@@ -1,1 +1,4 @@
-/* Actian DS tokens — populated by later tasks (foundations build). */
+/* Imports the canonical Actian token surface from vendored knowledge.
+ * Updates flow via vendor-snapshot — DO NOT edit tokens here.
+ */
+@import "../../vendor/tokens/tokens.css";

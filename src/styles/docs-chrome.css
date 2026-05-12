@@ -1,1 +1,75 @@
-/* Docs chrome (sidebar, header, footer) — populated by later tasks. */
+/* Site-specific chrome on top of Starlight. Keep small.
+ *
+ * Substitutions vs original plan (vendor tokens differ from expected names):
+ *   --zen-color-theme-primary        → --zen-color-primary-500
+ *   --zen-color-background-bg-default → --zen-color-bg-default
+ *   --zen-color-background-bg-grey-1 → --zen-color-bg-subtle
+ *   --zen-color-border-default       → --zen-border-default
+ */
+
+/* Header brand mark */
+.site-title {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.site-title::before {
+  content: "";
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  background: var(--zen-color-primary-500);
+  border-radius: 3px;
+  vertical-align: middle;
+}
+
+/* Footer attribution */
+footer .meta {
+  font-size: 12px;
+  color: var(--zen-color-text-secondary);
+}
+
+/* Token chip — used by TokenTable.astro */
+.token-chip {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: 1px solid var(--zen-border-default);
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+/* Stub footer cue — used by StubFooter.astro */
+.stub-footer {
+  margin-top: 32px;
+  padding: 16px;
+  background: var(--zen-color-bg-subtle);
+  border: 1px solid var(--zen-border-default);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--zen-color-text-secondary);
+}
+
+/* Inventory grid */
+.inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.inventory-row {
+  padding: 12px;
+  border: 1px solid var(--zen-border-default);
+  border-radius: 8px;
+  background: var(--zen-color-bg-default);
+}
+
+/* Icons gallery */
+.icons-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 12px;
+}

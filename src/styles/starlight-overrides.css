@@ -1,1 +1,50 @@
-/* Starlight theme overrides — populated by later tasks. */
+/* Starlight → Actian token mapping.
+ *
+ * Starlight uses a small set of design tokens (--sl-color-*, --sl-text-*,
+ * --sl-space-*). We override them to pull from the canonical Actian
+ * token scale. Token names verified against vendor/tokens/tokens.css.
+ *
+ * Substitutions vs original plan (vendor tokens differ from expected names):
+ *   --zen-color-theme-primary        → --zen-color-primary-500
+ *   --zen-color-background-bg-default → --zen-color-bg-default
+ *   --zen-color-background-bg-grey-1 → --zen-color-bg-subtle
+ *   --zen-color-background-bg-grey-2 → --zen-color-bg-muted
+ *   --zen-color-border-default       → --zen-border-default
+ *   --zen-text-font-family-default   → --zen-font-family-text
+ *   --zen-text-font-family-mono      → --zen-font-family-mono
+ *   --zen-color-focus-ring-default   → --zen-focus-ring-primary
+ */
+
+:root {
+  /* Accent — Actian theme primary */
+  --sl-color-accent: var(--zen-color-primary-500);
+  --sl-color-accent-high: var(--zen-color-primary-500);
+  --sl-color-accent-low: var(--zen-color-primary-500);
+  --sl-color-text-accent: var(--zen-color-primary-500);
+
+  /* Body text */
+  --sl-color-text: var(--zen-color-text-primary);
+  --sl-color-text-secondary: var(--zen-color-text-secondary);
+  --sl-color-text-invert: #fff;
+
+  /* Backgrounds */
+  --sl-color-bg: var(--zen-color-bg-default);
+  --sl-color-bg-nav: var(--zen-color-bg-subtle);
+  --sl-color-bg-sidebar: var(--zen-color-bg-subtle);
+  --sl-color-bg-inline-code: var(--zen-color-bg-muted);
+  --sl-color-hairline: var(--zen-border-default);
+
+  /* Typography */
+  --sl-font: var(--zen-font-family-text, system-ui, sans-serif);
+  --sl-font-mono: var(--zen-font-family-mono, ui-monospace, "SF Mono", monospace);
+
+  /* Focus ring — demonstrates a11y baked in */
+  --sl-color-focus: var(--zen-focus-ring-primary, var(--zen-color-primary-500));
+}
+
+/* Light only in MVP — dark mode is Phase 2. */
+:root[data-theme="dark"] {
+  /* Same tokens for now; explicit override placeholder for Phase 2. */
+  --sl-color-bg: var(--zen-color-bg-default);
+  --sl-color-text: var(--zen-color-text-primary);
+}
