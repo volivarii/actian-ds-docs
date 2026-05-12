@@ -20,19 +20,34 @@ const resolved = requirementRefs.map((r) => ({
   ref: r,
   section: loader.resolveAccessibilityRef(r.ref),
 }));
+
+function truncate(s: string | undefined, n: number): string {
+  if (!s) return "";
+  return s.length > n ? s.slice(0, n).replace(/\s+\S*$/, "") + "…" : s;
+}
 ---
 
-<ul>
+<ul class="a11y-refs">
   {resolved.map(({ ref, section }) => (
-    <li>
+    <li class="a11y-refs__item">
       {section ? (
-        <a href={`${base}accessibility#${ref.ref}`}>
-          <strong>{section.title}</strong>
-        </a>
+        <>
+          <div class="a11y-refs__header">
+            <a href={`${base}accessibility#${ref.ref}`}><strong>{section.title}</strong></a>
+            {section.wcag && section.wcag.length > 0 && (
+              <span class="a11y-refs__wcag">
+                {section.wcag.map((c: string) => <span class="a11y-refs__wcag-pill">WCAG {c}</span>)}
+              </span>
+            )}
+          </div>
+          {section.body_excerpt && (
+            <div class="a11y-refs__excerpt">{truncate(section.body_excerpt, 200)}</div>
+          )}
+          {ref.note && <div class="a11y-refs__note">{ref.note}</div>}
+        </>
       ) : (
         <strong>{ref.ref}</strong>
       )}
-      {ref.note && <> — {ref.note}</>}
     </li>
   ))}
 </ul>

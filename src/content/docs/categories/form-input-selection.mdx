@@ -9,6 +9,7 @@ import MotionPattern from "../../../components/MotionPattern.astro";
 import AccessibilityRefs from "../../../components/AccessibilityRefs.astro";
 import PageMetadata from "../../../components/PageMetadata.astro";
 import ComponentCard from "../../../components/ComponentCard.astro";
+import StatusPill from "../../../components/StatusPill.astro";
 import defaults from "../../../../vendor/components/dist/categories/form-input-selection-defaults.json";
 import dskit from "../../../../vendor/components/dist/registries/dskit.json";
 
@@ -17,6 +18,8 @@ import dskit from "../../../../vendor/components/dist/registries/dskit.json";
   source="components/dist/categories/form-input-selection-defaults.json"
   schema={1}
 />
+
+<StatusPill status={defaults.authoring_status} />
 
 **Confidence:**
 {Object.entries(defaults.confidence || {}).map(([k, v]) => (

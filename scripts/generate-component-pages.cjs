@@ -68,7 +68,7 @@ function renderContentItem(item) {
   return pairs.length ? pairs.join("; ") : null;
 }
 
-function buildPage(slug, entry, guideline, defaults) {
+function buildPage(slug, entry, guideline, defaults, registry) {
   var title = entry.name || slug;
   var description = (guideline && guideline.description) || `Component documentation for ${title}.`;
   var categoryLabel = entry.category;
@@ -81,6 +81,14 @@ function buildPage(slug, entry, guideline, defaults) {
   // Skip all section emission so the page reads clean instead of showing
   // empty Anatomy/Variants/Motion/Accessibility headers.
   if (!isStub) {
+    // Overview — short prose hoist, from registry description or guideline description.
+    // Hoisted from frontmatter so the page leads with prose before the first H2.
+    var overviewText = (entry.description && entry.description.trim())
+      || (guideline && guideline.description ? guideline.description : "");
+    if (overviewText) {
+      sections.push("## Overview\n\n" + escapeMdxPlaceholders(overviewText));
+    }
+
     // Anatomy: from guideline (curated) or category-defaults (fallback)
     if (guideline && guideline.anatomy && Array.isArray(guideline.anatomy.parts) && guideline.anatomy.parts.length) {
       sections.push("## Anatomy\n\n<Anatomy parts={" + jsLit(guideline.anatomy.parts) + "} />");
@@ -127,6 +135,20 @@ function buildPage(slug, entry, guideline, defaults) {
         return heading + "\n\n" + content;
       }).join("\n\n"));
     }
+
+    // Resources — Figma node + knowledge-source JSON. Always emit on non-stub
+    // pages so authors land somewhere actionable below the in-page docs.
+    var figmaUrl = (entry.nodeId && registry && registry.fileKey)
+      ? "https://www.figma.com/file/" + registry.fileKey + "?node-id=" + String(entry.nodeId).replace(":", "-")
+      : null;
+    var knowledgeUrl = "https://github.com/volivarii/actian-ds-knowledge/tree/main/components/src/guidelines/" + slug + ".json";
+    var resourceLines = [
+      "## Resources",
+      "",
+    ];
+    if (figmaUrl) resourceLines.push("- [Open in Figma](" + figmaUrl + ")");
+    resourceLines.push("- [Knowledge source (JSON)](" + knowledgeUrl + ")");
+    sections.push(resourceLines.join("\n"));
   }
 
   var imports = [
@@ -136,6 +158,7 @@ function buildPage(slug, entry, guideline, defaults) {
     "AccessibilityRefs",
     "PageMetadata",
     "StubFooter",
+    "StatusPill",
   ].map(function (name) {
     return 'import ' + name + ' from "../../../../components/' + name + '.astro";';
   }).join("\n");
@@ -145,6 +168,12 @@ function buildPage(slug, entry, guideline, defaults) {
   // (Starlight does NOT base-rewrite raw markdown links with absolute paths.)
   var categoryLink = categorySlug
     ? '**Category:** <a href={`${import.meta.env.BASE_URL.replace(/\\/?$/, "/")}categories/' + categorySlug + '`}>' + categoryLabel + "</a>"
+    : "";
+
+  // Status pill — surrogate from category-defaults.authoring_status (no
+  // per-component status yet). Renders inline next to the category link.
+  var statusLine = (defaults && defaults.authoring_status)
+    ? '<StatusPill status="' + defaults.authoring_status + '" />'
     : "";
 
   var stubFooter = (isStub && categorySlug)
@@ -165,7 +194,7 @@ function buildPage(slug, entry, guideline, defaults) {
     "  schema={1}",
     "/>",
     "",
-    categoryLink,
+    categoryLink + (statusLine ? " &nbsp; " + statusLine : ""),
     "",
     sections.join("\n\n"),
     "",
@@ -206,7 +235,7 @@ function main() {
 
     var defaults = loader.loadDefaultsForCategory(entry.category);
 
-    var mdx = buildPage(slug, entry, guideline, defaults);
+    var mdx = buildPage(slug, entry, guideline, defaults, registry);
     var categorySlug = slugifyCategory(entry.category);
     var categoryDir = path.join(OUT_DIR, categorySlug);
     if (!fs.existsSync(categoryDir)) fs.mkdirSync(categoryDir, { recursive: true });

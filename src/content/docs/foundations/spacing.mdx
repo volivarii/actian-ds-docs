@@ -16,5 +16,5 @@ import spacing from "../../../../vendor/foundations/dist/tokens/spacing.json";
 The Actian DS spacing scale.
 
 {spacing.blocks.filter((b) => b.type === "table").map((b) => (
-  <TokenTable headers={b.headers} rows={b.rows} />
+  <TokenTable headers={b.headers} rows={b.rows} showSwatch={true} />
 ))}

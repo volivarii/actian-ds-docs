@@ -1,0 +1,18 @@
+---
+interface Props {
+  status: string;
+}
+const { status } = Astro.props;
+
+// Map raw status → display label + style class.
+const STATUS_MAP: Record<string, { label: string; variant: string }> = {
+  "engineer-seed": { label: "Engineer seed", variant: "seed" },
+  "designer-curated": { label: "Curated", variant: "curated" },
+  "stable": { label: "Stable", variant: "stable" },
+  "beta": { label: "Beta", variant: "beta" },
+  "deprecated": { label: "Deprecated", variant: "deprecated" },
+};
+const config = STATUS_MAP[status] || { label: status, variant: "default" };
+---
+
+<span class={`status-pill status-pill--${config.variant}`}>{config.label}</span>

@@ -21,7 +21,7 @@ Border tokens for the Actian DS — radius, width, and composite border styles.
   <section>
     <h2>{file.title}</h2>
     {(file.blocks || []).filter((b) => b.type === "table").map((b) => (
-      <TokenTable headers={b.headers} rows={b.rows} />
+      <TokenTable headers={b.headers} rows={b.rows} showSwatch={true} />
     ))}
   </section>
 ))}

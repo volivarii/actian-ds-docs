@@ -81,7 +81,9 @@ footer .meta {
   background: var(--zen-color-bg-default);
   text-decoration: none;
   color: var(--zen-color-text-primary);
-  transition: border-color 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
 }
 .component-card:hover {
   border-color: var(--zen-color-primary-500);
@@ -122,7 +124,9 @@ footer .meta {
   background: var(--zen-color-bg-default);
   text-decoration: none;
   color: var(--zen-color-text-primary);
-  transition: border-color 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
 }
 .category-browse-card:hover {
   border-color: var(--zen-color-primary-500);
@@ -144,4 +148,175 @@ footer .meta {
   font-family: var(--zen-font-family-mono, monospace);
   margin-top: 8px;
   display: block;
+}
+
+/* Anatomy — numbered parts list + diagram placeholder. */
+.anatomy {
+  margin: 16px 0 24px;
+}
+.anatomy__diagram {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 180px;
+  border: 1px dashed var(--zen-border-default);
+  border-radius: 8px;
+  background: var(--zen-color-bg-subtle);
+  margin-bottom: 16px;
+}
+.anatomy__diagram-label {
+  font-size: 12px;
+  color: var(--zen-color-text-secondary);
+  font-family: var(--zen-font-family-mono, monospace);
+}
+.anatomy__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+.anatomy__item {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  align-items: start;
+  gap: 12px;
+  padding: 8px 0;
+}
+.anatomy__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--zen-color-primary-500);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--zen-font-family-mono, monospace);
+}
+.anatomy__copy strong {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+.anatomy__desc {
+  font-size: 13px;
+  color: var(--zen-color-text-secondary);
+  line-height: 1.4;
+}
+
+/* Accessibility refs — inline WCAG + body excerpt. */
+.a11y-refs {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0;
+  display: grid;
+  gap: 12px;
+}
+.a11y-refs__item {
+  padding: 12px 14px;
+  border: 1px solid var(--zen-border-default);
+  border-radius: 8px;
+  background: var(--zen-color-bg-default);
+}
+.a11y-refs__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+.a11y-refs__wcag {
+  display: inline-flex;
+  gap: 6px;
+}
+.a11y-refs__wcag-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--zen-color-bg-info, var(--zen-color-bg-subtle));
+  color: var(--zen-color-primary-700, var(--zen-color-primary-500));
+  font-size: 11px;
+  font-family: var(--zen-font-family-mono, monospace);
+  font-weight: 600;
+}
+.a11y-refs__excerpt {
+  font-size: 13px;
+  color: var(--zen-color-text-secondary);
+  line-height: 1.45;
+}
+.a11y-refs__note {
+  margin-top: 6px;
+  padding: 6px 8px;
+  background: var(--zen-color-bg-subtle);
+  border-left: 2px solid var(--zen-color-primary-500);
+  font-size: 12px;
+  font-style: italic;
+}
+
+/* Status pill — content authoring status. */
+.status-pill {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--zen-font-family-mono, monospace);
+  line-height: 1.5;
+  vertical-align: middle;
+}
+.status-pill--seed {
+  background: var(--zen-color-bg-warning, #fff9e5);
+  color: var(--zen-color-icon-warning, #c47a00);
+  border: 1px solid var(--zen-color-icon-warning, #ef8d00);
+}
+.status-pill--curated,
+.status-pill--stable {
+  background: var(--zen-color-bg-success, #f0ffec);
+  color: var(--zen-color-icon-success, #0a6e00);
+  border: 1px solid var(--zen-color-icon-success, #098900);
+}
+.status-pill--beta {
+  background: var(--zen-color-bg-info, #edf6ff);
+  color: var(--zen-color-primary-700, var(--zen-color-primary-500));
+  border: 1px solid var(--zen-color-primary-500);
+}
+.status-pill--deprecated {
+  background: var(--zen-color-bg-error, #fff4ec);
+  color: var(--zen-color-icon-error, #dc3514);
+  border: 1px solid var(--zen-color-icon-error, #dc3514);
+}
+.status-pill--default {
+  background: var(--zen-color-bg-subtle);
+  color: var(--zen-color-text-secondary);
+  border: 1px solid var(--zen-border-default);
+}
+
+/* Token visuals — color/spacing/radius/border-width chips. */
+.token-visual-cell {
+  width: 56px;
+}
+.token-ruler {
+  display: inline-block;
+  height: 8px;
+  background: var(--zen-color-primary-500);
+  vertical-align: middle;
+  min-width: 4px;
+}
+.token-radius {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  background: var(--zen-color-primary-500);
+  border-radius: 4px;
+  vertical-align: middle;
+}
+.token-border-width {
+  display: inline-block;
+  width: 48px;
+  height: 0;
+  border-top: 1px solid var(--zen-color-primary-500);
+  vertical-align: middle;
 }

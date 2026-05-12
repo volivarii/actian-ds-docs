@@ -5,11 +5,19 @@ interface Props {
 const { parts } = Astro.props;
 ---
 
-<table>
-  <thead><tr><th>Part</th><th>Description</th></tr></thead>
-  <tbody>
-    {parts.map((p) => (
-      <tr><td><strong>{p.name}</strong></td><td>{p.description}</td></tr>
+<div class="anatomy">
+  <div class="anatomy__diagram" aria-hidden="true">
+    <span class="anatomy__diagram-label">Anatomy diagram coming from Figma</span>
+  </div>
+  <ol class="anatomy__list">
+    {parts.map((p, i) => (
+      <li class="anatomy__item">
+        <span class="anatomy__num">{i + 1}</span>
+        <div class="anatomy__copy">
+          <strong>{p.name}</strong>
+          <div class="anatomy__desc">{p.description}</div>
+        </div>
+      </li>
     ))}
-  </tbody>
-</table>
+  </ol>
+</div>
