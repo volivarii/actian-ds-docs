@@ -1,11 +1,6 @@
 ---
 title: Actian Design System
-description: Foundations, components, accessibility, content — federated via actian-ds-knowledge.
-template: splash
-hero:
-  tagline: Reference for the Actian Design System — foundations, components, accessibility, and content guidelines.
-  image:
-    file: ../../assets/actian-logo.svg
+description: Reference for the Actian Design System — foundations, components, accessibility, and content guidelines.
 ---
 
 import dskit from "../../../vendor/components/dist/registries/dskit.json";
@@ -16,6 +11,8 @@ import EcosystemDiagram from "../../components/EcosystemDiagram.astro";
 export const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
 export const totalDsKit = Object.keys(dskit.components).length;
 export const categorizedDsKit = Object.values(dskit.components).filter((c) => c.category).length;
+
+Reference for the Actian Design System — foundations, components, accessibility, and content guidelines. Knowledge owns content; this site renders it.
 
 ## At a glance
 
