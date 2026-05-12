@@ -1,0 +1,65 @@
+---
+title: Migrations
+description: Schema transitions, version history, parallel-change discipline.
+---
+
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import PageMetadata from "../components/PageMetadata.astro";
+import vendored from "../../vendored.json";
+
+<StarlightPage frontmatter={{ title: "Migrations", description: "Schema transitions, version history, parallel-change discipline." }}>
+  <PageMetadata slug="migrations" source="(hand-authored)" schema={1} />
+
+  ## Parallel-change rule
+
+  The three-repo ecosystem uses parallel-change discipline for schema transitions. Concretely:
+
+  1. **New schema version is added alongside the old.** Both serialize valid; consumers may choose either.
+  2. **Producers migrate first.** Knowledge ships content under the new schema version. Old consumers continue reading the prior shape.
+  3. **Consumers migrate next.** Plugin and docs adapt their readers. Tests gate the migration.
+  4. **Old schema is removed last.** Only after all live consumers report green on the new shape.
+
+  **Friction-asymmetry check:** if rolling back to the old schema is harder than rolling forward to the new one, the migration is wrong-shape; reconsider.
+
+  ## Current schema versions
+
+  - `paths-manifest._schema_version`: **1** (knowledge v0.5.0+)
+  - Category defaults `_schema_version`: **1** (knowledge v0.4.5+)
+  - Foundations dist `_schema_version`: **1** (knowledge v0.4.0+)
+  - Docs site vendored pin: **{vendored.knowledge_repo_resolved_version}**
+
+  ## Manifest convention (v0.5.1)
+
+  Every key in `knowledge/paths-manifest.json` `paths` ∪ `collections` is **leaf XOR namespace** — never both. Enforced by `tests/manifest-convention.test.js` in the knowledge repo.
+
+  Example:
+  - ✓ `accessibility.guide` (leaf) + `accessibility.index` (leaf, sibling) — coexist cleanly
+  - ✗ `accessibility` (leaf) + `accessibility.index` (prefix of nested children) — would collide
+
+  Pre-v0.5.1 had the collision form; v0.5.1 renamed `accessibility` → `accessibility.guide` and `collections.components.categoryDefaults` → `collections.components.categoryDefaults.byKey` to honor the rule.
+
+  ## Recent migrations
+
+  - **Knowledge v0.5.1** (2026-05-12) — manifest leaf-XOR-namespace renames + CI convention test
+  - **Knowledge v0.5.0** (2026-05-12) — bump-version sync + drift loop break
+  - **Knowledge v0.4.9** (2026-05-12) — Phase 2 v2 category defaults (loop-breaker idempotency fix)
+  - **Knowledge v0.4.4** (2026-05-11) — JSON Schema validation + reviewdog inline annotations
+  - **Knowledge v0.4.0** (2026-05-11) — slug system + schema versioning (ecosystem move α)
+  - **Plugin v1.82.1** (2026-05-12) — vendor-snapshot CI/local parity fix
+  - **Plugin v1.82.0** (2026-05-12) — Phase 2c category-defaults consumption (PR ε)
+
+  ## In-flight transitions
+
+  None active at time of this build.
+
+  ## How drift is detected
+
+  The docs site runs four build-time guards on every vendor refresh:
+
+  1. **Motion-ref resolution** — every `motion_refs[].ref` cited by a category MD must resolve against `tokens/motion.json#patterns` by `.slug`. Build fails if not.
+  2. **A11y-ref resolution** — every `accessibility[].ref` must resolve against `a11y-index.json#sections`. Build fails if not.
+  3. **ASCII operator check** — vendored MD code-fenced blocks must use ASCII operators (`=>`, `->`, `<=`, `>=`, `!==`). Build fails on Unicode equivalents inside code blocks.
+  4. **Schema-version match** — `_schema_version` in `paths-manifest.json` must equal the version this site expects (currently `1`). Build fails on mismatch.
+
+  Failed guards block the vendor PR from auto-merging, surfacing drift in human-reviewable form.
+</StarlightPage>
