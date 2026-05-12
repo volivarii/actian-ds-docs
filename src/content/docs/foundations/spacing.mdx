@@ -1,0 +1,20 @@
+---
+title: Spacing
+description: Spacing scale tokens from the Actian foundations.
+---
+
+import TokenTable from "../../../components/TokenTable.astro";
+import PageMetadata from "../../../components/PageMetadata.astro";
+import spacing from "../../../../vendor/foundations/dist/tokens/spacing.json";
+
+<PageMetadata
+  slug="foundations.spacing"
+  source="foundations/dist/tokens/spacing.json"
+  schema={1}
+/>
+
+The Actian DS spacing scale.
+
+{spacing.blocks.filter((b) => b.type === "table").map((b) => (
+  <TokenTable headers={b.headers} rows={b.rows} />
+))}

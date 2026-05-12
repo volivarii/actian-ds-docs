@@ -1,0 +1,20 @@
+---
+title: Breakpoints
+description: Responsive breakpoint tokens from the Actian foundations.
+---
+
+import TokenTable from "../../../components/TokenTable.astro";
+import PageMetadata from "../../../components/PageMetadata.astro";
+import breakpoints from "../../../../vendor/foundations/dist/tokens/breakpoints.json";
+
+<PageMetadata
+  slug="foundations.breakpoints"
+  source="foundations/dist/tokens/breakpoints.json"
+  schema={1}
+/>
+
+Responsive breakpoint tokens for the Actian DS.
+
+{breakpoints.blocks.filter((b) => b.type === "table").map((b) => (
+  <TokenTable headers={b.headers} rows={b.rows} />
+))}

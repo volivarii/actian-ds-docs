@@ -1,0 +1,53 @@
+---
+interface Props {
+  headers: string[];
+  rows: Array<Record<string, string>>;
+  showSwatch?: boolean;
+  swatchColumn?: string;
+}
+
+const { headers, rows, showSwatch = false, swatchColumn = "Token" } = Astro.props;
+
+function renderCell(value: unknown): string {
+  return String(value ?? "").replace(/`([^`]+)`/g, "<code>$1</code>");
+}
+---
+
+<table>
+  <thead>
+    <tr>
+      {showSwatch && <th aria-label="swatch"></th>}
+      {headers.map((h) => <th>{h}</th>)}
+    </tr>
+  </thead>
+  <tbody>
+    {rows.map((row) => {
+      const tokenName = row[swatchColumn] || row["Token"];
+      const swatchStyle =
+        tokenName && tokenName.startsWith("--")
+          ? `background: var(${tokenName});`
+          : "";
+      return (
+        <tr>
+          {showSwatch && (
+            <td>
+              <span class="token-chip" style={swatchStyle} />
+            </td>
+          )}
+          {headers.map((h) => <td set:html={renderCell(row[h])} />)}
+        </tr>
+      );
+    })}
+  </tbody>
+</table>
+
+<style>
+  .token-chip {
+    display: inline-block;
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 0.25rem;
+    border: 1px solid var(--sl-color-gray-5, #ccc);
+    vertical-align: middle;
+  }
+</style>

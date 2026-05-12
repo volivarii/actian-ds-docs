@@ -1,0 +1,26 @@
+---
+title: Icons
+description: Icon tokens from the Actian foundations.
+---
+
+import TokenTable from "../../../components/TokenTable.astro";
+import PageMetadata from "../../../components/PageMetadata.astro";
+import iconSizes from "../../../../vendor/foundations/dist/tokens/icons/icon-sizes.json";
+import iconColors from "../../../../vendor/foundations/dist/tokens/icons/icon-colors.json";
+
+<PageMetadata
+  slug="foundations.icons"
+  source="foundations/dist/tokens/icons/"
+  schema={1}
+/>
+
+Icon tokens for the Actian DS — sizes and colors.
+
+{[iconSizes, iconColors].map((file) => (
+  <section>
+    <h2>{file.title}</h2>
+    {(file.blocks || []).filter((b) => b.type === "table").map((b) => (
+      <TokenTable headers={b.headers} rows={b.rows} />
+    ))}
+  </section>
+))}

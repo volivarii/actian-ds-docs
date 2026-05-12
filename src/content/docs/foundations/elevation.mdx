@@ -1,0 +1,20 @@
+---
+title: Elevation
+description: Elevation tokens from the Actian foundations.
+---
+
+import TokenTable from "../../../components/TokenTable.astro";
+import PageMetadata from "../../../components/PageMetadata.astro";
+import elevation from "../../../../vendor/foundations/dist/tokens/elevation.json";
+
+<PageMetadata
+  slug="foundations.elevation"
+  source="foundations/dist/tokens/elevation.json"
+  schema={1}
+/>
+
+Elevation tokens (shadow scale) for surfaces in the Actian DS.
+
+{elevation.blocks.filter((b) => b.type === "table").map((b) => (
+  <TokenTable headers={b.headers} rows={b.rows} />
+))}

@@ -1,0 +1,27 @@
+---
+title: Borders
+description: Border tokens from the Actian foundations.
+---
+
+import TokenTable from "../../../components/TokenTable.astro";
+import PageMetadata from "../../../components/PageMetadata.astro";
+import radius from "../../../../vendor/foundations/dist/tokens/borders/radius.json";
+import width from "../../../../vendor/foundations/dist/tokens/borders/width.json";
+import styleComposite from "../../../../vendor/foundations/dist/tokens/borders/style-composite.json";
+
+<PageMetadata
+  slug="foundations.borders"
+  source="foundations/dist/tokens/borders/"
+  schema={1}
+/>
+
+Border tokens for the Actian DS — radius, width, and composite border styles.
+
+{[radius, width, styleComposite].map((file) => (
+  <section>
+    <h2>{file.title}</h2>
+    {(file.blocks || []).filter((b) => b.type === "table").map((b) => (
+      <TokenTable headers={b.headers} rows={b.rows} />
+    ))}
+  </section>
+))}

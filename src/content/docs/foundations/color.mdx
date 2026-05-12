@@ -1,0 +1,20 @@
+---
+title: Color
+description: Color tokens from the Actian foundations.
+---
+
+import TokenTable from "../../../components/TokenTable.astro";
+import PageMetadata from "../../../components/PageMetadata.astro";
+import color from "../../../../vendor/foundations/dist/tokens/global-color.json";
+
+<PageMetadata
+  slug="foundations.color"
+  source="foundations/dist/tokens/global-color.json"
+  schema={1}
+/>
+
+The Actian DS color tokens — three theme rails (Actian, FM, DS Kit).
+
+{color.blocks.filter((b) => b.type === "table").map((b) => (
+  <TokenTable headers={b.headers} rows={b.rows} showSwatch={true} />
+))}

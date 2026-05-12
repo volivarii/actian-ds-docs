@@ -1,0 +1,44 @@
+---
+title: Motion
+description: Motion tokens and named patterns from the Actian foundations.
+---
+
+import TokenTable from "../../../components/TokenTable.astro";
+import PageMetadata from "../../../components/PageMetadata.astro";
+import motion from "../../../../vendor/foundations/dist/tokens/motion.json";
+
+<PageMetadata
+  slug="foundations.motion"
+  source="foundations/dist/tokens/motion.json"
+  schema={1}
+/>
+
+{motion.description && <p>{motion.description}</p>}
+
+## Tokens
+
+{Object.entries(motion.tokens || {}).map(([key, group]) => {
+  const rows = group.rows || [];
+  const headers = Object.keys(rows[0] || {}).filter((k) => !k.startsWith("status"));
+  return (
+    <section>
+      <h3>{key}</h3>
+      {group.description && <p>{group.description}</p>}
+      <TokenTable headers={headers} rows={rows} />
+    </section>
+  );
+})}
+
+## Patterns
+
+{Object.entries(motion.patterns || {}).map(([key, p]) => {
+  const phases = p.phases || [];
+  const phaseHeaders = Object.keys(phases[0] || {}).filter((k) => !k.startsWith("status"));
+  return (
+    <section>
+      <h3 id={p.slug}>{p.name}</h3>
+      <p><strong>Slug:</strong> <code>{p.slug}</code></p>
+      <TokenTable headers={phaseHeaders} rows={phases} />
+    </section>
+  );
+})}
