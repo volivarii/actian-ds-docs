@@ -1,0 +1,96 @@
+---
+title: Confidence scores
+description: What the confidence chips on each component page mean — how to read them, where the values come from, when to trust them.
+---
+
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import PageMetadata from "../components/PageMetadata.astro";
+
+<StarlightPage frontmatter={{ title: "Confidence scores", description: "Reading the confidence chips on each component page." }}>
+  <PageMetadata slug="reference.confidence" source="(hand-authored)" schema={1} />
+
+  Every component page shows a row of **confidence chips** near the top:
+
+  <div class="confidence-row" style="margin: 1rem 0;">
+    <span class="confidence-row__label">Confidence</span>
+    <span class="confidence-chip confidence-chip--high"><span class="confidence-chip__field">anatomy</span><span>high</span></span>
+    <span class="confidence-chip confidence-chip--medium"><span class="confidence-chip__field">variants</span><span>medium</span></span>
+    <span class="confidence-chip confidence-chip--medium"><span class="confidence-chip__field">motion</span><span>medium</span></span>
+    <span class="confidence-chip confidence-chip--high"><span class="confidence-chip__field">a11y</span><span>high</span></span>
+    <span class="confidence-chip confidence-chip--low"><span class="confidence-chip__field">content</span><span>low</span></span>
+  </div>
+
+  These tell you, **at a glance**, how well-curated each facet of a component's documentation is. A chip is NOT a quality score for the component itself — it's a score for **the documentation about the component**.
+
+  ## Reading the chips
+
+  ### The five facets
+
+  | Field | What it covers |
+  |---|---|
+  | **anatomy** | Named slots, layout regions, and structural parts (header, body, leading-icon, …). Drives the Anatomy section + design overlays. |
+  | **variants** | The full set of variant axes (State, Size, Theme, …) plus the values along each axis. Drives the Variants matrix. |
+  | **motion** | Interaction/animation patterns the component participates in (hover, press, expand, etc.). Linked from the Motion section. |
+  | **a11y** | WCAG 2.2 AA requirements and the patterns the component should follow. Linked from the Accessibility section. |
+  | **content** | UI copy guidance — labels, helper text, error states, tone. Component-specific (not category-defaulted). |
+
+  ### The three levels
+
+  | Level | Meaning | When you see it |
+  |---|---|---|
+  | <span class="confidence-chip confidence-chip--high" style="vertical-align: middle;"><span class="confidence-chip__field">high</span><span></span></span> | **Curated + complete.** Reviewed by the design team; data fully filled in. Treat as authoritative. | Stable components with full guideline coverage. |
+  | <span class="confidence-chip confidence-chip--medium" style="vertical-align: middle;"><span class="confidence-chip__field">medium</span><span></span></span> | **Curated but partial.** Reviewed but at least one expected detail is missing. Useful, but verify edge cases against Figma or with the design team. | Components mid-curation; common during category-defaults rollout. |
+  | <span class="confidence-chip confidence-chip--low" style="vertical-align: middle;"><span class="confidence-chip__field">low</span><span></span></span> | **Stub or unreviewed.** Auto-generated from the Figma sync; no human curation yet. Trust the registry shape (variants, properties) but check Figma for everything else. | Newly-synced components; stubs awaiting authoring. |
+
+  ## Where the values come from
+
+  ### anatomy / variants / motion / a11y
+
+  These four are **category-level defaults**. Every component in a category inherits the category's confidence baseline from `components/dist/categories/<category-slug>-defaults.json` in the [knowledge repo](https://github.com/volivarii/actian-ds-knowledge). The design team sets the level per category as it curates that category's recipe set.
+
+  Example (Action category — Action-defaults.json):
+
+  ```jsonc
+  {
+    "confidence": {
+      "anatomy": "medium",
+      "variants": "high",
+      "motion": "high",
+      "a11y": "high"
+    }
+  }
+  ```
+
+  Every Button, Link, Sticky footer page renders those four chips identically.
+
+  ### content
+
+  Synthesized per-component at page-generation time:
+
+  - <span class="confidence-chip confidence-chip--high" style="vertical-align: middle;"><span class="confidence-chip__field">high</span><span></span></span> when the component has a hand-curated guideline (`components/src/guidelines/<slug>.json`) AND that guideline includes a `content_guidelines.sections` block.
+  - <span class="confidence-chip confidence-chip--medium" style="vertical-align: middle;"><span class="confidence-chip__field">medium</span><span></span></span> when the component has a hand-curated guideline but no content section.
+  - <span class="confidence-chip confidence-chip--low" style="vertical-align: middle;"><span class="confidence-chip__field">low</span><span></span></span> for auto-stub guidelines or missing guidelines.
+
+  ## When to trust a page
+
+  Roughly:
+
+  - **All chips high or medium** → safe to use as-is for design + build work. Cross-reference Figma if you're working on edge cases.
+  - **One or more chips low** → the page's structural data (variants, properties, Figma URL) is still correct, but the *guidance* may be incomplete. Treat the page as a starting point; talk to the design team for prescriptive answers.
+  - **All chips low** → the component is freshly synced and the documentation is auto-stub. Trust only the registry-level facts (name, key, Figma node, variants). Everything else needs human input.
+
+  ## Improving a chip
+
+  Confidence isn't a static rating — it bumps up as guidelines get curated:
+
+  1. **anatomy / variants / motion / a11y:** bump by editing the category-defaults file in knowledge, then resync. Bumps lift every component in that category simultaneously.
+  2. **content:** bump by curating the component's guideline JSON to include a `content_guidelines.sections` block. Bumps just that one component.
+
+  The chip update reaches docs on the next vendor refresh (nightly cron, or manually via `vendor-snapshot.yml`).
+
+  ## Related
+
+  - **[Migrations](/migrations)** — schema versions + parallel-change discipline; the contract the confidence data depends on
+  - **[State](/state)** — sync state + tag versions across the three repos
+
+</StarlightPage>

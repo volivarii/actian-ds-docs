@@ -23,7 +23,19 @@ var path = require("path");
 var PATHS = require("./lib/paths.cjs");
 var loader = require("./lib/category-defaults-loader.cjs");
 
-var OUT_DIR = path.resolve(__dirname, "..", "src", "content", "docs", "components");
+// ζ.5 follow-up (2026-05-13): output is now section-aware. Components,
+// Foundations, and Brand items each land in their own top-level directory
+// under src/content/docs/, mirroring Figma's section organization (per
+// Vincent's "mimic Figma page structure" goal). Sidebar autogenerate per
+// directory in astro.config.mjs.
+var DOCS_ROOT = path.resolve(__dirname, "..", "src", "content", "docs");
+var SECTION_DIRS = {
+  Components: "components",
+  Foundations: "foundations",
+  "Brand Assets": "brand",
+};
+// Default for entries without a section field (e.g., fmkit/metakit syncs).
+var DEFAULT_SECTION_DIR = "components";
 
 function slugifyCategory(label) {
   return loader.normalizeCategorySlug(label);
@@ -286,10 +298,15 @@ function main() {
   var registry = JSON.parse(fs.readFileSync(registryPath, "utf8"));
   var guidelinesDir = path.join(PATHS.vendor, "components", "src", "guidelines");
 
-  // Wipe + recreate — generated content is gitignored. Recursive blow-away
-  // also handles old flat-layout MDX files left over from pre-nesting builds.
-  fs.rmSync(OUT_DIR, { recursive: true, force: true });
-  fs.mkdirSync(OUT_DIR, { recursive: true });
+  // Ensure each section root exists. Generator writes per-category dirs
+  // under each section root. Tracked content lives:
+  //   - foundations/*.mdx (root-level token pages — pre-existing)
+  //   - components/<cat>/index.mdx (category overview pages — tracked)
+  //   - brand/ (no tracked content yet — fully generator-output)
+  Object.values(SECTION_DIRS).forEach(function (sd) {
+    var dir = path.join(DOCS_ROOT, sd);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  });
 
   loader._resetCache();
 
@@ -319,6 +336,60 @@ function main() {
   // <IconGrid> with semantic-group headers is the right UI). Future
   // candidates: Product logos, Illustrations, Color/spacing tokens.
   var COLLECTION_CATEGORIES = new Set(["Icons"]);
+
+  // ζ.5 follow-up: pre-pass to compute the set of <section>/<category>
+  // dirs we'll write to in this run, keyed by absolute path. Used for
+  // two cleanup behaviors:
+  //   1. Orphan sweep: remove any existing category subdir under a
+  //      section root that isn't in this run's expected set (handles
+  //      stale dirs from prior generator runs that placed Foundations/
+  //      Brand items under components/).
+  //   2. Per-dir lazy clean: wipe non-index.mdx files + subdirs inside
+  //      each expected category dir before writing fresh content.
+  var expectedCategoryDirs = new Set();
+  Object.entries(registry.components).forEach(function (pair) {
+    var e = pair[1];
+    if (!e.category) return;
+    if (EXCLUDED_CATEGORIES.has(e.category)) return;
+    if (COLLECTION_CATEGORIES.has(e.category)) return;
+    var sd = SECTION_DIRS[e.section] || DEFAULT_SECTION_DIR;
+    var cd = path.join(DOCS_ROOT, sd, slugifyCategory(e.category));
+    expectedCategoryDirs.add(cd);
+  });
+
+  // Orphan sweep: walk each section root, delete any immediate subdir
+  // that isn't in expectedCategoryDirs. Preserves root-level tracked
+  // files (foundations/color.mdx etc.) since we only descend into dirs.
+  Object.values(SECTION_DIRS).forEach(function (sd) {
+    var sectionRoot = path.join(DOCS_ROOT, sd);
+    if (!fs.existsSync(sectionRoot)) return;
+    fs.readdirSync(sectionRoot, { withFileTypes: true }).forEach(function (entry) {
+      if (!entry.isDirectory()) return;
+      var dir = path.join(sectionRoot, entry.name);
+      if (!expectedCategoryDirs.has(dir)) {
+        fs.rmSync(dir, { recursive: true, force: true });
+      }
+    });
+  });
+
+  // Per-dir lazy clean: tracked across the main loop so we wipe each
+  // expected category dir only once, on first write. Removes non-index
+  // .mdx + all nested subdirs (those are 100% generator output).
+  var cleanedCategoryDirs = new Set();
+  function cleanCategoryDirOnce(categoryDir) {
+    if (cleanedCategoryDirs.has(categoryDir)) return;
+    cleanedCategoryDirs.add(categoryDir);
+    if (!fs.existsSync(categoryDir)) return;
+    var entries = fs.readdirSync(categoryDir, { withFileTypes: true });
+    entries.forEach(function (entry) {
+      var p = path.join(categoryDir, entry.name);
+      if (entry.isDirectory()) {
+        fs.rmSync(p, { recursive: true, force: true });
+      } else if (entry.isFile() && entry.name !== "index.mdx") {
+        fs.rmSync(p, { force: true });
+      }
+    });
+  }
 
   // Count components per (categorySlug, groupSlug) so we can decide whether
   // to nest. The `group` field is populated by knowledge v0.7.0+; absent on
@@ -375,9 +446,19 @@ function main() {
 
     var defaults = loader.loadDefaultsForCategory(entry.category);
 
+    // ζ.5 follow-up: route per-section. Foundations items go to
+    // foundations/<category>/<slug>.mdx, Brand items to
+    // brand/<category>/<slug>.mdx, Components items stay at
+    // components/<category>/<slug>.mdx. Falls back to components/ for
+    // entries without a section (legacy data / fmkit-metakit syncs).
+    var sectionDir = SECTION_DIRS[entry.section] || DEFAULT_SECTION_DIR;
+    var sectionRoot = path.join(DOCS_ROOT, sectionDir);
     var categorySlug = slugifyCategory(entry.category);
-    var categoryDir = path.join(OUT_DIR, categorySlug);
+    var categoryDir = path.join(sectionRoot, categorySlug);
     if (!fs.existsSync(categoryDir)) fs.mkdirSync(categoryDir, { recursive: true });
+    // Lazy-clean per category dir on first visit so subsequent slugs
+    // in the same category write into a clean slate.
+    cleanCategoryDirOnce(categoryDir);
 
     // ζ.2: nest under <group-slug>/ when 2+ components share the group.
     // Tag's 9 variants land in data-display/tag-identification-key/ so
