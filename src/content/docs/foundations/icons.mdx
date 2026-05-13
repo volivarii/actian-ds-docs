@@ -3,12 +3,11 @@ title: Icons
 description: "Icon tokens (sizes + colors) plus the full DS-Kit icon catalog grouped by semantic purpose."
 ---
 
-import TokenScale from "../../../components/TokenScale.astro";
 import TokenTable from "../../../components/TokenTable.astro";
 import PageMetadata from "../../../components/PageMetadata.astro";
 import IconGrid from "../../../components/IconGrid.astro";
 import iconColors from "../../../../vendor/foundations/dist/tokens/icons/icon-colors.json";
-import dtcg from "../../../../vendor/tokens/tokens.json";
+import iconSizes from "../../../../vendor/foundations/dist/tokens/icons/icon-sizes.json";
 import dskit from "../../../../vendor/components/dist/registries/dskit.json";
 
 <PageMetadata
@@ -21,7 +20,9 @@ Icon tokens for the Actian DS — sizes and colors — followed by the full icon
 
 ## Sizes
 
-<TokenScale data={dtcg.icon} prefix="icon" />
+{(iconSizes.blocks || []).filter((b) => b.type === "table").map((b) => (
+  <TokenTable headers={b.headers} rows={b.rows} />
+))}
 
 ## Colors
 

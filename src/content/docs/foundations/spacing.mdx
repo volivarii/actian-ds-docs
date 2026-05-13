@@ -3,10 +3,9 @@ title: Spacing
 description: Spacing scale tokens from the Actian foundations.
 ---
 
-import TokenScale from "../../../components/TokenScale.astro";
+import TokenTable from "../../../components/TokenTable.astro";
 import PageMetadata from "../../../components/PageMetadata.astro";
 import source from "../../../../vendor/foundations/dist/tokens/spacing.json";
-import dtcg from "../../../../vendor/tokens/tokens.json";
 
 <PageMetadata
   slug="foundations.spacing"
@@ -18,4 +17,6 @@ import dtcg from "../../../../vendor/tokens/tokens.json";
 
 ## Scale
 
-<TokenScale data={dtcg.spacing} prefix="spacing" />
+{(source.blocks || []).filter((b) => b.type === "table").map((b) => (
+  <TokenTable headers={b.headers} rows={b.rows} showSwatch={true} />
+))}
