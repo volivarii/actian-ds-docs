@@ -1,0 +1,169 @@
+---
+// IconGrid — renders the DS-Kit icon collection as a single page with
+// semantic grouping. Replaces the per-icon MDX layout that produced 234
+// flat sidebar entries.
+//
+// Each icon belongs to a primary `group` (from knowledge ζ.5
+// components/src/icon-groups.json — specific-first priority) AND
+// optionally additional `secondaryGroups` (8 multi-group icons today).
+// We render the icon under EVERY group it belongs to so designers find
+// e.g. `download` under both Navigation AND Common.
+//
+// Defensive against legacy data: if all icons share `group === "Actual
+// icons"` (v0.8.1 vendor data), the page renders one big section labeled
+// "Actual icons" — same UX as before, but at least collapsed into one
+// page instead of 234 sidebar entries.
+
+export interface Props {
+  icons: Array<{
+    slug: string;
+    name: string;
+    group?: string;
+    secondaryGroups?: string[];
+  }>;
+}
+
+const { icons } = Astro.props;
+
+// Build group → icons[] map. Multi-group icons appear in each section.
+// Iteration order preserves data order (which itself follows knowledge's
+// specific-first priority).
+const sections = new Map();
+for (const icon of icons) {
+  const groups = [icon.group, ...(icon.secondaryGroups || [])].filter(Boolean);
+  const targetGroups = groups.length > 0 ? groups : ["Other"];
+  for (const g of targetGroups) {
+    if (!sections.has(g)) sections.set(g, []);
+    sections.get(g).push(icon);
+  }
+}
+
+// Sort icons alphabetically within each group for predictable browsing.
+for (const items of sections.values()) {
+  items.sort((a: { slug: string }, b: { slug: string }) =>
+    a.slug.localeCompare(b.slug),
+  );
+}
+---
+
+<nav class="icon-toc" aria-label="Icon groups">
+  <strong class="icon-toc__label">Jump to:</strong>
+  {
+    [...sections.entries()].map(([group, items]) => (
+      <a class="icon-toc__link" href={`#${group.toLowerCase().replace(/\s+/g, "-")}`}>
+        {group} <span class="icon-toc__count">({items.length})</span>
+      </a>
+    ))
+  }
+</nav>
+
+{
+  [...sections.entries()].map(([group, items]) => (
+    <section class="icon-section">
+      <h2 id={group.toLowerCase().replace(/\s+/g, "-")} class="icon-section__heading">
+        {group}
+        <span class="icon-section__count">{items.length}</span>
+      </h2>
+      <div class="icon-grid">
+        {items.map((icon: { slug: string; name: string }) => (
+          <div class="icon-card" data-slug={icon.slug}>
+            <div class="icon-card__placeholder" aria-hidden="true" />
+            <code class="icon-card__slug">{icon.slug}</code>
+          </div>
+        ))}
+      </div>
+    </section>
+  ))
+}
+
+<style>
+  .icon-toc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.75rem;
+    align-items: baseline;
+    margin: 1rem 0 2rem;
+    padding: 0.75rem 1rem;
+    background: var(--sl-color-bg-sidebar);
+    border-radius: 6px;
+    font-size: 0.875rem;
+  }
+  .icon-toc__label {
+    color: var(--sl-color-text-accent);
+    font-weight: 600;
+  }
+  .icon-toc__link {
+    color: var(--sl-color-text);
+    text-decoration: none;
+  }
+  .icon-toc__link:hover {
+    color: var(--sl-color-text-accent);
+    text-decoration: underline;
+  }
+  .icon-toc__count {
+    color: var(--sl-color-text-muted, var(--sl-color-text));
+    opacity: 0.7;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .icon-section {
+    margin: 2rem 0;
+  }
+  .icon-section__heading {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin: 0 0 1rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--sl-color-hairline, rgba(128, 128, 128, 0.25));
+  }
+  .icon-section__count {
+    color: var(--sl-color-text-muted, var(--sl-color-text));
+    opacity: 0.55;
+    font-size: 0.875rem;
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .icon-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.5rem;
+  }
+  .icon-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 0.5rem;
+    border: 1px solid var(--sl-color-hairline, rgba(128, 128, 128, 0.2));
+    border-radius: 6px;
+    background: var(--sl-color-bg-sidebar);
+    text-align: center;
+    transition: border-color 120ms ease;
+  }
+  .icon-card:hover {
+    border-color: var(--sl-color-text-accent);
+  }
+  .icon-card__placeholder {
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    background: var(--sl-color-hairline, rgba(128, 128, 128, 0.15));
+  }
+  .icon-card__slug {
+    font-size: 0.75rem;
+    line-height: 1.2;
+    color: var(--sl-color-text);
+    word-break: break-word;
+    background: transparent;
+    padding: 0;
+  }
+
+  @media (max-width: 640px) {
+    .icon-grid {
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    }
+  }
+</style>

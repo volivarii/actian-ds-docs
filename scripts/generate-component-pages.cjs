@@ -309,6 +309,17 @@ function main() {
     "White-label services",
   ]);
 
+  // ζ.5 (2026-05-13): collection-mode categories. Per-component MDX
+  // generation is SKIPPED for these — the category instead renders as a
+  // SINGLE inline-grid page (src/content/docs/categories/<slug>.mdx,
+  // tracked manually). Use for categories where individual pages add no
+  // value over a grouped grid view.
+  //
+  // Today: Icons (234 entries; the docs sidebar can't fit 234 nodes; an
+  // <IconGrid> with semantic-group headers is the right UI). Future
+  // candidates: Product logos, Illustrations, Color/spacing tokens.
+  var COLLECTION_CATEGORIES = new Set(["Icons"]);
+
   // Count components per (categorySlug, groupSlug) so we can decide whether
   // to nest. The `group` field is populated by knowledge v0.7.0+; absent on
   // older vendor snapshots — in which case nestedGroups stays empty and the
@@ -324,6 +335,7 @@ function main() {
     var e = pair[1];
     if (!e.category || !e.group) return;
     if (EXCLUDED_CATEGORIES.has(e.category)) return;
+    if (COLLECTION_CATEGORIES.has(e.category)) return;
     var cs = slugifyCategory(e.category);
     var gs = slugifyCategory(e.group);
     if (!cs || !gs) return;
@@ -334,6 +346,7 @@ function main() {
   var written = 0;
   var skipped = 0;
   var excluded = 0;
+  var collection = 0;
   var nested = 0;
   Object.entries(registry.components).forEach(function (pair) {
     var slug = pair[0];
@@ -341,6 +354,12 @@ function main() {
     if (!entry.category) { skipped++; return; }
     if (EXCLUDED_CATEGORIES.has(entry.category)) {
       excluded++;
+      return;
+    }
+    if (COLLECTION_CATEGORIES.has(entry.category)) {
+      // Rendered inline via the category's collection MDX
+      // (src/content/docs/categories/<slug>.mdx) — no per-component MDX.
+      collection++;
       return;
     }
 
@@ -396,6 +415,10 @@ function main() {
       excluded +
       " in non-public categories (" +
       Array.from(EXCLUDED_CATEGORIES).join(", ") +
+      "), deferred " +
+      collection +
+      " to collection pages (" +
+      Array.from(COLLECTION_CATEGORIES).join(", ") +
       ")",
   );
 }
