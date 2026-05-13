@@ -293,12 +293,27 @@ function main() {
 
   loader._resetCache();
 
-  // ζ.2 docs sidebar refactor (2026-05-13): count components per
-  // (categorySlug, groupSlug) so we can decide whether to nest. The
-  // `group` field is populated by knowledge v0.7.0+; absent on older
-  // vendor snapshots — in which case nestedGroups stays empty and the
-  // generator behaves identically to pre-ζ.2 (flat layout). No
-  // regression for consumers still on v0.6.x.
+  // ζ.2 follow-up (2026-05-13): exclude scratchpad / non-public categories
+  // from docs publication. The knowledge registry is the canonical SoT and
+  // carries everything (plugin + MCP need the full picture); docs is a
+  // CURATED PRESENTATION SUBSET. Excluded categories are skipped at
+  // generation time — entries don't get MDX pages and don't appear in the
+  // sidebar.
+  //
+  // Add to this set if the design team introduces a new working/private
+  // category in Figma that shouldn't be published. Sections (top-level
+  // Figma markers) could become a coarser knob later; per-category is
+  // sufficient today.
+  var EXCLUDED_CATEGORIES = new Set([
+    "Local components",
+    "White-label services",
+  ]);
+
+  // Count components per (categorySlug, groupSlug) so we can decide whether
+  // to nest. The `group` field is populated by knowledge v0.7.0+; absent on
+  // older vendor snapshots — in which case nestedGroups stays empty and the
+  // generator behaves identically to pre-ζ.2 (flat layout). No regression
+  // for consumers still on v0.6.x.
   //
   // Nesting rule: nest under <group-slug>/ ONLY when 2+ components share
   // the (category, group) tuple. Solo components keep the flat layout —
@@ -308,6 +323,7 @@ function main() {
   Object.entries(registry.components).forEach(function (pair) {
     var e = pair[1];
     if (!e.category || !e.group) return;
+    if (EXCLUDED_CATEGORIES.has(e.category)) return;
     var cs = slugifyCategory(e.category);
     var gs = slugifyCategory(e.group);
     if (!cs || !gs) return;
@@ -317,11 +333,16 @@ function main() {
 
   var written = 0;
   var skipped = 0;
+  var excluded = 0;
   var nested = 0;
   Object.entries(registry.components).forEach(function (pair) {
     var slug = pair[0];
     var entry = pair[1];
     if (!entry.category) { skipped++; return; }
+    if (EXCLUDED_CATEGORIES.has(entry.category)) {
+      excluded++;
+      return;
+    }
 
     var guidelinePath = path.join(guidelinesDir, slug + ".json");
     var guideline = null;
@@ -371,7 +392,11 @@ function main() {
       nested +
       " in nested groups), skipped " +
       skipped +
-      " uncategorized",
+      " uncategorized, excluded " +
+      excluded +
+      " in non-public categories (" +
+      Array.from(EXCLUDED_CATEGORIES).join(", ") +
+      ")",
   );
 }
 
