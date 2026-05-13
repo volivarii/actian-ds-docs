@@ -153,61 +153,80 @@ function buildPage(slug, entry, guideline, defaults, registry, opts) {
 
   var sections = [];
 
-  // Stub pages: render ONLY title + category link + StubFooter (handled below).
-  // Skip all section emission so the page reads clean instead of showing
-  // empty Anatomy/Variants/Motion/Accessibility headers.
-  if (!isStub) {
-    // Overview — short prose hoist, from registry description or guideline description.
-    // Hoisted from frontmatter so the page leads with prose before the first H2.
-    var overviewText = (entry.description && entry.description.trim())
-      || (guideline && guideline.description ? guideline.description : "");
-    if (overviewText) {
-      sections.push("## Overview\n\n" + escapeMdxPlaceholders(overviewText));
-    }
+  // ζ.5 follow-up (2026-05-13): stub pages were previously rendered as
+  // title-only — but the registry HAS useful data for stubs (description,
+  // variants from Figma sync, Figma URL). Hiding it produced "empty page"
+  // confusion (Vincent's screenshot of Tag, Catalog). New strategy:
+  //   - Registry-driven sections render ALWAYS (Overview from
+  //     entry.description, Variants matrix from entry.variants, Resources
+  //     with Figma + knowledge URLs)
+  //   - Defaults-driven sections render ALWAYS when defaults exist for
+  //     this category (Anatomy, Motion, Accessibility — the category
+  //     baseline is meaningful even before per-component curation)
+  //   - Guideline-only sections (Content guidelines) render only when the
+  //     guideline is non-stub AND has the data
+  //   - StubFooter still appears for stubs to signal curation status
 
-    // Anatomy: from guideline (curated) or category-defaults (fallback)
-    if (guideline && guideline.anatomy && Array.isArray(guideline.anatomy.parts) && guideline.anatomy.parts.length) {
-      sections.push("## Anatomy\n\n<Anatomy parts={" + jsLit(guideline.anatomy.parts) + "} />");
-    } else if (defaults && defaults.card_anatomy && Array.isArray(defaults.card_anatomy.parts) && defaults.card_anatomy.parts.length) {
-      sections.push("## Anatomy\n\n<Anatomy parts={" + jsLit(defaults.card_anatomy.parts) + "} />");
-    }
+  // Overview — short prose hoist, from registry description or guideline description.
+  // Hoisted from frontmatter so the page leads with prose before the first H2.
+  var overviewText = (entry.description && entry.description.trim())
+    || (guideline && guideline.description ? guideline.description : "");
+  if (overviewText) {
+    sections.push("## Overview\n\n" + escapeMdxPlaceholders(overviewText));
+  }
 
-    // Variants: prefer registry.variants (the live shape from Figma sync) over guideline
-    if (entry.variants && Object.keys(entry.variants).length) {
-      var axes = Object.entries(entry.variants).map(function (pair) {
-        return { axis: pair[0], values: pair[1] };
-      });
-      sections.push("## Variants\n\n<VariantMatrix variantAxes={" + jsLit(axes) + "} />");
-    } else if (defaults && defaults.card_component && Array.isArray(defaults.card_component.variantAxes) && defaults.card_component.variantAxes.length) {
-      sections.push("## Variants\n\n<VariantMatrix variantAxes={" + jsLit(defaults.card_component.variantAxes) + "} />");
-    }
+  // Anatomy: from guideline (curated) or category-defaults (fallback).
+  // Skip when only the stub guideline exists AND no defaults; otherwise
+  // category-defaults provide a useful baseline even for stubs.
+  if (!isStub && guideline && guideline.anatomy && Array.isArray(guideline.anatomy.parts) && guideline.anatomy.parts.length) {
+    sections.push("## Anatomy\n\n<Anatomy parts={" + jsLit(guideline.anatomy.parts) + "} />");
+  } else if (defaults && defaults.card_anatomy && Array.isArray(defaults.card_anatomy.parts) && defaults.card_anatomy.parts.length) {
+    sections.push("## Anatomy\n\n<Anatomy parts={" + jsLit(defaults.card_anatomy.parts) + "} />");
+  }
 
-    // Motion: prefer guideline.behavior.motion.pattern; fall back to category-defaults
-    if (guideline && guideline.behavior && guideline.behavior.motion && guideline.behavior.motion.pattern) {
-      var slugStr = guideline.behavior.motion.pattern;
-      sections.push("## Motion\n\n<MotionPattern patternRefs={" + jsLit([{ ref: slugStr }]) + "} />");
-    } else if (defaults && defaults.card_motion && Array.isArray(defaults.card_motion.patternRefs)) {
-      sections.push("## Motion\n\n<MotionPattern patternRefs={" + jsLit(defaults.card_motion.patternRefs) + "} />");
-    }
+  // Variants — registry-driven (live Figma sync data). Always render
+  // when present, even for stubs.
+  if (entry.variants && Object.keys(entry.variants).length) {
+    var axes = Object.entries(entry.variants).map(function (pair) {
+      return { axis: pair[0], values: pair[1] };
+    });
+    sections.push("## Variants\n\n<VariantMatrix variantAxes={" + jsLit(axes) + "} />");
+  } else if (defaults && defaults.card_component && Array.isArray(defaults.card_component.variantAxes) && defaults.card_component.variantAxes.length) {
+    sections.push("## Variants\n\n<VariantMatrix variantAxes={" + jsLit(defaults.card_component.variantAxes) + "} />");
+  }
 
-    // Accessibility: prefer guideline.accessibility; fall back to category-defaults refs
-    if (guideline && guideline.accessibility) {
-      if (typeof guideline.accessibility === "string") {
-        sections.push("## Accessibility\n\n" + guideline.accessibility);
-      } else if (Array.isArray(guideline.accessibility.requirementRefs)) {
-        sections.push("## Accessibility\n\n<AccessibilityRefs requirementRefs={" + jsLit(guideline.accessibility.requirementRefs) + "} />");
-      }
-    } else if (defaults && defaults.card_accessibility && Array.isArray(defaults.card_accessibility.requirementRefs)) {
-      sections.push("## Accessibility\n\n<AccessibilityRefs requirementRefs={" + jsLit(defaults.card_accessibility.requirementRefs) + "} />");
-    }
+  // Motion: prefer guideline (curated) over defaults. Defaults render
+  // for stubs too — category-level pattern is the right baseline.
+  if (!isStub && guideline && guideline.behavior && guideline.behavior.motion && guideline.behavior.motion.pattern) {
+    var slugStr = guideline.behavior.motion.pattern;
+    sections.push("## Motion\n\n<MotionPattern patternRefs={" + jsLit([{ ref: slugStr }]) + "} />");
+  } else if (defaults && defaults.card_motion && Array.isArray(defaults.card_motion.patternRefs)) {
+    sections.push("## Motion\n\n<MotionPattern patternRefs={" + jsLit(defaults.card_motion.patternRefs) + "} />");
+  }
 
-    // Content guidelines: only from guideline (no category fallback)
-    if (guideline && guideline.content_guidelines && Array.isArray(guideline.content_guidelines.sections)) {
-      sections.push("## Content guidelines\n\n" + guideline.content_guidelines.sections.map(renderContentSection).join("\n\n"));
+  // Accessibility: prefer guideline; fall back to category-defaults.
+  // Defaults render for stubs too.
+  if (!isStub && guideline && guideline.accessibility) {
+    if (typeof guideline.accessibility === "string") {
+      sections.push("## Accessibility\n\n" + guideline.accessibility);
+    } else if (Array.isArray(guideline.accessibility.requirementRefs)) {
+      sections.push("## Accessibility\n\n<AccessibilityRefs requirementRefs={" + jsLit(guideline.accessibility.requirementRefs) + "} />");
     }
+  } else if (defaults && defaults.card_accessibility && Array.isArray(defaults.card_accessibility.requirementRefs)) {
+    sections.push("## Accessibility\n\n<AccessibilityRefs requirementRefs={" + jsLit(defaults.card_accessibility.requirementRefs) + "} />");
+  }
 
-    // Resources — Figma node + knowledge-source JSON. Always emit on non-stub
-    // pages so authors land somewhere actionable below the in-page docs.
+  // Content guidelines — guideline-only (no category fallback). Only
+  // emitted for non-stub guidelines that have the content_guidelines
+  // block; stubs strictly don't have curated content.
+  if (!isStub && guideline && guideline.content_guidelines && Array.isArray(guideline.content_guidelines.sections)) {
+    sections.push("## Content guidelines\n\n" + guideline.content_guidelines.sections.map(renderContentSection).join("\n\n"));
+  }
+
+  // Resources — Figma node + knowledge-source JSON. Registry-driven, so
+  // emitted ALWAYS (stub or not). Stubs benefit most from this — it's
+  // the actionable jump-off to Figma where the canonical source lives.
+  {
     var figmaUrl = (entry.nodeId && registry && registry.fileKey)
       ? "https://www.figma.com/file/" + registry.fileKey + "?node-id=" + String(entry.nodeId).replace(":", "-")
       : null;
@@ -322,8 +341,23 @@ function main() {
   // Figma markers) could become a coarser knob later; per-category is
   // sufficient today.
   var EXCLUDED_CATEGORIES = new Set([
+    // Figma scratchpad / internal-only — never publish
     "Local components",
     "White-label services",
+    // ζ.6 (2026-05-13) — categories whose auto-generated content is
+    // either entirely covered by a tracked hand-curated page OR is
+    // empty/stub-only and adds noise to the sidebar:
+    //   - "Breakpoint, grid & structure": foundations/breakpoints.mdx
+    //     (tracked) already covers breakpoints with the token table +
+    //     authoritative grid description; the registry's grid components
+    //     (L/M/S/XL/XS grids) are Figma layout visualizations, not
+    //     separately documentable.
+    //   - "Content guidelines": the top-level /content link in the
+    //     sidebar (sourced from content/dist/content.md) is the
+    //     canonical place; the registry's single auto-stub item
+    //     ("Content Checklist") was empty.
+    "Breakpoint, grid & structure",
+    "Content guidelines",
   ]);
 
   // ζ.5 (2026-05-13): collection-mode categories. Per-component MDX
