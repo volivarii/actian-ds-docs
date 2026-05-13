@@ -125,7 +125,14 @@ function renderContentSection(s) {
   return parts.join("\n\n");
 }
 
-function buildPage(slug, entry, guideline, defaults, registry) {
+function buildPage(slug, entry, guideline, defaults, registry, opts) {
+  opts = opts || {};
+  // ζ.2 (2026-05-13): when a component is nested into a group subfolder
+  // (e.g., data-display/tag-identification-key/tag-default.mdx), the
+  // relative import path back to src/components/ needs one extra "../".
+  // nestDepth=0 → 4 ups (flat layout, unchanged); nestDepth=1 → 5 ups.
+  var nestDepth = opts.nestDepth || 0;
+  var importPrefix = "../".repeat(4 + nestDepth) + "components";
   var title = entry.name || slug;
   var description = (guideline && guideline.description) || `Component documentation for ${title}.`;
   var categoryLabel = entry.category;
@@ -213,7 +220,7 @@ function buildPage(slug, entry, guideline, defaults, registry) {
     "Callout",
     "TermList",
   ].map(function (name) {
-    return 'import ' + name + ' from "../../../../components/' + name + '.astro";';
+    return 'import ' + name + ' from "' + importPrefix + "/" + name + '.astro";';
   }).join("\n");
 
   // BASE_URL-aware category link: emit as inline MDX expression so the
@@ -285,8 +292,32 @@ function main() {
   fs.mkdirSync(OUT_DIR, { recursive: true });
 
   loader._resetCache();
+
+  // ζ.2 docs sidebar refactor (2026-05-13): count components per
+  // (categorySlug, groupSlug) so we can decide whether to nest. The
+  // `group` field is populated by knowledge v0.7.0+; absent on older
+  // vendor snapshots — in which case nestedGroups stays empty and the
+  // generator behaves identically to pre-ζ.2 (flat layout). No
+  // regression for consumers still on v0.6.x.
+  //
+  // Nesting rule: nest under <group-slug>/ ONLY when 2+ components share
+  // the (category, group) tuple. Solo components keep the flat layout —
+  // a "Button" page wouldn't be served by being nested inside a
+  // single-child "Button" folder.
+  var groupCounts = {};
+  Object.entries(registry.components).forEach(function (pair) {
+    var e = pair[1];
+    if (!e.category || !e.group) return;
+    var cs = slugifyCategory(e.category);
+    var gs = slugifyCategory(e.group);
+    if (!cs || !gs) return;
+    var key = cs + "::" + gs;
+    groupCounts[key] = (groupCounts[key] || 0) + 1;
+  });
+
   var written = 0;
   var skipped = 0;
+  var nested = 0;
   Object.entries(registry.components).forEach(function (pair) {
     var slug = pair[0];
     var entry = pair[1];
@@ -304,16 +335,44 @@ function main() {
 
     var defaults = loader.loadDefaultsForCategory(entry.category);
 
-    var mdx = buildPage(slug, entry, guideline, defaults, registry);
     var categorySlug = slugifyCategory(entry.category);
     var categoryDir = path.join(OUT_DIR, categorySlug);
     if (!fs.existsSync(categoryDir)) fs.mkdirSync(categoryDir, { recursive: true });
-    var outPath = path.join(categoryDir, slug + ".mdx");
+
+    // ζ.2: nest under <group-slug>/ when 2+ components share the group.
+    // Tag's 9 variants land in data-display/tag-identification-key/ so
+    // Starlight's autogenerate produces one collapsible sidebar node
+    // instead of 9 flat siblings.
+    var outDir = categoryDir;
+    var nestDepth = 0;
+    if (entry.group) {
+      var groupSlug = slugifyCategory(entry.group);
+      var groupKey = groupSlug ? (categorySlug + "::" + groupSlug) : null;
+      if (groupKey && groupCounts[groupKey] > 1) {
+        outDir = path.join(categoryDir, groupSlug);
+        if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
+        nestDepth = 1;
+        nested++;
+      }
+    }
+
+    var mdx = buildPage(slug, entry, guideline, defaults, registry, {
+      nestDepth: nestDepth,
+    });
+    var outPath = path.join(outDir, slug + ".mdx");
     fs.writeFileSync(outPath, mdx);
     written++;
   });
 
-  console.log("generate-component-pages: wrote " + written + " pages, skipped " + skipped + " uncategorized");
+  console.log(
+    "generate-component-pages: wrote " +
+      written +
+      " pages (" +
+      nested +
+      " in nested groups), skipped " +
+      skipped +
+      " uncategorized",
+  );
 }
 
 if (require.main === module) {
