@@ -63,6 +63,7 @@ jobs:
           fi
 
       - name: Open or update PR
+        id: cpr
         if: steps.changes.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v7
         with:
@@ -75,4 +76,13 @@ jobs:
           body: |
             Auto-generated vendor refresh from knowledge tag.
             Review the diff under `vendor/` and `vendored.json`.
-          labels: vendor
+          labels: vendor,auto-merge
+
+      - name: Enable auto-merge
+        if: steps.changes.outputs.changed == 'true' && steps.cpr.outputs.pull-request-number
+        env:
+          # App token (not default GITHUB_TOKEN) — gh CLI auto-merge call
+          # attributes to the App, matching the PR author identity.
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          gh pr merge "${{ steps.cpr.outputs.pull-request-number }}" --auto --squash --repo "${{ github.repository }}"
