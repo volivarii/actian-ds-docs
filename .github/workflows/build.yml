@@ -1,7 +1,16 @@
 name: Build and Deploy
 
+# Triggers:
+#   - push to main      → build + deploy to GitHub Pages
+#   - pull_request      → build only (deploy gated by `if: github.ref == 'refs/heads/main'`)
+#
+# We intentionally do NOT trigger on `push` to PR branches: the same SHA
+# already gets a `pull_request` build, so a bare `push:` trigger would
+# double-build every PR commit (push event ref differs from pull_request
+# event ref, so the concurrency group below cannot dedupe them either).
 on:
   push:
+    branches: [main]
   pull_request:
 
 concurrency:
