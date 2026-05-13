@@ -341,8 +341,23 @@ function main() {
   // Figma markers) could become a coarser knob later; per-category is
   // sufficient today.
   var EXCLUDED_CATEGORIES = new Set([
+    // Figma scratchpad / internal-only — never publish
     "Local components",
     "White-label services",
+    // ζ.6 (2026-05-13) — categories whose auto-generated content is
+    // either entirely covered by a tracked hand-curated page OR is
+    // empty/stub-only and adds noise to the sidebar:
+    //   - "Breakpoint, grid & structure": foundations/breakpoints.mdx
+    //     (tracked) already covers breakpoints with the token table +
+    //     authoritative grid description; the registry's grid components
+    //     (L/M/S/XL/XS grids) are Figma layout visualizations, not
+    //     separately documentable.
+    //   - "Content guidelines": the top-level /content link in the
+    //     sidebar (sourced from content/dist/content.md) is the
+    //     canonical place; the registry's single auto-stub item
+    //     ("Content Checklist") was empty.
+    "Breakpoint, grid & structure",
+    "Content guidelines",
   ]);
 
   // ζ.5 (2026-05-13): collection-mode categories. Per-component MDX
