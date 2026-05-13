@@ -3,7 +3,7 @@
   "knowledge_repo_version_range": "<1.0.0",
   "knowledge_repo_resolved_version": "v0.7.1",
   "knowledge_repo_resolved_sha": "cf852582cb2eb650a5d6df0a1f60ffaf9804fa4f",
-  "vendored_at": "2026-05-13T12:58:46.191Z",
+  "vendored_at": "2026-05-13T13:06:58.735Z",
   "vendored_entries": [
     "AUTHORING.md",
     "accessibility",
