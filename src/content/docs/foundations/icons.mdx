@@ -1,13 +1,15 @@
 ---
 title: Icons
-description: Icon tokens from the Actian foundations.
+description: "Icon tokens (sizes + colors) plus the full DS-Kit icon catalog grouped by semantic purpose."
 ---
 
 import TokenScale from "../../../components/TokenScale.astro";
 import TokenTable from "../../../components/TokenTable.astro";
 import PageMetadata from "../../../components/PageMetadata.astro";
+import IconGrid from "../../../components/IconGrid.astro";
 import iconColors from "../../../../vendor/foundations/dist/tokens/icons/icon-colors.json";
 import dtcg from "../../../../vendor/tokens/tokens.json";
+import dskit from "../../../../vendor/components/dist/registries/dskit.json";
 
 <PageMetadata
   slug="foundations.icons"
@@ -15,7 +17,7 @@ import dtcg from "../../../../vendor/tokens/tokens.json";
   schema={1}
 />
 
-Icon tokens for the Actian DS — sizes and colors.
+Icon tokens for the Actian DS — sizes and colors — followed by the full icon catalog grouped by semantic purpose.
 
 ## Sizes
 
@@ -28,3 +30,20 @@ Icon color tokens are exposed under `color.icon` and rendered on the [Color](/fo
 {(iconColors.blocks || []).filter((b) => b.type === "table").map((b) => (
   <TokenTable headers={b.headers} rows={b.rows} showSwatch={true} />
 ))}
+
+## Catalog
+
+The DS-Kit ships **234 icons** organized into **11 semantic groups** derived from the Figma Actual-icons layout. Eight icons (`add`, `book-bookmark`, `dataset`, `directory`, `download`, `export`, `minimize`, `process`) belong to multiple groups and appear in each section below.
+
+Group order is specific-first: context-specific groups (Connector, Status, Cursor) come before universal ones (Common). Same ordering as the knowledge-side priority resolver in [`components/src/icon-groups.json`](https://github.com/volivarii/actian-ds-knowledge/blob/main/components/src/icon-groups.json).
+
+<IconGrid
+  icons={Object.entries(dskit.components)
+    .filter(([_, e]) => e.category === "Icons")
+    .map(([slug, e]) => ({
+      slug,
+      name: e.name,
+      group: e.group,
+      secondaryGroups: e.secondaryGroups,
+    }))}
+/>

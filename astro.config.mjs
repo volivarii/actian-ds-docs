@@ -32,15 +32,21 @@ export default defineConfig({
       components: {
         ThemeSelect: "./src/components/empty.astro",
       },
+      // Sidebar mirrors Figma's section organization:
+      // - Foundations ← Figma 💎 FOUNDATIONS
+      // - Components ← Figma 🧱 COMPONENTS (each category has an index.mdx overview)
+      // - Brand assets ← Figma 🎨 BRAND ASSETS
+      // Content guidelines + Accessibility + Patterns + Reference are
+      // docs-only top-level entries (no Figma equivalent).
       sidebar: [
         { label: "Foundations", items: [{ autogenerate: { directory: "foundations" } }] },
         { label: "Content guidelines", link: "/content" },
         { label: "Accessibility", link: "/accessibility" },
-        { label: "Categories", items: [{ autogenerate: { directory: "categories" } }] },
         {
           label: "Components",
           items: [{ autogenerate: { directory: "components" } }],
         },
+        { label: "Brand assets", items: [{ autogenerate: { directory: "brand" } }] },
         { label: "Patterns", link: "/patterns" },
         {
           label: "Reference",
@@ -49,6 +55,7 @@ export default defineConfig({
             { label: "Inventory", link: "/inventory" },
             { label: "State", link: "/state" },
             { label: "Migrations", link: "/migrations" },
+            { label: "Confidence scores", link: "/confidence" },
           ],
         },
       ],
