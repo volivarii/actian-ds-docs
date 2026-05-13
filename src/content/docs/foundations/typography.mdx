@@ -6,6 +6,10 @@ description: Typography tokens from the Actian foundations.
 import TokenScale from "../../../components/TokenScale.astro";
 import TokenTable from "../../../components/TokenTable.astro";
 import PageMetadata from "../../../components/PageMetadata.astro";
+import fontFamily from "../../../../vendor/foundations/dist/tokens/typography/font-family.json";
+import fontSize from "../../../../vendor/foundations/dist/tokens/typography/font-size.json";
+import lineHeight from "../../../../vendor/foundations/dist/tokens/typography/line-height.json";
+import letterSpacing from "../../../../vendor/foundations/dist/tokens/typography/letter-spacing.json";
 import textStyleComposite from "../../../../vendor/foundations/dist/tokens/typography/text-style-tokens-composite.json";
 import dtcg from "../../../../vendor/tokens/tokens.json";
 
@@ -19,7 +23,9 @@ Typography tokens for the Actian DS — family, weight, size, line-height, lette
 
 ## Font family
 
-<TokenScale data={dtcg.font.family} prefix="font-family" visualKind="none" />
+{(fontFamily.blocks || []).filter((b) => b.type === "table").map((b) => (
+  <TokenTable headers={b.headers} rows={b.rows} />
+))}
 
 ## Font weight
 
@@ -27,19 +33,25 @@ Typography tokens for the Actian DS — family, weight, size, line-height, lette
 
 ## Font size
 
-<TokenScale data={dtcg.font.size} prefix="font-size" visualKind="none" />
+{(fontSize.blocks || []).filter((b) => b.type === "table").map((b) => (
+  <TokenTable headers={b.headers} rows={b.rows} />
+))}
 
 ## Line height
 
-<TokenScale data={dtcg.font.lineheight} prefix="font-lineheight" visualKind="none" />
+{(lineHeight.blocks || []).filter((b) => b.type === "table").map((b) => (
+  <TokenTable headers={b.headers} rows={b.rows} />
+))}
 
 ## Letter spacing
 
-<TokenScale data={dtcg.font.letterspacing} prefix="font-letterspacing" visualKind="none" />
+{(letterSpacing.blocks || []).filter((b) => b.type === "table").map((b) => (
+  <TokenTable headers={b.headers} rows={b.rows} />
+))}
 
 ## Composite text styles
 
-Composite text-style tokens combine family / weight / size / line-height into named roles (e.g. `body`, `heading`, `caption`). Not yet in the DTCG export — rendered from the foundations source.
+Composite text-style tokens combine family / weight / size / line-height into named roles (e.g. `body`, `heading`, `caption`). Rendered from the foundations source.
 
 {(textStyleComposite.blocks || []).filter((b) => b.type === "table").map((b) => (
   <TokenTable headers={b.headers} rows={b.rows} />

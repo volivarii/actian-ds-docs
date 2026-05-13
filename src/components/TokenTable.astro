@@ -9,7 +9,33 @@ interface Props {
 const { headers, rows, showSwatch = false, swatchColumn = "Token" } = Astro.props;
 
 function renderCell(value: unknown): string {
-  return String(value ?? "").replace(/`([^`]+)`/g, "<code>$1</code>");
+  return String(value ?? "")
+    // Code spans: `value` → <code>value</code>
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    // Italics: *text* → <em>text</em>  (used in status_note's "*(note)*" suffix)
+    .replace(/\*([^*]+)\*/g, "<em>$1</em>");
+}
+
+// Knowledge's foundations-derive splits the "Status" markdown column
+// into two row fields: `status` (lowercase, e.g., "shipped") and
+// `status_note` (the original cell text, e.g., "Proposed *(rename
+// from `text-primary` — eng update required)*"). We reconstruct the
+// rendered "Status" column from these two fields when the header is
+// "Status" but the row only carries the lowercase pieces. Back-compat:
+// if a row supplies `Status` directly (legacy data), that wins.
+const STATUS_EMOJI: Record<string, string> = {
+  shipped: "🟢",
+  proposed: "🟡",
+  "in-review": "🔵",
+  deprecated: "⛔",
+};
+
+function renderStatus(row: Record<string, string>): string {
+  if (row.Status) return renderCell(row.Status);
+  const emoji = STATUS_EMOJI[row.status] || "";
+  const text = row.status_note || row.status || "";
+  if (!text && !emoji) return "";
+  return renderCell((emoji ? emoji + " " : "") + text);
 }
 
 // Detect token visual type from the token name. Returns the kind + the
@@ -53,7 +79,9 @@ function tokenVisual(name: string | undefined): { kind: string; value: string } 
               )}
             </td>
           )}
-          {headers.map((h) => <td set:html={renderCell(row[h])} />)}
+          {headers.map((h) => (
+            <td set:html={h === "Status" ? renderStatus(row) : renderCell(row[h])} />
+          ))}
         </tr>
       );
     })}

@@ -3,9 +3,11 @@ title: Borders
 description: Border tokens from the Actian foundations.
 ---
 
-import TokenScale from "../../../components/TokenScale.astro";
+import TokenTable from "../../../components/TokenTable.astro";
 import PageMetadata from "../../../components/PageMetadata.astro";
-import dtcg from "../../../../vendor/tokens/tokens.json";
+import radius from "../../../../vendor/foundations/dist/tokens/borders/radius.json";
+import width from "../../../../vendor/foundations/dist/tokens/borders/width.json";
+import styleComposite from "../../../../vendor/foundations/dist/tokens/borders/style-composite.json";
 
 <PageMetadata
   slug="foundations.borders"
@@ -13,22 +15,24 @@ import dtcg from "../../../../vendor/tokens/tokens.json";
   schema={1}
 />
 
-Border tokens for the Actian DS — radius, width, and border colors.
+Border tokens for the Actian DS — radius, width, and composite border styles.
 
 ## Radius
 
-<TokenScale data={dtcg.border.radius} prefix="border-radius" />
+{(radius.blocks || []).filter((b) => b.type === "table").map((b) => (
+  <TokenTable headers={b.headers} rows={b.rows} showSwatch={true} />
+))}
 
 ## Width
 
-<TokenScale data={dtcg.border.width} prefix="border-width" />
+{(width.blocks || []).filter((b) => b.type === "table").map((b) => (
+  <TokenTable headers={b.headers} rows={b.rows} showSwatch={true} />
+))}
 
-## Border colors
+## Border styles
 
-Semantic border-color tokens used across surfaces, fields, and states.
+Semantic border tokens combining width + color into named roles for surfaces, fields, and states.
 
-<TokenScale
-  data={Object.fromEntries(Object.entries(dtcg.border).filter(([k]) => !["radius", "width"].includes(k)))}
-  prefix="border"
-  visualKind="color"
-/>
+{(styleComposite.blocks || []).filter((b) => b.type === "table").map((b) => (
+  <TokenTable headers={b.headers} rows={b.rows} />
+))}

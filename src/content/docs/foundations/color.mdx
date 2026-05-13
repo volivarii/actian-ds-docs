@@ -4,7 +4,11 @@ description: Color tokens from the Actian foundations.
 ---
 
 import TokenScale from "../../../components/TokenScale.astro";
+import TokenTable from "../../../components/TokenTable.astro";
 import PageMetadata from "../../../components/PageMetadata.astro";
+import backgrounds from "../../../../vendor/foundations/dist/tokens/backgrounds.json";
+import textColors from "../../../../vendor/foundations/dist/tokens/typography/text-color-tokens.json";
+import iconColors from "../../../../vendor/foundations/dist/tokens/icons/icon-colors.json";
 import dtcg from "../../../../vendor/tokens/tokens.json";
 
 <PageMetadata
@@ -45,15 +49,21 @@ Per-surface tokens for backgrounds, text, icons, and annotation.
 
 ### Backgrounds
 
-<TokenScale data={dtcg.color.bg} prefix="color-bg" />
+{(backgrounds.blocks || []).filter((b) => b.type === "table").map((b) => (
+  <TokenTable headers={b.headers} rows={b.rows} showSwatch={true} />
+))}
 
 ### Text
 
-<TokenScale data={dtcg.color.text} prefix="color-text" />
+{(textColors.blocks || []).filter((b) => b.type === "table").map((b) => (
+  <TokenTable headers={b.headers} rows={b.rows} showSwatch={true} />
+))}
 
 ### Icons
 
-<TokenScale data={dtcg.color.icon} prefix="color-icon" />
+{(iconColors.blocks || []).filter((b) => b.type === "table").map((b) => (
+  <TokenTable headers={b.headers} rows={b.rows} showSwatch={true} />
+))}
 
 ### Annotation
 
