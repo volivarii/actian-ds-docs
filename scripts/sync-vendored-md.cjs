@@ -34,11 +34,16 @@ var PAGES = [
     description: "WCAG 2.2 AA guidance for the Actian DS.",
   },
   {
+    // Phase 4b: the /content page now renders global / cross-cutting
+    // content guidance only (voice, tone, terminology, UX-pattern topics).
+    // Component-scoped content guidance lives on each component page,
+    // sourced from the per-component guideline JSONs. The full transitional
+    // content.md concat is no longer the docs source.
     slug: "content",
-    source: "vendor/content/dist/content.md",
-    sourceKey: "content/dist/content.md",
+    source: "vendor/content/dist/global.md",
+    sourceKey: "content/dist/global.md",
     title: "Content guidelines",
-    description: "Voice, terminology, UI copy patterns — Actian DS content.",
+    description: "Voice, tone, terminology, and UX-pattern copy guidance — Actian DS.",
   },
 ];
 
@@ -49,25 +54,18 @@ function stripFirstH1(body) {
 }
 
 function convertJekyllFrontmatterToHeadings(body) {
-  // vendor/content/dist/content.md is a concatenated bundle of source
-  // files where each retains Jekyll-style frontmatter at the top:
+  // Historically, the vendored content bundle concatenated source files
+  // that each retained a Jekyll-style frontmatter block (`--- title: ...
+  // ---`) as their de-facto section header, with no `## Title` heading in
+  // the body. This converted those blocks into real `## Title` headings.
   //
-  //     ---
-  //     title: "Buttons"
-  //     nav_order: 4
-  //     ---
-  //
-  // The source MDs use that title: as the de facto section header — there
-  // is no '## Buttons' heading in the body. Naive stripping deletes the
-  // structure entirely. Instead, convert each frontmatter block into a
-  // proper '## Title' heading so the page hierarchy is preserved (and the
-  // right-rail TOC + cross-link anchors get usable slugs).
-  //
-  // Strictness:
-  //   - Opening '---' must be followed IMMEDIATELY by 'title:'; that
-  //     prevents matching the gap between an earlier HR '---' and a
-  //     later real frontmatter block.
-  //   - Body is bounded to ≤10 lines before the closing '---'.
+  // As of Phase 4b the docs source is `content/dist/global.md`, which the
+  // knowledge repo's derive-content.js already emits with proper `## `
+  // section headings (frontmatter stripped at derive time). So this
+  // function is now effectively a no-op on the current input — the regex
+  // finds nothing to convert. It is retained defensively: it is harmless
+  // on frontmatter-free input, and still covers the `accessibility.md`
+  // page + any future source that reverts to the Jekyll-block shape.
   return body.replace(
     /\n---\n[ \t]*title:[ \t]*"((?:[^"\\]|\\.)*)"[ \t]*\n(?:[^\n]*\n){0,10}---\n/g,
     function (_, title) {

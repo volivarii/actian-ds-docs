@@ -1,7 +1,8 @@
 import type { APIRoute } from "astro";
 import { getCollection } from "astro:content";
 
-const SITE = process.env.SITE_URL || "https://volivarii.github.io/actian-ds-docs";
+const SITE =
+  process.env.SITE_URL || "https://volivarii.github.io/actian-ds-docs";
 
 export const GET: APIRoute = async () => {
   const docs = await getCollection("docs");
@@ -22,22 +23,38 @@ export const GET: APIRoute = async () => {
 
   for (const entry of foundations) {
     const slug = entry.id.replace(/^foundations\//, "").replace(/\.mdx?$/, "");
-    lines.push(`- [${entry.data.title}](${SITE}/foundations/${slug}.md): ${entry.data.description || ""}`);
+    lines.push(
+      `- [${entry.data.title}](${SITE}/foundations/${slug}.md): ${entry.data.description || ""}`,
+    );
   }
 
-  lines.push("", "## Accessibility", "", `- [WCAG 2.2 AA guidance](${SITE}/accessibility.md): WCAG criteria, contrast, keyboard nav, ARIA patterns`);
-  lines.push("", "## Content guidelines", "", `- [Content](${SITE}/content.md): voice, terminology, UI copy patterns`);
+  lines.push(
+    "",
+    "## Accessibility",
+    "",
+    `- [WCAG 2.2 AA guidance](${SITE}/accessibility.md): WCAG criteria, contrast, keyboard nav, ARIA patterns`,
+  );
+  lines.push(
+    "",
+    "## Content guidelines",
+    "",
+    `- [Content](${SITE}/content.md): voice, tone, terminology, and UX-pattern copy guidance`,
+  );
 
   lines.push("", "## Categories", "");
   for (const entry of categories) {
     const slug = entry.id.replace(/^categories\//, "").replace(/\.mdx?$/, "");
-    lines.push(`- [${entry.data.title}](${SITE}/categories/${slug}.md): ${entry.data.description || ""}`);
+    lines.push(
+      `- [${entry.data.title}](${SITE}/categories/${slug}.md): ${entry.data.description || ""}`,
+    );
   }
 
   lines.push("", "## Components (categorized DS Kit)", "");
   for (const entry of components) {
     const slug = entry.id.replace(/^components\//, "").replace(/\.mdx?$/, "");
-    lines.push(`- [${entry.data.title}](${SITE}/components/${slug}.md): ${entry.data.description || ""}`);
+    lines.push(
+      `- [${entry.data.title}](${SITE}/components/${slug}.md): ${entry.data.description || ""}`,
+    );
   }
 
   lines.push("", "## Other", "");
