@@ -353,7 +353,7 @@ function main() {
     //     (L/M/S/XL/XS grids) are Figma layout visualizations, not
     //     separately documentable.
     //   - "Content guidelines": the top-level /content link in the
-    //     sidebar (sourced from content/dist/content.md) is the
+    //     sidebar (sourced from content/dist/global.md) is the
     //     canonical place; the registry's single auto-stub item
     //     ("Content Checklist") was empty.
     "Breakpoint, grid & structure",

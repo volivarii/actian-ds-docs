@@ -50,6 +50,9 @@ var EXCLUDE_TOP_LEVEL = new Set([
   "AGENTS.md",
   "CLAUDE.md",
   "CONTRIBUTING.md",
+  // Repo-governance file — only meaningful at the knowledge repo's own
+  // root; inert and noise inside the docs-site vendor tree.
+  "CODEOWNERS",
   "llms.txt",
 ]);
 
