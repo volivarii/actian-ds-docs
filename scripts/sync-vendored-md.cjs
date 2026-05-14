@@ -34,11 +34,16 @@ var PAGES = [
     description: "WCAG 2.2 AA guidance for the Actian DS.",
   },
   {
+    // Phase 4b: the /content page now renders global / cross-cutting
+    // content guidance only (voice, tone, terminology, UX-pattern topics).
+    // Component-scoped content guidance lives on each component page,
+    // sourced from the per-component guideline JSONs. The full transitional
+    // content.md concat is no longer the docs source.
     slug: "content",
-    source: "vendor/content/dist/content.md",
-    sourceKey: "content/dist/content.md",
+    source: "vendor/content/dist/global.md",
+    sourceKey: "content/dist/global.md",
     title: "Content guidelines",
-    description: "Voice, terminology, UI copy patterns — Actian DS content.",
+    description: "Voice, tone, terminology, and UX-pattern copy guidance — Actian DS.",
   },
 ];
 
