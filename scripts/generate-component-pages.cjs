@@ -7,12 +7,13 @@
  * Reads:
  *   - vendor/components/dist/registries/dskit.json (322 components total;
  *     72 carry a `category` field)
- *   - vendor/components/src/guidelines/<slug>.json (when present;
- *     44 curated + 41 stubs in v0.5.1)
+ *   - vendor/components/dist/guidelines/<slug>.json (when present — the
+ *     derived per-component multi-domain guideline objects; resolved via
+ *     the manifest collection components.guidelineDoc.byKey)
  *
  * Writes:
- *   - src/content/docs/components/<slug>.mdx (one per categorized component;
- *     Starlight v0.39 reads from src/content/docs/<dir>/)
+ *   - src/content/docs/<section>/<category>/<slug>.mdx (one per categorized
+ *     component; Starlight reads from src/content/docs/<dir>/)
  *
  * Uncategorized components (250) get NO page here — they're rendered on
  * /inventory only (Task 9).
@@ -59,14 +60,23 @@ function escapeMdxPlaceholders(s) {
 }
 
 // Render a { headers, rows } table as a GitHub-flavored markdown table.
+// All-empty rows are dropped: the upstream guideline-md-parser can leave a
+// trailing ["", ""] artifact row when a source table is followed by a
+// Jekyll `{: .do-dont-table}` annotation line — rendering it would produce
+// a stray blank row in the docs table.
 function renderMarkdownTable(headers, rows) {
   var esc = function (c) {
     return escapeMdxPlaceholders(String(c == null ? "" : c)).replace(/\|/g, "\\|");
   };
+  var nonEmptyRows = (rows || []).filter(function (row) {
+    return (row || []).some(function (c) {
+      return c != null && String(c).trim() !== "";
+    });
+  });
   var lines = [];
   lines.push("| " + headers.map(esc).join(" | ") + " |");
   lines.push("|" + headers.map(function () { return "---"; }).join("|") + "|");
-  (rows || []).forEach(function (row) {
+  nonEmptyRows.forEach(function (row) {
     lines.push("| " + (row || []).map(esc).join(" | ") + " |");
   });
   return lines.join("\n");
@@ -263,9 +273,9 @@ function buildPage(slug, entry, guideline, defaults, registry, opts) {
 
   // Resources — Figma node + knowledge-source link. The Figma link is
   // registry-driven (emitted always). The knowledge-source link points at
-  // the per-component authoring directory and is emitted only when that
-  // component actually has a guideline (a non-stub) — otherwise it would
-  // 404.
+  // the per-component authoring directory and is emitted only when a
+  // guideline JSON exists for this component (`if (guideline)`) — otherwise
+  // the directory wouldn't exist and the link would 404.
   {
     var figmaUrl = (entry.nodeId && registry && registry.fileKey)
       ? "https://www.figma.com/file/" + registry.fileKey + "?node-id=" + String(entry.nodeId).replace(":", "-")
