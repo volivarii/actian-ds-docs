@@ -58,10 +58,26 @@ function escapeMdxPlaceholders(s) {
   return s.replace(/<([a-zA-Z][\w.-]*)>/g, "`<$1>`");
 }
 
-// content_guidelines.sections[].content[] items are objects with various
-// shapes (rule | note | do/dont | term[/definition] | examples). Bucket
-// them by shape and emit the right component as JSX in the MDX.
-function renderContentSection(s) {
+// Render a { headers, rows } table as a GitHub-flavored markdown table.
+function renderMarkdownTable(headers, rows) {
+  var esc = function (c) {
+    return escapeMdxPlaceholders(String(c == null ? "" : c)).replace(/\|/g, "\\|");
+  };
+  var lines = [];
+  lines.push("| " + headers.map(esc).join(" | ") + " |");
+  lines.push("|" + headers.map(function () { return "---"; }).join("|") + "|");
+  (rows || []).forEach(function (row) {
+    lines.push("| " + (row || []).map(esc).join(" | ") + " |");
+  });
+  return lines.join("\n");
+}
+
+// content[] items come from the knowledge repo's guideline-md-parser in a
+// small set of shapes: plain strings (rules/bullets), { do, dont } pairs,
+// { term, rule } terminology entries, { note } callouts, and
+// { table: { headers, rows } } generic tables. Bucket them and emit the
+// right component/markdown as JSX.
+function renderContentItems(items, headingForDiag) {
   var pairs = [];   // [{ do, dont }, ...]
   var dos = [];     // solo dos
   var donts = [];   // solo donts
@@ -69,34 +85,37 @@ function renderContentSection(s) {
   var notes = [];   // strings
   var terms = [];   // [{ term, definition }]
   var examples = [];
+  var tables = [];  // [{ headers, rows }]
   var unknown = []; // for diagnostics
 
-  (s.content || []).forEach(function (item) {
+  (items || []).forEach(function (item) {
     if (typeof item === "string") { rules.push(item); return; }
     if (item && typeof item === "object") {
       if (item.do && item.dont) { pairs.push({ do: item.do, dont: item.dont }); return; }
       if (item.do) { dos.push(item.do); return; }
       if (item.dont) { donts.push(item.dont); return; }
+      // `term` must be checked before `rule`: terminology items are
+      // { term, rule } where `rule` carries the definition text.
+      if (item.term) { terms.push({ term: item.term, definition: item.definition || item.rule }); return; }
       if (item.rule) { rules.push(item.rule); return; }
       if (item.note) { notes.push(item.note); return; }
-      if (item.term) { terms.push({ term: item.term, definition: item.definition }); return; }
+      if (item.table && Array.isArray(item.table.headers)) { tables.push(item.table); return; }
       if (item.examples) {
         var ex = Array.isArray(item.examples) ? item.examples : [item.examples];
         ex.forEach(function (e) { examples.push(String(e)); });
         return;
       }
+      if (item.example) { examples.push(String(item.example)); return; }
       unknown.push(item);
     }
   });
 
   if (unknown.length) {
-    process.stderr.write("[generate] WARNING: unknown content_guideline shape(s) in section '"
-      + (s.heading || "") + "': " + JSON.stringify(unknown) + "\n");
+    process.stderr.write("[generate] WARNING: unknown content item shape(s) in section '"
+      + (headingForDiag || "") + "': " + JSON.stringify(unknown) + "\n");
   }
 
   var parts = [];
-  parts.push("### " + (s.heading || ""));
-
   if (rules.length) {
     parts.push(rules.map(function (r) { return "- " + escapeMdxPlaceholders(r); }).join("\n"));
   }
@@ -130,10 +149,31 @@ function renderContentSection(s) {
     }).join(", ");
     parts.push("<TermList items={[" + termsJsx + "]} />");
   }
+  if (tables.length) {
+    tables.forEach(function (tbl) {
+      parts.push(renderMarkdownTable(tbl.headers, tbl.rows));
+    });
+  }
   if (examples.length) {
     parts.push("**Examples:** " + examples.map(function (e) { return "`" + e + "`"; }).join(", "));
   }
 
+  return parts.join("\n\n");
+}
+
+// Render one domains.content section: an H3 heading (skipped when empty —
+// the parser emits an untitled lead section before the first heading) plus
+// its content[], plus one reserved level of `subsections` (H4).
+function renderContentSection(s) {
+  var parts = [];
+  if (s.heading) parts.push("### " + s.heading);
+  var body = renderContentItems(s.content, s.heading);
+  if (body) parts.push(body);
+  (s.subsections || []).forEach(function (sub) {
+    if (sub.subheading) parts.push("#### " + sub.subheading);
+    var subBody = renderContentItems(sub.content, sub.subheading);
+    if (subBody) parts.push(subBody);
+  });
   return parts.join("\n\n");
 }
 
@@ -146,10 +186,22 @@ function buildPage(slug, entry, guideline, defaults, registry, opts) {
   var nestDepth = opts.nestDepth || 0;
   var importPrefix = "../".repeat(4 + nestDepth) + "components";
   var title = entry.name || slug;
-  var description = (guideline && guideline.description) || `Component documentation for ${title}.`;
+  var description = (entry.description && entry.description.trim())
+    || `Component documentation for ${title}.`;
   var categoryLabel = entry.category;
   var categorySlug = slugifyCategory(categoryLabel);
-  var isStub = !guideline || guideline._stub === true;
+
+  // The per-component guideline JSON (components/dist/guidelines/<slug>.json)
+  // carries a `domains` object; only the `content` domain is authored as
+  // structured sections today (usage/design/behavior/tokens are `inherited`
+  // or `not-started`). A page is treated as a "stub" when no curated content
+  // domain is present — anatomy / motion / a11y / variants then come purely
+  // from the registry + category-defaults baseline.
+  var contentDomain = guideline && guideline.domains && guideline.domains.content;
+  var hasContent = !!(contentDomain
+    && Array.isArray(contentDomain.sections)
+    && (contentDomain.status === "approved" || contentDomain.status === "draft"));
+  var isStub = !hasContent;
 
   var sections = [];
 
@@ -167,20 +219,17 @@ function buildPage(slug, entry, guideline, defaults, registry, opts) {
   //     guideline is non-stub AND has the data
   //   - StubFooter still appears for stubs to signal curation status
 
-  // Overview — short prose hoist, from registry description or guideline description.
-  // Hoisted from frontmatter so the page leads with prose before the first H2.
-  var overviewText = (entry.description && entry.description.trim())
-    || (guideline && guideline.description ? guideline.description : "");
+  // Overview — short prose hoist from the registry description. Hoisted
+  // so the page leads with prose before the first H2.
+  var overviewText = (entry.description && entry.description.trim()) || "";
   if (overviewText) {
     sections.push("## Overview\n\n" + escapeMdxPlaceholders(overviewText));
   }
 
-  // Anatomy: from guideline (curated) or category-defaults (fallback).
-  // Skip when only the stub guideline exists AND no defaults; otherwise
-  // category-defaults provide a useful baseline even for stubs.
-  if (!isStub && guideline && guideline.anatomy && Array.isArray(guideline.anatomy.parts) && guideline.anatomy.parts.length) {
-    sections.push("## Anatomy\n\n<Anatomy parts={" + jsLit(guideline.anatomy.parts) + "} />");
-  } else if (defaults && defaults.card_anatomy && Array.isArray(defaults.card_anatomy.parts) && defaults.card_anatomy.parts.length) {
+  // Anatomy: from category-defaults. The per-component `design` domain is
+  // `inherited` (resolves to the category baseline) — the guideline JSON
+  // carries no component-specific anatomy of its own.
+  if (defaults && defaults.card_anatomy && Array.isArray(defaults.card_anatomy.parts) && defaults.card_anatomy.parts.length) {
     sections.push("## Anatomy\n\n<Anatomy parts={" + jsLit(defaults.card_anatomy.parts) + "} />");
   }
 
@@ -195,48 +244,41 @@ function buildPage(slug, entry, guideline, defaults, registry, opts) {
     sections.push("## Variants\n\n<VariantMatrix variantAxes={" + jsLit(defaults.card_component.variantAxes) + "} />");
   }
 
-  // Motion: prefer guideline (curated) over defaults. Defaults render
-  // for stubs too — category-level pattern is the right baseline.
-  if (!isStub && guideline && guideline.behavior && guideline.behavior.motion && guideline.behavior.motion.pattern) {
-    var slugStr = guideline.behavior.motion.pattern;
-    sections.push("## Motion\n\n<MotionPattern patternRefs={" + jsLit([{ ref: slugStr }]) + "} />");
-  } else if (defaults && defaults.card_motion && Array.isArray(defaults.card_motion.patternRefs)) {
+  // Motion + Accessibility: from category-defaults. The per-component
+  // `behavior` domain is `inherited` (motion + a11y resolve to the
+  // category baseline) — the guideline JSON carries no component-specific
+  // motion/accessibility of its own.
+  if (defaults && defaults.card_motion && Array.isArray(defaults.card_motion.patternRefs)) {
     sections.push("## Motion\n\n<MotionPattern patternRefs={" + jsLit(defaults.card_motion.patternRefs) + "} />");
   }
-
-  // Accessibility: prefer guideline; fall back to category-defaults.
-  // Defaults render for stubs too.
-  if (!isStub && guideline && guideline.accessibility) {
-    if (typeof guideline.accessibility === "string") {
-      sections.push("## Accessibility\n\n" + guideline.accessibility);
-    } else if (Array.isArray(guideline.accessibility.requirementRefs)) {
-      sections.push("## Accessibility\n\n<AccessibilityRefs requirementRefs={" + jsLit(guideline.accessibility.requirementRefs) + "} />");
-    }
-  } else if (defaults && defaults.card_accessibility && Array.isArray(defaults.card_accessibility.requirementRefs)) {
+  if (defaults && defaults.card_accessibility && Array.isArray(defaults.card_accessibility.requirementRefs)) {
     sections.push("## Accessibility\n\n<AccessibilityRefs requirementRefs={" + jsLit(defaults.card_accessibility.requirementRefs) + "} />");
   }
 
-  // Content guidelines — guideline-only (no category fallback). Only
-  // emitted for non-stub guidelines that have the content_guidelines
-  // block; stubs strictly don't have curated content.
-  if (!isStub && guideline && guideline.content_guidelines && Array.isArray(guideline.content_guidelines.sections)) {
-    sections.push("## Content guidelines\n\n" + guideline.content_guidelines.sections.map(renderContentSection).join("\n\n"));
+  // Content guidelines — the curated `content` domain. Emitted only when
+  // the component has an approved/draft content domain with sections.
+  if (hasContent) {
+    sections.push("## Content guidelines\n\n" + contentDomain.sections.map(renderContentSection).join("\n\n"));
   }
 
-  // Resources — Figma node + knowledge-source JSON. Registry-driven, so
-  // emitted ALWAYS (stub or not). Stubs benefit most from this — it's
-  // the actionable jump-off to Figma where the canonical source lives.
+  // Resources — Figma node + knowledge-source link. The Figma link is
+  // registry-driven (emitted always). The knowledge-source link points at
+  // the per-component authoring directory and is emitted only when that
+  // component actually has a guideline (a non-stub) — otherwise it would
+  // 404.
   {
     var figmaUrl = (entry.nodeId && registry && registry.fileKey)
       ? "https://www.figma.com/file/" + registry.fileKey + "?node-id=" + String(entry.nodeId).replace(":", "-")
       : null;
-    var knowledgeUrl = "https://github.com/volivarii/actian-ds-knowledge/tree/main/components/src/guidelines/" + slug + ".json";
     var resourceLines = [
       "## Resources",
       "",
     ];
     if (figmaUrl) resourceLines.push("- [Open in Figma](" + figmaUrl + ")");
-    resourceLines.push("- [Knowledge source (JSON)](" + knowledgeUrl + ")");
+    if (guideline) {
+      var knowledgeUrl = "https://github.com/volivarii/actian-ds-knowledge/tree/main/components/src/" + slug;
+      resourceLines.push("- [Knowledge source](" + knowledgeUrl + ")");
+    }
     sections.push(resourceLines.join("\n"));
   }
 
@@ -262,15 +304,14 @@ function buildPage(slug, entry, guideline, defaults, registry, opts) {
     : "";
 
   // Confidence chips — inherit 4 fields (anatomy/variants/motion/a11y) from
-  // category-defaults, plus a synthesized `content` field per-component:
-  //   - high   : curated guideline with content_guidelines.sections present
-  //   - medium : curated guideline, but no content_guidelines block
-  //   - low    : stub / missing guideline
+  // category-defaults, plus a synthesized `content` field per-component
+  // driven by the content domain's status:
+  //   - high   : content domain `approved`
+  //   - medium : content domain `draft`
+  //   - low    : no curated content domain (stub)
   var contentConfidence = "low";
-  if (guideline && !guideline._stub) {
-    contentConfidence = (guideline.content_guidelines && Array.isArray(guideline.content_guidelines.sections) && guideline.content_guidelines.sections.length)
-      ? "high"
-      : "medium";
+  if (hasContent) {
+    contentConfidence = contentDomain.status === "approved" ? "high" : "medium";
   }
   var confidenceLine = "";
   if (defaults && defaults.confidence) {
@@ -315,7 +356,11 @@ function buildPage(slug, entry, guideline, defaults, registry, opts) {
 function main() {
   var registryPath = PATHS.components.registries.dskit;
   var registry = JSON.parse(fs.readFileSync(registryPath, "utf8"));
-  var guidelinesDir = path.join(PATHS.vendor, "components", "src", "guidelines");
+  // Phase 4b.2: per-component guideline JSONs now come from the derived
+  // components/dist/guidelines/<slug>.json layer (the new multi-domain
+  // shape), resolved via the manifest collection. The legacy scraped
+  // components/src/guidelines/*.json layer is no longer read.
+  var guidelineFor = PATHS.components.guidelineDoc.byKey;
 
   // Ensure each section root exists. Generator writes per-category dirs
   // under each section root. Tracked content lives:
@@ -468,7 +513,7 @@ function main() {
       return;
     }
 
-    var guidelinePath = path.join(guidelinesDir, slug + ".json");
+    var guidelinePath = guidelineFor(slug);
     var guideline = null;
     if (fs.existsSync(guidelinePath)) {
       try {
