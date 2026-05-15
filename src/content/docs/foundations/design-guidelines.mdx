@@ -1,0 +1,35 @@
+---
+title: Design Guidelines
+description: How to apply foundations — usage rules, contrast pairings, spacing rhythm, elevation, and grid behavior. Section 3 of the Foundations master spec.
+---
+
+import DesignGuidelinesSection from "../../../components/DesignGuidelinesSection.astro";
+import PageMetadata from "../../../components/PageMetadata.astro";
+
+export const bundleModules = import.meta.glob(
+  "../../../../vendor/foundations/dist/design-guidelines/**/*.json",
+  { eager: true, import: "default" },
+);
+
+export const bundle = Object.fromEntries(
+  Object.values(bundleModules).map((entry) => [entry.id, entry]),
+);
+
+export const root = bundle["design-guidelines"];
+
+<PageMetadata
+  slug="foundations.design-guidelines"
+  source="foundations/dist/design-guidelines/"
+  schema={1}
+/>
+
+Section 3 of the Foundations master spec — applied rules for color, typography, spacing, elevation, interactive states, breakpoints, focus rings, borders, and placeholder text. Generated from `foundations/src/foundations.md` § Design Guidelines.
+
+{(root?.children || [])
+  .slice()
+  .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+  .map((child) => bundle[child.id])
+  .filter(Boolean)
+  .map((section) => (
+    <DesignGuidelinesSection section={section} bundle={bundle} level={2} />
+  ))}
