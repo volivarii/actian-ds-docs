@@ -254,21 +254,24 @@ function buildPage(slug, entry, guideline, defaults, registry, opts) {
     sections.push("## Variants\n\n<VariantMatrix variantAxes={" + jsLit(defaults.card_component.variantAxes) + "} />");
   }
 
-  // Motion + Accessibility: from category-defaults. The per-component
-  // `behavior` domain is `inherited` (motion + a11y resolve to the
-  // category baseline) — the guideline JSON carries no component-specific
-  // motion/accessibility of its own.
+  // Motion: from category-defaults. The per-component `behavior` domain
+  // is `inherited` (motion resolves to the category baseline).
   if (defaults && defaults.card_motion && Array.isArray(defaults.card_motion.patternRefs)) {
     sections.push("## Motion\n\n<MotionPattern patternRefs={" + jsLit(defaults.card_motion.patternRefs) + "} />");
-  }
-  if (defaults && defaults.card_accessibility && Array.isArray(defaults.card_accessibility.requirementRefs)) {
-    sections.push("## Accessibility\n\n<AccessibilityRefs requirementRefs={" + jsLit(defaults.card_accessibility.requirementRefs) + "} />");
   }
 
   // Content guidelines — the curated `content` domain. Emitted only when
   // the component has an approved/draft content domain with sections.
+  // Ordered BEFORE Accessibility so designers see copy rules close to the
+  // anatomy + variants context they're authoring against.
   if (hasContent) {
     sections.push("## Content guidelines\n\n" + contentDomain.sections.map(renderContentSection).join("\n\n"));
+  }
+
+  // Accessibility: from category-defaults. The per-component `behavior`
+  // domain is `inherited` (a11y resolves to the category baseline).
+  if (defaults && defaults.card_accessibility && Array.isArray(defaults.card_accessibility.requirementRefs)) {
+    sections.push("## Accessibility\n\n<AccessibilityRefs requirementRefs={" + jsLit(defaults.card_accessibility.requirementRefs) + "} />");
   }
 
   // Resources — Figma node + knowledge-source link. The Figma link is
