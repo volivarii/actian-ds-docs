@@ -29,6 +29,14 @@ var fs = require("fs");
 var path = require("path");
 var PATHS = require("./paths.cjs");
 
+// Load the manifest once at module-top. _motionPath() reads the named
+// leaf entry rather than constructing the path from PATHS.foundations.distDir,
+// so upstream layout changes are absorbed by vendor refreshes alone.
+var MANIFEST = (function () {
+  var manifestPath = path.join(PATHS.vendor, "paths-manifest.json");
+  return JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+})();
+
 // In-process caches. Build/CLI processes are short-lived, so cache
 // lifetime is the process. Tests call _resetCache.
 var categoryCache = {};
@@ -100,11 +108,20 @@ function loadDefaultsForCategory(input) {
 }
 
 // Motion patterns live in vendor/foundations/dist/tokens/motion.json
-// under `.patterns`. This file is covered by the foundations.leaf
-// recursive collection in the manifest but isn't exposed as a named
-// leaf — construct the path from PATHS.vendor.
+// under `.patterns`. The exact relative path is declared in the manifest
+// under `foundations.tokens.motion` so upstream layout changes are
+// absorbed by vendor refreshes rather than requiring a docs-side edit.
 function _motionPath() {
-  return path.join(PATHS.foundations.distDir, "tokens", "motion.json");
+  var entry = MANIFEST.paths["foundations.tokens.motion"];
+  if (!entry || !entry.path) {
+    throw new Error(
+      "category-defaults-loader: manifest is missing the " +
+        "'foundations.tokens.motion' entry. " +
+        "Refresh vendor to knowledge v0.14.0 or later by running " +
+        "scripts/vendor/vendor-snapshot.cjs --range.",
+    );
+  }
+  return path.join(PATHS.vendor, entry.path);
 }
 
 function _loadMotionPatterns() {
@@ -187,4 +204,5 @@ module.exports = {
   resolveMotionRef: resolveMotionRef,
   resolveAccessibilityRef: resolveAccessibilityRef,
   _resetCache: _resetCache,
+  _motionPath: _motionPath,
 };
