@@ -23,6 +23,7 @@ var fs = require("fs");
 var path = require("path");
 var PATHS = require("./lib/paths.cjs");
 var loader = require("./lib/category-defaults-loader.cjs");
+var TABS = require(path.resolve(__dirname, "..", "src", "data", "component-tabs.config.cjs")).tabs;
 
 // ζ.5 follow-up (2026-05-13): output is now section-aware. Components,
 // Foundations, and Brand items each land in their own top-level directory
@@ -187,6 +188,228 @@ function renderContentSection(s) {
   return parts.join("\n\n");
 }
 
+// ---------------------------------------------------------------------------
+// Named render helpers — extracted from the original buildPage body so that
+// buildComponent can dispatch them individually by tab config.
+// Each helper returns "" when its inputs are absent (stub case).
+// ---------------------------------------------------------------------------
+
+function renderOverview(entry) {
+  var overviewText = (entry.description && entry.description.trim()) || "";
+  if (!overviewText) return "";
+  return "## Overview\n\n" + escapeMdxPlaceholders(overviewText);
+}
+
+function renderAnatomy(defaults) {
+  if (!(defaults && defaults.card_anatomy && Array.isArray(defaults.card_anatomy.parts) && defaults.card_anatomy.parts.length)) return "";
+  return "## Anatomy\n\n<Anatomy parts={" + jsLit(defaults.card_anatomy.parts) + "} />";
+}
+
+function renderVariantsMatrix(entry, defaults) {
+  if (entry.variants && Object.keys(entry.variants).length) {
+    var axes = Object.entries(entry.variants).map(function (pair) {
+      return { axis: pair[0], values: pair[1] };
+    });
+    return "## Variants\n\n<VariantMatrix variantAxes={" + jsLit(axes) + "} />";
+  }
+  if (defaults && defaults.card_component && Array.isArray(defaults.card_component.variantAxes) && defaults.card_component.variantAxes.length) {
+    return "## Variants\n\n<VariantMatrix variantAxes={" + jsLit(defaults.card_component.variantAxes) + "} />";
+  }
+  return "";
+}
+
+// Alias — used by the "code" tab's variantsTable renderer key.
+function renderVariantsTable(entry, defaults) {
+  return renderVariantsMatrix(entry, defaults);
+}
+
+function renderMotion(defaults) {
+  if (!(defaults && defaults.card_motion && Array.isArray(defaults.card_motion.patternRefs))) return "";
+  return "## Motion\n\n<MotionPattern patternRefs={" + jsLit(defaults.card_motion.patternRefs) + "} />";
+}
+
+function renderContentDomain(contentDomain) {
+  if (!contentDomain) return "";
+  return "## Content guidelines\n\n" + contentDomain.sections.map(renderContentSection).join("\n\n");
+}
+
+function renderA11yRefs(defaults) {
+  if (!(defaults && defaults.card_accessibility && Array.isArray(defaults.card_accessibility.requirementRefs))) return "";
+  return "## Accessibility\n\n<AccessibilityRefs requirementRefs={" + jsLit(defaults.card_accessibility.requirementRefs) + "} />";
+}
+
+function renderResources(slug, entry, registry, guideline) {
+  var figmaUrl = (entry.nodeId && registry && registry.fileKey)
+    ? "https://www.figma.com/file/" + registry.fileKey + "?node-id=" + String(entry.nodeId).replace(":", "-")
+    : null;
+  var resourceLines = [
+    "## Resources",
+    "",
+  ];
+  if (figmaUrl) resourceLines.push("- [Open in Figma](" + figmaUrl + ")");
+  if (guideline) {
+    var knowledgeUrl = "https://github.com/volivarii/actian-ds-knowledge/tree/main/components/src/" + slug;
+    resourceLines.push("- [Knowledge source](" + knowledgeUrl + ")");
+  }
+  return resourceLines.join("\n");
+}
+
+function renderStubFooter(categorySlug) {
+  if (!categorySlug) return "";
+  return '<StubFooter category="' + categorySlug + '" />';
+}
+
+// ---------------------------------------------------------------------------
+// Small placeholder helpers for tabs that have no real data yet.
+// ---------------------------------------------------------------------------
+
+function renderCategoryUsageBaseline(defaults) {
+  if (!defaults || !defaults.card_usage || !Array.isArray(defaults.card_usage.points)) return "";
+  return "## When to use\n\n" + defaults.card_usage.points
+    .map(function (p) { return "- " + escapeMdxPlaceholders(p); }).join("\n");
+}
+
+function renderGlobalA11yLink() {
+  var base = "${import.meta.env.BASE_URL.replace(/\\/?$/, '/')}";
+  return "## Cross-cutting accessibility\n\nSee the full <a href={`" + base + "accessibility`}>WCAG 2.2 AA guidance</a> for criteria that apply to every component.";
+}
+
+function renderTokensPlaceholder() {
+  return "## Tokens\n\nPer-component token documentation pending. See the <a href={`${import.meta.env.BASE_URL.replace(/\\/?$/, '/')}foundations/color`}>foundations tokens</a> for the full scale.";
+}
+
+function renderApiPlaceholder(entry) {
+  if (!entry.variants) return "";
+  return "## API surface\n\nVariant axes are listed under Variants above. Public properties are defined in the registry at `components/dist/registries/dskit.json#" + (entry.name || "") + "`.";
+}
+
+// ---------------------------------------------------------------------------
+// renderTabMdx — per-file frontmatter + MDX shell.
+// ---------------------------------------------------------------------------
+
+function renderTabMdx(ctx) {
+  var fm = [
+    "---",
+    "title: " + JSON.stringify(ctx.title),
+    "description: " + JSON.stringify(ctx.description),
+    "tableOfContents: false",
+    "template: doc",
+    "tab: " + JSON.stringify(ctx.tabSlug),
+    "component: " + JSON.stringify(ctx.slug),
+    "status: " + JSON.stringify(ctx.status),
+  ];
+  if (!ctx.isIndex) {
+    fm.push("sidebar: { hidden: true }");
+  }
+  fm.push("---");
+
+  var imports = [
+    "Anatomy", "VariantMatrix", "MotionPattern", "AccessibilityRefs",
+    "PageMetadata", "StubFooter", "DoDont", "Callout", "TermList",
+    "ComponentTabs",
+  ].map(function (name) {
+    return 'import ' + name + ' from "' + ctx.importPrefix + "/" + name + '.astro";';
+  }).join("\n");
+
+  return [
+    fm.join("\n"),
+    "",
+    imports,
+    "",
+    "<PageMetadata",
+    '  slug="components.' + ctx.slug + '.' + ctx.tabSlug + '"',
+    '  source="components/dist/registries/dskit.json#' + ctx.slug + '"',
+    "  schema={1}",
+    "/>",
+    "",
+    "<ComponentTabs component={" + JSON.stringify(ctx.slug) + "} activeTab={" + JSON.stringify(ctx.tabSlug) + "} />",
+    "",
+    ctx.body,
+    "",
+  ].join("\n");
+}
+
+// ---------------------------------------------------------------------------
+// buildComponent — new top-level export. Returns { files: { [relPath]: string } }
+// (testable without fs writes).
+// ---------------------------------------------------------------------------
+
+function buildComponent(slug, entry, guideline, defaults, registry, opts) {
+  opts = opts || {};
+  var nestDepth = opts.nestDepth || 0;
+  // Tab MDX files live one level deeper than the legacy flat layout:
+  // src/content/docs/<section>/<category>/<slug>/<tab>.mdx
+  // → import paths need +1 "../" vs old (4 → 5; nested +1 again → 6).
+  var importPrefix = "../".repeat(5 + nestDepth) + "components";
+
+  var contentDomain = guideline && guideline.domains && guideline.domains.content;
+  var hasContent = !!(contentDomain
+    && Array.isArray(contentDomain.sections)
+    && (contentDomain.status === "approved" || contentDomain.status === "draft"));
+  var categorySlug = slugifyCategory(entry.category);
+
+  var RENDERERS = {
+    overview:              function () { return renderOverview(entry); },
+    variantsSummary:       function () { return renderVariantsMatrix(entry, defaults); },
+    categoryUsageBaseline: function () { return renderCategoryUsageBaseline(defaults); },
+    contentDomain:         function () { return hasContent ? renderContentDomain(contentDomain) : ""; },
+    anatomy:               function () { return renderAnatomy(defaults); },
+    motion:                function () { return renderMotion(defaults); },
+    a11yRefs:              function () { return renderA11yRefs(defaults); },
+    globalA11yLink:        function () { return renderGlobalA11yLink(); },
+    variantsTable:         function () { return renderVariantsMatrix(entry, defaults); },
+    tokensPlaceholder:     function () { return renderTokensPlaceholder(); },
+    apiPlaceholder:        function () { return renderApiPlaceholder(entry); },
+    resources:             function () { return renderResources(slug, entry, registry, guideline); },
+  };
+
+  var files = {};
+  TABS.forEach(function (tab) {
+    var body = tab.renderers
+      .map(function (r) { return RENDERERS[r] ? RENDERERS[r]() : ""; })
+      .filter(function (s) { return s && s.trim() !== ""; })
+      .join("\n\n");
+
+    var isStubTab = body.trim() === "";
+    if (isStubTab && categorySlug) {
+      body = renderStubFooter(categorySlug);
+    }
+
+    var tabStatus = "stub";
+    if (tab.domains.length === 0) {
+      tabStatus = isStubTab ? "stub" : "synthesized";
+    } else {
+      var domStatuses = tab.domains
+        .map(function (d) { return guideline && guideline.domains && guideline.domains[d] && guideline.domains[d].status; })
+        .filter(Boolean);
+      if (domStatuses.indexOf("approved") !== -1) tabStatus = "approved";
+      else if (domStatuses.indexOf("draft") !== -1) tabStatus = "draft";
+      else if (domStatuses.indexOf("inherited") !== -1) tabStatus = "inherited";
+    }
+
+    var filename = tab.isIndex ? "index.mdx" : (tab.slug + ".mdx");
+    files[filename] = renderTabMdx({
+      title: entry.name || slug,
+      description: (entry.description && entry.description.trim())
+        || ("Component documentation for " + (entry.name || slug) + " — " + tab.label + "."),
+      isIndex: !!tab.isIndex,
+      importPrefix: importPrefix,
+      slug: slug,
+      tabSlug: tab.slug,
+      tabLabel: tab.label,
+      status: tabStatus,
+      body: body,
+    });
+  });
+  return { files: files };
+}
+
+// ---------------------------------------------------------------------------
+// buildPage — legacy single-file emitter. Kept for backward compatibility.
+// Calls the named helpers extracted above. The main() call site now uses
+// buildComponent instead (step 3.6).
+// ---------------------------------------------------------------------------
+
 function buildPage(slug, entry, guideline, defaults, registry, opts) {
   opts = opts || {};
   // ζ.2 (2026-05-13): when a component is nested into a group subfolder
@@ -201,12 +424,6 @@ function buildPage(slug, entry, guideline, defaults, registry, opts) {
   var categoryLabel = entry.category;
   var categorySlug = slugifyCategory(categoryLabel);
 
-  // The per-component guideline JSON (components/dist/guidelines/<slug>.json)
-  // carries a `domains` object; only the `content` domain is authored as
-  // structured sections today (usage/design/behavior/tokens are `inherited`
-  // or `not-started`). A page is treated as a "stub" when no curated content
-  // domain is present — anatomy / motion / a11y / variants then come purely
-  // from the registry + category-defaults baseline.
   var contentDomain = guideline && guideline.domains && guideline.domains.content;
   var hasContent = !!(contentDomain
     && Array.isArray(contentDomain.sections)
@@ -215,85 +432,26 @@ function buildPage(slug, entry, guideline, defaults, registry, opts) {
 
   var sections = [];
 
-  // ζ.5 follow-up (2026-05-13): stub pages were previously rendered as
-  // title-only — but the registry HAS useful data for stubs (description,
-  // variants from Figma sync, Figma URL). Hiding it produced "empty page"
-  // confusion (Vincent's screenshot of Tag, Catalog). New strategy:
-  //   - Registry-driven sections render ALWAYS (Overview from
-  //     entry.description, Variants matrix from entry.variants, Resources
-  //     with Figma + knowledge URLs)
-  //   - Defaults-driven sections render ALWAYS when defaults exist for
-  //     this category (Anatomy, Motion, Accessibility — the category
-  //     baseline is meaningful even before per-component curation)
-  //   - Guideline-only sections (Content guidelines) render only when the
-  //     guideline is non-stub AND has the data
-  //   - StubFooter still appears for stubs to signal curation status
+  var overviewResult = renderOverview(entry);
+  if (overviewResult) sections.push(overviewResult);
 
-  // Overview — short prose hoist from the registry description. Hoisted
-  // so the page leads with prose before the first H2.
-  var overviewText = (entry.description && entry.description.trim()) || "";
-  if (overviewText) {
-    sections.push("## Overview\n\n" + escapeMdxPlaceholders(overviewText));
-  }
+  var anatomyResult = renderAnatomy(defaults);
+  if (anatomyResult) sections.push(anatomyResult);
 
-  // Anatomy: from category-defaults. The per-component `design` domain is
-  // `inherited` (resolves to the category baseline) — the guideline JSON
-  // carries no component-specific anatomy of its own.
-  if (defaults && defaults.card_anatomy && Array.isArray(defaults.card_anatomy.parts) && defaults.card_anatomy.parts.length) {
-    sections.push("## Anatomy\n\n<Anatomy parts={" + jsLit(defaults.card_anatomy.parts) + "} />");
-  }
+  var variantsResult = renderVariantsMatrix(entry, defaults);
+  if (variantsResult) sections.push(variantsResult);
 
-  // Variants — registry-driven (live Figma sync data). Always render
-  // when present, even for stubs.
-  if (entry.variants && Object.keys(entry.variants).length) {
-    var axes = Object.entries(entry.variants).map(function (pair) {
-      return { axis: pair[0], values: pair[1] };
-    });
-    sections.push("## Variants\n\n<VariantMatrix variantAxes={" + jsLit(axes) + "} />");
-  } else if (defaults && defaults.card_component && Array.isArray(defaults.card_component.variantAxes) && defaults.card_component.variantAxes.length) {
-    sections.push("## Variants\n\n<VariantMatrix variantAxes={" + jsLit(defaults.card_component.variantAxes) + "} />");
-  }
+  var motionResult = renderMotion(defaults);
+  if (motionResult) sections.push(motionResult);
 
-  // Motion: from category-defaults. The per-component `behavior` domain
-  // is `inherited` (motion resolves to the category baseline).
-  if (defaults && defaults.card_motion && Array.isArray(defaults.card_motion.patternRefs)) {
-    sections.push("## Motion\n\n<MotionPattern patternRefs={" + jsLit(defaults.card_motion.patternRefs) + "} />");
-  }
-
-  // Content guidelines — the curated `content` domain. Emitted only when
-  // the component has an approved/draft content domain with sections.
-  // Ordered BEFORE Accessibility so designers see copy rules close to the
-  // anatomy + variants context they're authoring against.
   if (hasContent) {
-    sections.push("## Content guidelines\n\n" + contentDomain.sections.map(renderContentSection).join("\n\n"));
+    sections.push(renderContentDomain(contentDomain));
   }
 
-  // Accessibility: from category-defaults. The per-component `behavior`
-  // domain is `inherited` (a11y resolves to the category baseline).
-  if (defaults && defaults.card_accessibility && Array.isArray(defaults.card_accessibility.requirementRefs)) {
-    sections.push("## Accessibility\n\n<AccessibilityRefs requirementRefs={" + jsLit(defaults.card_accessibility.requirementRefs) + "} />");
-  }
+  var a11yResult = renderA11yRefs(defaults);
+  if (a11yResult) sections.push(a11yResult);
 
-  // Resources — Figma node + knowledge-source link. The Figma link is
-  // registry-driven (emitted always). The knowledge-source link points at
-  // the per-component authoring directory and is emitted only when a
-  // guideline JSON exists for this component (`if (guideline)`) — otherwise
-  // the directory wouldn't exist and the link would 404.
-  {
-    var figmaUrl = (entry.nodeId && registry && registry.fileKey)
-      ? "https://www.figma.com/file/" + registry.fileKey + "?node-id=" + String(entry.nodeId).replace(":", "-")
-      : null;
-    var resourceLines = [
-      "## Resources",
-      "",
-    ];
-    if (figmaUrl) resourceLines.push("- [Open in Figma](" + figmaUrl + ")");
-    if (guideline) {
-      var knowledgeUrl = "https://github.com/volivarii/actian-ds-knowledge/tree/main/components/src/" + slug;
-      resourceLines.push("- [Knowledge source](" + knowledgeUrl + ")");
-    }
-    sections.push(resourceLines.join("\n"));
-  }
+  sections.push(renderResources(slug, entry, registry, guideline));
 
   var imports = [
     "Anatomy",
@@ -466,7 +624,9 @@ function main() {
 
   // Per-dir lazy clean: tracked across the main loop so we wipe each
   // expected category dir only once, on first write. Removes non-index
-  // .mdx + all nested subdirs (those are 100% generator output).
+  // .mdx + all nested subdirs. Sub-route layout (2026-05-16): each
+  // component then re-creates its own <slug>/ subdir containing six tab
+  // MDX files — so the wipe-then-write order is intentional.
   var cleanedCategoryDirs = new Set();
   function cleanCategoryDirOnce(categoryDir) {
     if (cleanedCategoryDirs.has(categoryDir)) return;
@@ -569,11 +729,12 @@ function main() {
       }
     }
 
-    var mdx = buildPage(slug, entry, guideline, defaults, registry, {
-      nestDepth: nestDepth,
+    var out = buildComponent(slug, entry, guideline, defaults, registry, { nestDepth: nestDepth });
+    var compDir = path.join(outDir, slug);
+    if (!fs.existsSync(compDir)) fs.mkdirSync(compDir, { recursive: true });
+    Object.entries(out.files).forEach(function (pair) {
+      fs.writeFileSync(path.join(compDir, pair[0]), pair[1]);
     });
-    var outPath = path.join(outDir, slug + ".mdx");
-    fs.writeFileSync(outPath, mdx);
     written++;
   });
 
@@ -600,4 +761,4 @@ if (require.main === module) {
   main();
 }
 
-module.exports = { main: main, buildPage: buildPage };
+module.exports = { main: main, buildPage: buildPage, buildComponent: buildComponent };
