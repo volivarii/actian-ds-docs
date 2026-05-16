@@ -1,6 +1,7 @@
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 import remarkCustomHeaderId from "remark-custom-header-id";
+import starlightLinksValidator from "starlight-links-validator";
 
 const SITE = process.env.SITE_URL || "https://volivarii.github.io/actian-ds-docs";
 const BASE = process.env.SITE_BASE || "/actian-ds-docs";
@@ -63,6 +64,35 @@ export default defineConfig({
             { label: "Confidence scores", link: "/confidence" },
           ],
         },
+      ],
+      plugins: [
+        starlightLinksValidator({
+          // Default behavior: fail build on any broken internal link.
+          // Triage exclusions live below; only add an entry with a brief
+          // comment explaining why the link is intentionally unresolved.
+          errorOnRelativeLinks: true,
+          errorOnInvalidHashes: true,
+          // exclude(context) receives {file, link, slug} for each link under
+          // validation. Return true to skip that link check.
+          // `file` is the absolute path to the source file.
+          exclude: ({ file }) => {
+            // content is auto-generated from vendor/content/dist/global.md
+            // by scripts/sync-vendored-md.cjs on every build. The upstream
+            // document uses bare component slugs (e.g. `filters`, `stepper`)
+            // as relative links — several reference components without pages
+            // yet (validation-messages, wizards) and others that would need
+            // upstream global.md edits. Fixing the generated output would be
+            // clobbered on next sync; suppress until knowledge-repo links are
+            // updated to absolute paths.
+            if (file.endsWith("/content.md") || file.endsWith("\\content.md")) return true;
+            // confidence.mdx links to /migrations and /state, which are real
+            // pages served from src/pages/ (custom Astro pages, not Starlight
+            // content-collection pages). Validator flags them as
+            // "invalid link to custom page" — they resolve fine at runtime.
+            if (file.endsWith("/confidence.mdx") || file.endsWith("\\confidence.mdx")) return true;
+            return false;
+          },
+        }),
       ],
     }),
   ],
