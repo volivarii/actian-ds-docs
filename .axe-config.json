@@ -1,0 +1,14 @@
+{
+  "_comment": "Source of truth for axe rules + excludes. @axe-core/cli does not accept --config; the CI job and local run commands translate these to --rules and --exclude CLI flags.",
+  "rules": [
+    { "id": "color-contrast", "enabled": true },
+    { "id": "landmark-one-main", "enabled": true },
+    { "id": "page-has-heading-one", "enabled": true },
+    { "id": "region", "enabled": true },
+    { "id": "duplicate-id-aria", "enabled": true }
+  ],
+  "exclude": [
+    ["[data-astro-source-file]"],
+    [".sl-link-card"]
+  ]
+}
