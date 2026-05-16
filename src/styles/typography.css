@@ -7,10 +7,22 @@
  *                    with slight humanist warmth.
  *   Mono           → IBM Plex Mono — paired sibling for tokens + code.
  *
- * Self-hosted via Google Fonts; no API key needed.
+ * Self-hosted IBM Plex via @fontsource (PR 2026-05-16 theme polish).
+ * Weights locked to what the docs actually use:
+ *   Sans: 400 (body/normal), 500 (medium), 600 (semibold)
+ *   Mono: 500 (medium), 600 (semibold) — 400 omitted, not referenced
+ * No Google Fonts request, no third-party DNS, GDPR-clean.
+ * @fontsource defaults to font-display: swap — no FOIT regression.
  */
 
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
+/* IBM Plex Sans — weights 400 / 500 / 600 */
+@import "@fontsource/ibm-plex-sans/400.css";
+@import "@fontsource/ibm-plex-sans/500.css";
+@import "@fontsource/ibm-plex-sans/600.css";
+
+/* IBM Plex Mono — weights 500 / 600 */
+@import "@fontsource/ibm-plex-mono/500.css";
+@import "@fontsource/ibm-plex-mono/600.css";
 
 :root {
   /* Type-system vars — consumed by Starlight overrides. */

@@ -13,6 +13,8 @@
   },
   "dependencies": {
     "@astrojs/starlight": "^0.39.2",
+    "@fontsource/ibm-plex-mono": "^5.2.7",
+    "@fontsource/ibm-plex-sans": "^5.2.8",
     "astro": "^6.3.1",
     "remark-custom-header-id": "^1.0.0",
     "sharp": "^0.34.5"
