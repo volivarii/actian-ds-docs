@@ -50,12 +50,86 @@ function jsLit(value) {
   return JSON.stringify(value);
 }
 
+// Module-level slug-to-absolute-path map.
+// Populated once in main() from the registry before any pages are written.
+// Used by rewriteComponentLinks() to fix bare-slug markdown links that come
+// from the knowledge-repo guideline JSONs (e.g. `[ghost buttons](button)`).
+var _slugToPath = {};
+
+/**
+ * Build the slug → absolute doc path map from the registry.
+ * Called once in main() so all renderContentItems() calls can use it.
+ * @param {Object} registry - dskit.json parsed object
+ * @param {Object} groupCounts - { "catSlug::groupSlug": count } from main()
+ */
+function buildSlugToPathMap(registry, groupCounts) {
+  var map = {};
+  Object.entries(registry.components).forEach(function (pair) {
+    var slug = pair[0];
+    var entry = pair[1];
+    if (!entry.category) return;
+    var sd = SECTION_DIRS[entry.section] || DEFAULT_SECTION_DIR;
+    var catSlug = slugifyCategory(entry.category);
+    var parts = [sd, catSlug];
+    if (entry.group) {
+      var groupSlug = slugifyCategory(entry.group);
+      var key = catSlug + "::" + groupSlug;
+      if (groupSlug && groupCounts[key] > 1) {
+        parts.push(groupSlug);
+      }
+    }
+    parts.push(slug);
+    map[slug] = "/" + parts.join("/") + "/";
+  });
+  _slugToPath = map;
+}
+
+// Slug aliases: knowledge-repo content uses legacy or shorthand names that
+// differ from the canonical registry slugs. Map the knowledge alias → the
+// canonical dskit.json slug so rewriteComponentLinks() can resolve the path.
+// "forms" is intentionally absent: no standalone component page exists, so
+// the link is removed entirely (see the REMOVE_LINK_SLUGS set below).
+var SLUG_ALIASES = {
+  "notification-toast": "notification",  // alert-banner.json references old name
+  "tag": "tag-interactive",              // tag-default.json links to generic "tag"
+};
+
+// Slugs with no component page that should have their markdown link syntax
+// removed entirely, leaving just the link text. This prevents both broken
+// links and relative-link validator errors.
+var REMOVE_LINK_SLUGS = new Set(["forms"]);
+
+/**
+ * Rewrite bare-slug markdown links to absolute doc paths.
+ * Converts `[label](slug)` to `[label](/components/category/slug/)`
+ * when `slug` is a known component. Unknown slugs are left untouched
+ * so the validator can still flag genuinely broken links.
+ * @param {string} s - input markdown/MDX text
+ * @returns {string}
+ */
+function rewriteComponentLinks(s) {
+  if (typeof s !== "string") return s;
+  // Match markdown link targets that look like a bare slug (no / prefix,
+  // no http://, not a hash anchor). Must be followed by ) to close the link.
+  return s.replace(/\[([^\]]+)\]\(([a-z][a-z0-9-]*)\)/g, function (match, label, slug) {
+    // Remove link syntax entirely for slugs with no component page.
+    if (REMOVE_LINK_SLUGS.has(slug)) return label;
+    // Resolve via alias first, then direct slug lookup.
+    var canonical = SLUG_ALIASES[slug] || slug;
+    var abs = _slugToPath[canonical];
+    return abs ? ("[" + label + "](" + abs + ")") : match;
+  });
+}
+
 // Wrap <placeholder> spans in code ticks so MDX doesn't try to parse them
 // as JSX tags. Knowledge content uses '<assetNames>'-style placeholders in
 // rule prose ("Search in <assetNames>"); without this, MDX bails on
 // "Expected a closing tag for `<assetNames>`".
 function escapeMdxPlaceholders(s) {
   if (typeof s !== "string") return s;
+  // Rewrite bare-slug markdown links to absolute paths first, so the
+  // MDX validator sees real links rather than relative slug references.
+  s = rewriteComponentLinks(s);
   // Convert <foo>, <foo-bar>, <FooBar>, <a.b> into `<foo>` etc.
   return s.replace(/<([a-zA-Z][\w.-]*)>/g, "`<$1>`");
 }
@@ -666,6 +740,11 @@ function main() {
     var key = cs + "::" + gs;
     groupCounts[key] = (groupCounts[key] || 0) + 1;
   });
+
+  // Build the slug → absolute-path lookup before the write loop so that
+  // rewriteComponentLinks() (called inside escapeMdxPlaceholders) can convert
+  // bare-slug markdown links in guideline JSON content to absolute doc paths.
+  buildSlugToPathMap(registry, groupCounts);
 
   var written = 0;
   var skipped = 0;
