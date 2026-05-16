@@ -334,7 +334,6 @@ function renderTabMdx(ctx) {
     "---",
     "title: " + JSON.stringify(ctx.title),
     "description: " + JSON.stringify(ctx.description),
-    "tableOfContents: false",
     "template: doc",
     "tab: " + JSON.stringify(ctx.tabSlug),
     "component: " + JSON.stringify(ctx.slug),
