@@ -53,6 +53,42 @@ jobs:
         with:
           path: dist
 
+  a11y:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build site for a11y scan
+        env:
+          SITE_URL: http://localhost:4321
+          SITE_BASE: /actian-ds-docs
+        run: npm run build
+
+      - name: Start static server
+        run: npx http-server dist -p 4321 -s &
+
+      - name: Wait for server
+        run: npx wait-on http://localhost:4321/actian-ds-docs/ --timeout 30000
+
+      - name: Run axe against target pages
+        run: |
+          set -e
+          for path in "/" "/components/action/button/" "/foundations/spacing/" "/accessibility/"; do
+            echo "axe → $path"
+            npx axe "http://localhost:4321/actian-ds-docs${path}" \
+              --rules "color-contrast,landmark-one-main,page-has-heading-one,region,duplicate-id-aria" \
+              --exclude "[data-astro-source-file]" \
+              --exit
+          done
+
   # Deploy must live in the same workflow as the artifact upload — the
   # deploy-pages action reads artifacts from the current workflow run,
   # and workflow_run-triggered deploys can't see upstream artifacts.
