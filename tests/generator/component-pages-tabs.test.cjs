@@ -49,11 +49,11 @@ test("every emitted page sets template: doc and a valid tab: frontmatter", funct
   });
 });
 
-test("tableOfContents disabled on tab pages (right-rail TOC suppression)", function () {
+test("tab pages do not disable tableOfContents (right-rail TOC stays on)", function () {
   var out = gen.buildComponent("button", REG.components.button, BTN_GUIDE, null, REG);
   Object.keys(out.files).forEach(function (f) {
-    assert.match(out.files[f], /tableOfContents:\s*false/,
-      f + " must disable the right-rail TOC");
+    assert.doesNotMatch(out.files[f], /tableOfContents:\s*false/,
+      f + " must NOT disable the right-rail TOC");
   });
 });
 

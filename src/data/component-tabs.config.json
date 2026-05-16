@@ -5,13 +5,13 @@
       "label": "Overview",
       "isIndex": true,
       "domains": [],
-      "renderers": ["overview", "variantsSummary", "resources"]
+      "renderers": ["confidenceChips", "overview", "resources"]
     },
     {
       "slug": "design",
       "label": "Design",
       "domains": ["design", "behavior"],
-      "renderers": ["anatomy", "motion"]
+      "renderers": ["anatomy", "variantsTable", "motion"]
     },
     {
       "slug": "usage",
@@ -35,7 +35,7 @@
       "slug": "code",
       "label": "Code",
       "domains": ["tokens"],
-      "renderers": ["variantsTable", "tokensPlaceholder", "apiPlaceholder"]
+      "renderers": ["tokensPlaceholder", "apiPlaceholder"]
     }
   ]
 }
