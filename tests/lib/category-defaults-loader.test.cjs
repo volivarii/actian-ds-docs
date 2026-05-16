@@ -185,3 +185,24 @@ test("category defaults — every accessibility.ref resolves against a11y-index"
     "all accessibility refs must resolve: " + unresolved.join("; "),
   );
 });
+
+// --- _motionPath manifest-driven resolution ---
+
+var path = require("node:path");
+var fs = require("node:fs");
+
+test("_motionPath resolves via paths-manifest.foundations.tokens.motion", function () {
+  var manifest = JSON.parse(
+    fs.readFileSync(path.join(__dirname, "../../vendor/paths-manifest.json"), "utf8"),
+  );
+  var motionEntry = manifest.paths["foundations.tokens.motion"];
+  assert.ok(motionEntry, "manifest must declare foundations.tokens.motion");
+  assert.equal(motionEntry.path, "foundations/dist/tokens/motion.json");
+
+  assert.ok(loader._motionPath, "category-defaults-loader must expose _motionPath for tests");
+  var resolved = loader._motionPath();
+  assert.ok(
+    resolved.endsWith(motionEntry.path),
+    "expected resolved path to end with " + motionEntry.path + ", got " + resolved,
+  );
+});
