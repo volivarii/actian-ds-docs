@@ -17,9 +17,18 @@
 :root {
   /* Accent — single decisive Actian blue. */
   --sl-color-accent: var(--zen-color-primary-500);
-  --sl-color-accent-high: var(--zen-color-primary-700, var(--zen-color-primary-500));
-  --sl-color-accent-low: var(--zen-color-primary-300, var(--zen-color-primary-500));
-  --sl-color-text-accent: var(--zen-color-primary-700, var(--zen-color-primary-500));
+  --sl-color-accent-high: var(
+    --zen-color-primary-700,
+    var(--zen-color-primary-500)
+  );
+  --sl-color-accent-low: var(
+    --zen-color-primary-300,
+    var(--zen-color-primary-500)
+  );
+  --sl-color-text-accent: var(
+    --zen-color-primary-700,
+    var(--zen-color-primary-500)
+  );
 
   /* Body text. */
   --sl-color-text: var(--zen-color-text-primary);
@@ -50,9 +59,43 @@
   --prose-max-width: 70ch;
 }
 
+/* ------------------------------------------------------------------
+ * Motion + chrome polish (2026-05-16 theme polish).
+ * Standardized 150ms ease-out for hover/focus; longer 200ms for layout.
+ * Hairline borders at restrained alpha for a shadcn/Radix feel.
+ * ------------------------------------------------------------------ */
+:root {
+  --transition-fast: 120ms;
+  --transition-base: 150ms;
+  --transition-layout: 200ms;
+  --motion-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+  --motion-easing-emphasized: cubic-bezier(0.3, 0, 0, 1);
+
+  --border-hairline: 1px solid
+    var(--zen-color-neutral-100, var(--zen-border-default));
+  --border-hairline-strong: 1px solid
+    var(--zen-color-neutral-200, var(--zen-border-default));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition-fast: 0ms;
+    --transition-base: 0ms;
+    --transition-layout: 0ms;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Header — refined: tighter, hairline border, branded. */
 header.header {
-  border-bottom: 1px solid var(--zen-color-neutral-100, var(--zen-border-default));
+  border-bottom: 1px solid
+    var(--zen-color-neutral-100, var(--zen-border-default));
   background: var(--zen-color-bg-default);
   backdrop-filter: saturate(180%) blur(8px);
 }
