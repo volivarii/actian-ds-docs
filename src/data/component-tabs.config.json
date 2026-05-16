@@ -1,0 +1,41 @@
+{
+  "tabs": [
+    {
+      "slug": "overview",
+      "label": "Overview",
+      "isIndex": true,
+      "domains": [],
+      "renderers": ["overview", "variantsSummary", "resources"]
+    },
+    {
+      "slug": "usage",
+      "label": "Usage",
+      "domains": ["usage"],
+      "renderers": ["categoryUsageBaseline"]
+    },
+    {
+      "slug": "content",
+      "label": "Content",
+      "domains": ["content"],
+      "renderers": ["contentDomain"]
+    },
+    {
+      "slug": "design",
+      "label": "Design",
+      "domains": ["design", "behavior"],
+      "renderers": ["anatomy", "motion"]
+    },
+    {
+      "slug": "accessibility",
+      "label": "Accessibility",
+      "domains": [],
+      "renderers": ["a11yRefs", "globalA11yLink"]
+    },
+    {
+      "slug": "code",
+      "label": "Code",
+      "domains": ["tokens"],
+      "renderers": ["variantsTable", "tokensPlaceholder", "apiPlaceholder"]
+    }
+  ]
+}

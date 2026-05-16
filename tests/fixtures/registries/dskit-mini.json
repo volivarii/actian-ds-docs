@@ -1,0 +1,25 @@
+{
+  "_schema_version": 1,
+  "library": "dskit",
+  "fileKey": "FIXTURE_FILE_KEY",
+  "componentCount": 2,
+  "components": {
+    "button": {
+      "name": "Button",
+      "key": "fixture-button",
+      "nodeId": "1:1",
+      "description": "Primary trigger for an action.",
+      "section": "Components",
+      "category": "Action",
+      "variants": { "Type": ["Primary", "Secondary"], "Size": ["Default", "Small"] }
+    },
+    "sticky-footer": {
+      "name": "Sticky footer",
+      "key": "fixture-sticky-footer",
+      "nodeId": "1:2",
+      "description": "Persistent bottom action bar.",
+      "section": "Components",
+      "category": "Action"
+    }
+  }
+}

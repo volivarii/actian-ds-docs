@@ -1,0 +1,18 @@
+{
+  "_schema_version": 1,
+  "slug": "button",
+  "component": "Buttons",
+  "meta": { "category": "action" },
+  "domains": {
+    "content": {
+      "status": "approved",
+      "sections": [
+        { "heading": "When to use", "content": ["Use buttons for actions, not navigation."] }
+      ]
+    },
+    "usage":   { "status": "not-started" },
+    "design":  { "status": "inherited" },
+    "behavior":{ "status": "inherited" },
+    "tokens":  { "status": "not-started" }
+  }
+}

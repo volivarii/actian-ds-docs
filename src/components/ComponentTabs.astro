@@ -1,0 +1,67 @@
+---
+import config from "../data/component-tabs.config.json";
+
+interface Props {
+  component: string;
+  activeTab: string;
+}
+const { component, activeTab } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+
+// Derive sibling URLs by walking up from the current page URL until we
+// find the segment matching `component`, then append each tab slug.
+// The current page's pathname looks like
+// "/actian-ds-docs/components/action/button/usage/" — we need the
+// "/components/action/button/" prefix.
+const path = Astro.url.pathname;
+const compIdx = path.indexOf("/" + component + "/");
+const prefix =
+  compIdx >= 0
+    ? path.slice(0, compIdx + component.length + 2)
+    : base + "components/" + component + "/";
+
+const tabs = config.tabs.map((t) => ({
+  slug: t.slug,
+  label: t.label,
+  href: t.isIndex ? prefix : prefix + t.slug + "/",
+  isActive: t.slug === activeTab,
+}));
+---
+
+<nav class="component-tabs" role="tablist" aria-label={`${component} sections`}>
+  {
+    tabs.map((t) => (
+      <a
+        class:list={["component-tabs__tab", { "is-active": t.isActive }]}
+        role="tab"
+        aria-selected={t.isActive ? "true" : "false"}
+        tabindex={t.isActive ? 0 : -1}
+        href={t.href}
+        data-tab={t.slug}
+      >
+        {t.label}
+      </a>
+    ))
+  }
+</nav>
+
+<script>
+  // Arrow-key navigation across the tab strip — Roving tabindex pattern.
+  document.querySelectorAll('.component-tabs[role="tablist"]').forEach((list) => {
+    const tabs = Array.from(list.querySelectorAll<HTMLAnchorElement>('[role="tab"]'));
+    list.addEventListener("keydown", (e) => {
+      const ke = e as KeyboardEvent;
+      const idx = tabs.findIndex((t) => t === document.activeElement);
+      if (idx < 0) return;
+      if (ke.key === "ArrowRight" || ke.key === "ArrowLeft") {
+        ke.preventDefault();
+        const next =
+          ke.key === "ArrowRight"
+            ? (idx + 1) % tabs.length
+            : (idx - 1 + tabs.length) % tabs.length;
+        tabs[next].focus();
+        tabs[next].click();
+      }
+    });
+  });
+</script>
