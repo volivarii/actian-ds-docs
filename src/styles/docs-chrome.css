@@ -312,10 +312,13 @@ footer .meta {
  * ------------------------------------------------------------------ */
 .callout {
   margin: 16px 0;
-  padding: 12px 14px;
+  padding: 12px 16px;
   border-radius: 4px;
   border-left: 3px solid;
-  background: var(--zen-color-bg-subtle);
+  border-top: var(--border-hairline);
+  border-right: var(--border-hairline);
+  border-bottom: var(--border-hairline);
+  background: var(--zen-color-bg-default);
 }
 .callout--note,
 .callout--info {
@@ -827,6 +830,7 @@ button[data-open-modal] {
  * Component sub-route tab strip — sticky below Starlight header.
  * Rendered by <ComponentTabs/> embedded in each per-tab MDX file by
  * renderTabMdx() in scripts/generate-component-pages.cjs.
+ * Transitions consume the standardized motion tokens added in PR 1.
  * ------------------------------------------------------------------ */
 .component-tabs {
   display: flex;
@@ -850,8 +854,8 @@ button[data-open-modal] {
   color: var(--zen-color-text-secondary);
   text-decoration: none !important;
   transition:
-    color 0.15s,
-    border-color 0.15s;
+    color var(--transition-base) var(--motion-easing-standard),
+    border-color var(--transition-base) var(--motion-easing-standard);
 }
 .component-tabs__tab:hover {
   color: var(--zen-color-primary-500);
@@ -864,4 +868,68 @@ button[data-open-modal] {
   outline: 2px solid var(--zen-color-primary-500);
   outline-offset: 2px;
   border-radius: 2px;
+}
+
+/* ------------------------------------------------------------------
+ * Code block — subtle background + refined copy button (2026-05-16).
+ * Starlight renders <pre class="expressive-code"> for code fences;
+ * the copy-button is a child <button class="copy">.
+ * ------------------------------------------------------------------ */
+.sl-markdown-content .expressive-code pre,
+.sl-markdown-content pre.astro-code {
+  background: var(--zen-color-bg-subtle) !important;
+  border: var(--border-hairline);
+  border-radius: 6px;
+  padding: 14px 16px;
+}
+.sl-markdown-content .expressive-code .copy button,
+.sl-markdown-content pre button.copy {
+  background: var(--zen-color-bg-default) !important;
+  border: var(--border-hairline) !important;
+  border-radius: 4px;
+  padding: 4px 6px;
+  transition:
+    background var(--transition-base) var(--motion-easing-standard),
+    border-color var(--transition-base) var(--motion-easing-standard);
+}
+.sl-markdown-content .expressive-code .copy button:hover,
+.sl-markdown-content pre button.copy:hover {
+  background: var(--zen-color-primary-25) !important;
+  border-color: var(--zen-color-primary-300) !important;
+}
+
+/* ------------------------------------------------------------------
+ * Density modes (2026-05-16 theme polish):
+ *   editorial → generous vertical rhythm, larger H1, breathable
+ *   technical → compact rows, dense tables (default for reference pages)
+ * Editorial scope: pages that contain .stats-row (the homepage editorial
+ * component grid). This site does not use Starlight's splash template
+ * (which would emit data-has-hero on <html>); the homepage is a regular
+ * doc page (index.mdx) with custom editorial components. .stats-row is
+ * the unambiguous editorial marker — it appears only in index.html.
+ * The h1 Starlight renders sits outside .sl-markdown-content in its own
+ * .content-panel, so it is targeted via .content-panel h1 when .stats-row
+ * is a sibling inside the same .sl-markdown-content wrapper.
+ * Technical is the implicit default — no scope needed.
+ * ------------------------------------------------------------------ */
+
+/* Editorial h1 — the page title sits in its own .content-panel above
+ * .sl-markdown-content. Since CSS can't scope upward with :has() on
+ * broader ancestors without knowing the exact tree, we scope the h2
+ * and p styles via the .sl-markdown-content that contains .stats-row.
+ * The h1 lives in a sibling .content-panel; style it via the
+ * .main-pane context using :has(.stats-row). */
+.main-pane:has(.stats-row) h1 {
+  font-size: clamp(2rem, 5vw, 3rem) !important;
+  line-height: 1.1 !important;
+  letter-spacing: -0.025em !important;
+}
+.sl-markdown-content:has(.stats-row) > p {
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  max-width: 64ch;
+}
+.sl-markdown-content:has(.stats-row) > h2 {
+  margin-top: 3em !important;
+  padding-top: 1.5em !important;
 }
