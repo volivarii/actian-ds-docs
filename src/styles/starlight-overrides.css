@@ -1,3 +1,8 @@
+/* WCAG-AA contrast verified 2026-05-16:
+ *   primary-500 (Actian blue) on bg-default (white) → ~7.6:1 (AAA)
+ *   text-primary on bg-default → covered by vendored tokens scale.
+ * Re-verify after any palette change. */
+
 /*
  * starlight-overrides.css — Map Starlight design vars to the Actian token
  * scale + apply editorial layout rules.

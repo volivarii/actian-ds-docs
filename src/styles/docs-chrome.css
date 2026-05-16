@@ -312,10 +312,13 @@ footer .meta {
  * ------------------------------------------------------------------ */
 .callout {
   margin: 16px 0;
-  padding: 12px 14px;
+  padding: 12px 16px;
   border-radius: 4px;
   border-left: 3px solid;
-  background: var(--zen-color-bg-subtle);
+  border-top: var(--border-hairline);
+  border-right: var(--border-hairline);
+  border-bottom: var(--border-hairline);
+  background: var(--zen-color-bg-default);
 }
 .callout--note,
 .callout--info {
@@ -827,6 +830,7 @@ button[data-open-modal] {
  * Component sub-route tab strip — sticky below Starlight header.
  * Rendered by <ComponentTabs/> embedded in each per-tab MDX file by
  * renderTabMdx() in scripts/generate-component-pages.cjs.
+ * Transitions consume the standardized motion tokens added in PR 1.
  * ------------------------------------------------------------------ */
 .component-tabs {
   display: flex;
@@ -850,8 +854,8 @@ button[data-open-modal] {
   color: var(--zen-color-text-secondary);
   text-decoration: none !important;
   transition:
-    color 0.15s,
-    border-color 0.15s;
+    color var(--transition-base) var(--motion-easing-standard),
+    border-color var(--transition-base) var(--motion-easing-standard);
 }
 .component-tabs__tab:hover {
   color: var(--zen-color-primary-500);
@@ -864,4 +868,32 @@ button[data-open-modal] {
   outline: 2px solid var(--zen-color-primary-500);
   outline-offset: 2px;
   border-radius: 2px;
+}
+
+/* ------------------------------------------------------------------
+ * Code block — subtle background + refined copy button (2026-05-16).
+ * Starlight renders <pre class="expressive-code"> for code fences;
+ * the copy-button is a child <button class="copy">.
+ * ------------------------------------------------------------------ */
+.sl-markdown-content .expressive-code pre,
+.sl-markdown-content pre.astro-code {
+  background: var(--zen-color-bg-subtle) !important;
+  border: var(--border-hairline);
+  border-radius: 6px;
+  padding: 14px 16px;
+}
+.sl-markdown-content .expressive-code .copy button,
+.sl-markdown-content pre button.copy {
+  background: var(--zen-color-bg-default) !important;
+  border: var(--border-hairline) !important;
+  border-radius: 4px;
+  padding: 4px 6px;
+  transition:
+    background var(--transition-base) var(--motion-easing-standard),
+    border-color var(--transition-base) var(--motion-easing-standard);
+}
+.sl-markdown-content .expressive-code .copy button:hover,
+.sl-markdown-content pre button.copy:hover {
+  background: var(--zen-color-primary-25) !important;
+  border-color: var(--zen-color-primary-300) !important;
 }
