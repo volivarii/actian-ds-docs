@@ -157,90 +157,160 @@ function renderMarkdownTable(headers, rows) {
   return lines.join("\n");
 }
 
-// content[] items come from the knowledge repo's guideline-md-parser in a
-// small set of shapes: plain strings (rules/bullets), { do, dont } pairs,
-// { term, rule } terminology entries, { note } callouts, and
-// { table: { headers, rows } } generic tables. Bucket them and emit the
-// right component/markdown as JSX.
+// content[] items come from the knowledge repo's guideline-md-parser in
+// these shapes (current schema; see actian-ds-knowledge/schemas/guideline-
+// component.json $defs.contentItem):
+//
+//   - { prose: string }                       ← standalone paragraph
+//   - { bullets: [strings] }                  ← one markdown list
+//   - { note: string }                        ← blockquote (opt-in callout)
+//   - { do, dont } | { do } | { dont }        ← do/don't table rows or solos
+//   - { term, rule|definition }               ← terminology table rows
+//   - { table: { headers, rows } }            ← generic table
+//   - { example } | { examples: [strings] }   ← code/example blocks
+//   - string                                  ← LEGACY bullet (pre-prose
+//                                               parser); kept for backwards
+//                                               compatibility with old JSON
+//
+// Items appear in authored source order. We walk them once and emit in that
+// same order. The only "bucketing" is collapsing CONSECUTIVE same-type runs
+// into one compound component:
+//   - consecutive {do,dont} pairs collapse into one <DoDont pairs={[...]}>
+//   - consecutive terminology rows collapse into one <TermList items={[...]}>
+//   - consecutive legacy strings (or solos like all dos, all donts) collapse
+//     into one block
+// Different types adjacent to each other emit as separate blocks, preserving
+// authored order. This matches universal precedent (Primer, Polaris, Carbon,
+// Starlight, Markdoc): the renderer never reorders blocks within a section.
 function renderContentItems(items, headingForDiag) {
-  var pairs = [];   // [{ do, dont }, ...]
-  var dos = [];     // solo dos
-  var donts = [];   // solo donts
-  var rules = [];   // strings
-  var notes = [];   // strings
-  var terms = [];   // [{ term, definition }]
-  var examples = [];
-  var tables = [];  // [{ headers, rows }]
-  var unknown = []; // for diagnostics
+  if (!items || !items.length) return "";
 
-  (items || []).forEach(function (item) {
-    if (typeof item === "string") { rules.push(item); return; }
-    if (item && typeof item === "object") {
-      if (item.do && item.dont) { pairs.push({ do: item.do, dont: item.dont }); return; }
-      if (item.do) { dos.push(item.do); return; }
-      if (item.dont) { donts.push(item.dont); return; }
-      // `term` must be checked before `rule`: terminology items are
-      // { term, rule } where `rule` carries the definition text.
-      if (item.term) { terms.push({ term: item.term, definition: item.definition || item.rule }); return; }
-      if (item.rule) { rules.push(item.rule); return; }
-      if (item.note) { notes.push(item.note); return; }
-      if (item.table && Array.isArray(item.table.headers)) { tables.push(item.table); return; }
-      if (item.examples) {
-        var ex = Array.isArray(item.examples) ? item.examples : [item.examples];
-        ex.forEach(function (e) { examples.push(String(e)); });
-        return;
-      }
-      if (item.example) { examples.push(String(item.example)); return; }
-      unknown.push(item);
-    }
-  });
+  function isPair(it) { return it && typeof it === "object" && it.do && it.dont; }
+  function isSoloDo(it) {
+    return it && typeof it === "object" && it.do && !it.dont;
+  }
+  function isSoloDont(it) {
+    return it && typeof it === "object" && it.dont && !it.do;
+  }
+  function isTerm(it) { return it && typeof it === "object" && it.term; }
+  function isLegacyBullet(it) { return typeof it === "string"; }
 
-  if (unknown.length) {
-    process.stderr.write("[generate] WARNING: unknown content item shape(s) in section '"
-      + (headingForDiag || "") + "': " + JSON.stringify(unknown) + "\n");
+  // Greedy: from index `i`, collect a contiguous run for which predicate(it)
+  // is true. Returns { items: [...], next: index-past-the-run }.
+  function takeRun(arr, i, predicate) {
+    var run = [];
+    var j = i;
+    while (j < arr.length && predicate(arr[j])) { run.push(arr[j]); j++; }
+    return { items: run, next: j };
   }
 
-  var parts = [];
-  if (rules.length) {
-    parts.push(rules.map(function (r) { return "- " + escapeMdxPlaceholders(r); }).join("\n"));
-  }
-  if (pairs.length) {
+  function renderDoDontPairs(pairs) {
     var pairsJsx = pairs.map(function (p) {
       return "{ do: " + JSON.stringify(escapeMdxPlaceholders(p.do))
         + ", dont: " + JSON.stringify(escapeMdxPlaceholders(p.dont)) + " }";
     }).join(", ");
-    parts.push("<DoDont pairs={[" + pairsJsx + "]} />");
+    return "<DoDont pairs={[" + pairsJsx + "]} />";
   }
-  if (dos.length) {
-    parts.push(dos.map(function (d) {
-      return "<DoDont do={" + JSON.stringify(escapeMdxPlaceholders(d)) + "} />";
-    }).join("\n\n"));
-  }
-  if (donts.length) {
-    parts.push(donts.map(function (d) {
-      return "<DoDont dont={" + JSON.stringify(escapeMdxPlaceholders(d)) + "} />";
-    }).join("\n\n"));
-  }
-  if (notes.length) {
-    parts.push(notes.map(function (n) {
-      return "<Callout variant=\"note\">\n" + escapeMdxPlaceholders(n) + "\n</Callout>";
-    }).join("\n\n"));
-  }
-  if (terms.length) {
-    var termsJsx = terms.map(function (t) {
+
+  function renderTermList(rows) {
+    var jsx = rows.map(function (t) {
+      var def = t.definition || t.rule;
       return "{ term: " + JSON.stringify(escapeMdxPlaceholders(t.term))
-        + (t.definition ? ", definition: " + JSON.stringify(escapeMdxPlaceholders(t.definition)) : "")
+        + (def ? ", definition: " + JSON.stringify(escapeMdxPlaceholders(def)) : "")
         + " }";
     }).join(", ");
-    parts.push("<TermList items={[" + termsJsx + "]} />");
+    return "<TermList items={[" + jsx + "]} />";
   }
-  if (tables.length) {
-    tables.forEach(function (tbl) {
-      parts.push(renderMarkdownTable(tbl.headers, tbl.rows));
-    });
+
+  function renderBullets(strings) {
+    return strings.map(function (s) {
+      return "- " + escapeMdxPlaceholders(s);
+    }).join("\n");
   }
-  if (examples.length) {
-    parts.push("**Examples:** " + examples.map(function (e) { return "`" + e + "`"; }).join(", "));
+
+  function renderCallout(text) {
+    return "<Callout variant=\"note\">\n" + escapeMdxPlaceholders(text) + "\n</Callout>";
+  }
+
+  var parts = [];
+  var unknown = [];
+  var i = 0;
+  while (i < items.length) {
+    var it = items[i];
+
+    // Consecutive runs that collapse into one compound component.
+    if (isPair(it)) {
+      var run = takeRun(items, i, isPair);
+      parts.push(renderDoDontPairs(run.items));
+      i = run.next; continue;
+    }
+    if (isTerm(it)) {
+      var trun = takeRun(items, i, isTerm);
+      parts.push(renderTermList(trun.items));
+      i = trun.next; continue;
+    }
+    if (isLegacyBullet(it)) {
+      // Collapse consecutive legacy bullet strings into one <ul>. Newer JSON
+      // uses {bullets:[...]} so each list is already a unit.
+      var brun = takeRun(items, i, isLegacyBullet);
+      parts.push(renderBullets(brun.items));
+      i = brun.next; continue;
+    }
+    if (isSoloDo(it)) {
+      var drun = takeRun(items, i, isSoloDo);
+      parts.push(drun.items.map(function (x) {
+        return "<DoDont do={" + JSON.stringify(escapeMdxPlaceholders(x.do)) + "} />";
+      }).join("\n\n"));
+      i = drun.next; continue;
+    }
+    if (isSoloDont(it)) {
+      var xrun = takeRun(items, i, isSoloDont);
+      parts.push(xrun.items.map(function (x) {
+        return "<DoDont dont={" + JSON.stringify(escapeMdxPlaceholders(x.dont)) + "} />";
+      }).join("\n\n"));
+      i = xrun.next; continue;
+    }
+
+    // Single-item shapes — emit in source order, no run collapsing.
+    if (it && typeof it === "object") {
+      if (Array.isArray(it.bullets)) {
+        parts.push(renderBullets(it.bullets));
+        i++; continue;
+      }
+      if (typeof it.prose === "string") {
+        parts.push(escapeMdxPlaceholders(it.prose));
+        i++; continue;
+      }
+      if (typeof it.note === "string") {
+        parts.push(renderCallout(it.note));
+        i++; continue;
+      }
+      if (it.table && Array.isArray(it.table.headers)) {
+        parts.push(renderMarkdownTable(it.table.headers, it.table.rows));
+        i++; continue;
+      }
+      if (Array.isArray(it.examples) || typeof it.examples === "string") {
+        var ex = Array.isArray(it.examples) ? it.examples : [it.examples];
+        parts.push("**Examples:** " + ex.map(function (e) { return "`" + e + "`"; }).join(", "));
+        i++; continue;
+      }
+      if (typeof it.example === "string") {
+        parts.push("**Example:** `" + it.example + "`");
+        i++; continue;
+      }
+      if (typeof it.rule === "string") {
+        // Bare {rule} (no do/dont/term sibling) — treat as prose.
+        parts.push(escapeMdxPlaceholders(it.rule));
+        i++; continue;
+      }
+      unknown.push(it);
+    }
+    i++;
+  }
+
+  if (unknown.length) {
+    process.stderr.write("[generate] WARNING: unknown content item shape(s) in section '"
+      + (headingForDiag || "") + "': " + JSON.stringify(unknown) + "\n");
   }
 
   return parts.join("\n\n");
