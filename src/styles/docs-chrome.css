@@ -242,23 +242,28 @@ footer .meta {
   border: 1px solid;
 }
 .confidence-chip__field {
+  /* Softer than the value via weight, NOT opacity. Opacity would cut
+   * effective contrast and fail WCAG AA at the chip's small text size. */
   color: inherit;
-  opacity: 0.65;
+  font-weight: 400;
 }
+/* All three variants use the -900 text token so 11px chip text clears
+ * WCAG AA 4.5:1 against the matching -25 background. The icon-<state>
+ * tokens lighter shades sit at 3.2–3.4:1 which fail for non-large text. */
 .confidence-chip--high {
   background: var(--zen-color-success-25, #f0ffec);
-  color: var(--zen-color-icon-success, #0a6e00);
-  border-color: var(--zen-color-success-200, var(--zen-color-icon-success));
+  color: var(--zen-color-success-900, #0a4a00);
+  border-color: var(--zen-color-success-200, var(--zen-color-success-900));
 }
 .confidence-chip--medium {
   background: var(--zen-color-warning-25, #fff9e5);
-  color: var(--zen-color-icon-warning, #c47a00);
-  border-color: var(--zen-color-warning-200, var(--zen-color-icon-warning));
+  color: var(--zen-color-warning-900, #83551f);
+  border-color: var(--zen-color-warning-200, var(--zen-color-warning-900));
 }
 .confidence-chip--low {
   background: var(--zen-color-error-25, #fff4ec);
-  color: var(--zen-color-icon-error, #dc3514);
-  border-color: var(--zen-color-error-200, var(--zen-color-icon-error));
+  color: var(--zen-color-error-900, #762a1c);
+  border-color: var(--zen-color-error-200, var(--zen-color-error-900));
 }
 
 /* ------------------------------------------------------------------

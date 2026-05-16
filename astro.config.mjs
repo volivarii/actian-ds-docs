@@ -2,6 +2,7 @@ import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 import remarkCustomHeaderId from "remark-custom-header-id";
 import starlightLinksValidator from "starlight-links-validator";
+import componentsSidebar from "./src/data/components-sidebar.json";
 
 const SITE = process.env.SITE_URL || "https://volivarii.github.io/actian-ds-docs";
 const BASE = process.env.SITE_BASE || "/actian-ds-docs";
@@ -45,12 +46,12 @@ export default defineConfig({
         { label: "Accessibility", link: "/accessibility" },
         {
           label: "Components",
-          // autogenerate respects per-page `sidebar: { hidden: true }`. Each
-          // component now lives in its own subdir with six MDX tabs; only the
-          // index.mdx is sidebar-visible (other tabs set hidden:true via the
-          // generator). See scripts/generate-component-pages.cjs +
-          // src/data/component-tabs.config.json.
-          items: [{ autogenerate: { directory: "components" } }],
+          // Sidebar items are emitted by scripts/generate-component-pages.cjs to
+          // src/data/components-sidebar.json (pre-build). Manual config replaces
+          // autogenerate because autogenerate doesn't merge a directory + its
+          // index.mdx into a single entry — which would double each component
+          // with the sub-route tabs architecture.
+          items: componentsSidebar,
         },
         { label: "Brand assets", items: [{ autogenerate: { directory: "brand" } }] },
         { label: "Patterns", link: "/patterns" },

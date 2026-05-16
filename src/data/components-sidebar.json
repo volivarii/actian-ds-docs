@@ -1,0 +1,326 @@
+[
+  {
+    "label": "Action",
+    "collapsed": true,
+    "items": [
+      {
+        "label": "Button",
+        "link": "/components/action/button/"
+      },
+      {
+        "label": "Link",
+        "link": "/components/action/link/"
+      },
+      {
+        "label": "Sticky footer",
+        "link": "/components/action/sticky-footer/"
+      }
+    ]
+  },
+  {
+    "label": "Data Display",
+    "collapsed": true,
+    "items": [
+      {
+        "label": "⛔️ Bar graph",
+        "link": "/components/data-display/data-viz-wip-all-others/bar-graph/"
+      },
+      {
+        "label": "⛔️ Line graph",
+        "link": "/components/data-display/data-viz-wip-all-others/line-graph/"
+      },
+      {
+        "label": "✍️ Badge",
+        "link": "/components/data-display/badge/"
+      },
+      {
+        "label": "✍️ Collapse-accordion",
+        "link": "/components/data-display/collapse-accordion/"
+      },
+      {
+        "label": "✍️ Table",
+        "link": "/components/data-display/table/"
+      },
+      {
+        "label": "✍️ Tag, Catalog",
+        "link": "/components/data-display/tag-identification-key/tag-catalog/"
+      },
+      {
+        "label": "✍️ Tag, Catalog item type",
+        "link": "/components/data-display/tag-identification-key/tag-catalog-item-type/"
+      },
+      {
+        "label": "✍️ Tag, Default",
+        "link": "/components/data-display/tag-identification-key/tag-default/"
+      },
+      {
+        "label": "✍️ Tag, Glossary item type",
+        "link": "/components/data-display/tag-identification-key/tag-glossary-item-type/"
+      },
+      {
+        "label": "✍️ Tag, Interactive",
+        "link": "/components/data-display/tag-identification-key/tag-interactive/"
+      },
+      {
+        "label": "✍️ Tag, Stage",
+        "link": "/components/data-display/tag-identification-key/tag-stage/"
+      },
+      {
+        "label": "✍️ Tag, Status",
+        "link": "/components/data-display/tag-identification-key/tag-status/"
+      },
+      {
+        "label": "✍️ Tag, Updated",
+        "link": "/components/data-display/tag-identification-key/tag-updated/"
+      },
+      {
+        "label": "Avatar",
+        "link": "/components/data-display/avatar/"
+      },
+      {
+        "label": "Card",
+        "link": "/components/data-display/card/card/"
+      },
+      {
+        "label": "Digram, Item types",
+        "link": "/components/data-display/digram/digram-item-types/"
+      },
+      {
+        "label": "Digram, Topic",
+        "link": "/components/data-display/digram/digram-topic/"
+      },
+      {
+        "label": "Glossary item hierarchy diagram",
+        "link": "/components/data-display/glossary-item-hierarchy-diagram/"
+      },
+      {
+        "label": "Identification key",
+        "link": "/components/data-display/tag-identification-key/identification-key/"
+      },
+      {
+        "label": "Lineage connecting line",
+        "link": "/components/data-display/data-viz-lineage/lineage-connecting-line/"
+      },
+      {
+        "label": "Lineage grouped node",
+        "link": "/components/data-display/data-viz-lineage/lineage-grouped-node/"
+      },
+      {
+        "label": "Lineage individual node",
+        "link": "/components/data-display/data-viz-lineage/lineage-individual-node/"
+      },
+      {
+        "label": "Metamodel widget",
+        "link": "/components/data-display/metamodel-widget/"
+      },
+      {
+        "label": "Page header",
+        "link": "/components/data-display/page-header/"
+      },
+      {
+        "label": "Perimeter card",
+        "link": "/components/data-display/card/perimeter-card/"
+      },
+      {
+        "label": "Progress bar small",
+        "link": "/components/data-display/progress-bar-small/"
+      },
+      {
+        "label": "Scroll bar",
+        "link": "/components/data-display/scroll-bar/"
+      },
+      {
+        "label": "Search result card",
+        "link": "/components/data-display/search-result-card/"
+      },
+      {
+        "label": "Segmented control",
+        "link": "/components/data-display/segmented-control/"
+      },
+      {
+        "label": "Tile, Item",
+        "link": "/components/data-display/card/tile-item/"
+      },
+      {
+        "label": "Toolbar",
+        "link": "/components/data-display/toolbar/"
+      }
+    ]
+  },
+  {
+    "label": "Feedback",
+    "collapsed": true,
+    "items": [
+      {
+        "label": "✍️ Alert-banner",
+        "link": "/components/feedback/alert-banner/"
+      },
+      {
+        "label": "Confirmation",
+        "link": "/components/feedback/empty-state/confirmation/"
+      },
+      {
+        "label": "Empty state",
+        "link": "/components/feedback/empty-state/empty-state/"
+      },
+      {
+        "label": "Error state",
+        "link": "/components/feedback/empty-state/error-state/"
+      },
+      {
+        "label": "Loader",
+        "link": "/components/feedback/loading-loader-spinner-skeleton/loader/"
+      },
+      {
+        "label": "Loader with logo",
+        "link": "/components/feedback/loading-loader-spinner-skeleton/loader-with-logo/"
+      },
+      {
+        "label": "Loading skeleton",
+        "link": "/components/feedback/loading-loader-spinner-skeleton/loading-skeleton/"
+      },
+      {
+        "label": "Maintenance banner",
+        "link": "/components/feedback/maintenance-banner/"
+      },
+      {
+        "label": "Maintenance state",
+        "link": "/components/feedback/empty-state/maintenance-state/"
+      },
+      {
+        "label": "Notification",
+        "link": "/components/feedback/notification/"
+      },
+      {
+        "label": "Spinner",
+        "link": "/components/feedback/loading-loader-spinner-skeleton/spinner/"
+      }
+    ]
+  },
+  {
+    "label": "Form (input & selection)",
+    "collapsed": true,
+    "items": [
+      {
+        "label": "Calendar",
+        "link": "/components/form-input-selection/calendar/calendar/"
+      },
+      {
+        "label": "Checkbox with label",
+        "link": "/components/form-input-selection/checkbox-with-label/"
+      },
+      {
+        "label": "Dropdown, Select, default",
+        "link": "/components/form-input-selection/dropdown-select-default/"
+      },
+      {
+        "label": "Input",
+        "link": "/components/form-input-selection/input/"
+      },
+      {
+        "label": "Input, date",
+        "link": "/components/form-input-selection/calendar/input-date/"
+      },
+      {
+        "label": "Radio button",
+        "link": "/components/form-input-selection/radio-button/"
+      },
+      {
+        "label": "Rich text",
+        "link": "/components/form-input-selection/rich-text/"
+      },
+      {
+        "label": "Search",
+        "link": "/components/form-input-selection/search/search/"
+      },
+      {
+        "label": "Search dropdown menu",
+        "link": "/components/form-input-selection/search/search-dropdown-menu/"
+      },
+      {
+        "label": "Search filters",
+        "link": "/components/form-input-selection/search-filters/"
+      },
+      {
+        "label": "Toglge",
+        "link": "/components/form-input-selection/toglge/"
+      }
+    ]
+  },
+  {
+    "label": "Navigation",
+    "collapsed": true,
+    "items": [
+      {
+        "label": "✍️ Side nav",
+        "link": "/components/navigation/side-nav/"
+      },
+      {
+        "label": "Account dropdown",
+        "link": "/components/navigation/global-header/account-dropdown/"
+      },
+      {
+        "label": "App switcher dropdown",
+        "link": "/components/navigation/global-header/app-switcher-dropdown/"
+      },
+      {
+        "label": "Breadcrumbs",
+        "link": "/components/navigation/breadcrumbs/"
+      },
+      {
+        "label": "Global header",
+        "link": "/components/navigation/global-header/global-header/"
+      },
+      {
+        "label": "Notification dropdown",
+        "link": "/components/navigation/global-header/notification-dropdown/"
+      },
+      {
+        "label": "Stepper",
+        "link": "/components/navigation/stepper/stepper/"
+      },
+      {
+        "label": "Stepper buttons",
+        "link": "/components/navigation/stepper/stepper-buttons/"
+      },
+      {
+        "label": "Tabs",
+        "link": "/components/navigation/tabs/"
+      },
+      {
+        "label": "Traffic light",
+        "link": "/components/navigation/traffic-light/"
+      },
+      {
+        "label": "Whats new dropdown",
+        "link": "/components/navigation/global-header/whats-new-dropdown/"
+      }
+    ]
+  },
+  {
+    "label": "Overlays",
+    "collapsed": true,
+    "items": [
+      {
+        "label": "⚠️ Tooltip",
+        "link": "/components/overlays/tooltip/"
+      },
+      {
+        "label": "⛔️ Popover",
+        "link": "/components/overlays/popover/"
+      },
+      {
+        "label": "Chat with AI Steward",
+        "link": "/components/overlays/chat-with-ai-steward/"
+      },
+      {
+        "label": "Drawer, side panel",
+        "link": "/components/overlays/drawer-side-panel/"
+      },
+      {
+        "label": "Modal",
+        "link": "/components/overlays/modal/"
+      }
+    ]
+  }
+]

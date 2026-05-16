@@ -312,6 +312,21 @@ function renderA11yRefs(defaults) {
   return "## Accessibility\n\n<AccessibilityRefs requirementRefs={" + jsLit(defaults.card_accessibility.requirementRefs) + "} />";
 }
 
+function renderConfidenceChips(defaults, contentDomain) {
+  if (!defaults || !defaults.confidence) return "";
+  var contentConfidence = "low";
+  if (contentDomain && contentDomain.status === "approved") contentConfidence = "high";
+  else if (contentDomain && contentDomain.status === "draft") contentConfidence = "medium";
+  var merged = Object.assign({}, defaults.confidence, { content: contentConfidence });
+  var chips = Object.entries(merged).map(function (kv) {
+    return '<span class={`confidence-chip confidence-chip--' + kv[1] + '`}>'
+      + '<span class="confidence-chip__field">' + kv[0] + '</span>'
+      + '<span>' + kv[1] + '</span>'
+      + '</span>';
+  }).join("\n  ");
+  return '<div class="confidence-row">\n  <span class="confidence-row__label">Confidence</span>\n  ' + chips + '\n</div>';
+}
+
 function renderResources(slug, entry, registry, guideline) {
   var figmaUrl = (entry.nodeId && registry && registry.fileKey)
     ? "https://www.figma.com/file/" + registry.fileKey + "?node-id=" + String(entry.nodeId).replace(":", "-")
@@ -367,7 +382,6 @@ function renderTabMdx(ctx) {
     "---",
     "title: " + JSON.stringify(ctx.title),
     "description: " + JSON.stringify(ctx.description),
-    "tableOfContents: false",
     "template: doc",
     "tab: " + JSON.stringify(ctx.tabSlug),
     "component: " + JSON.stringify(ctx.slug),
@@ -424,6 +438,7 @@ function buildComponent(slug, entry, guideline, defaults, registry, opts) {
   var categorySlug = slugifyCategory(entry.category);
 
   var RENDERERS = {
+    confidenceChips:       function () { return renderConfidenceChips(defaults, contentDomain); },
     overview:              function () { return renderOverview(entry); },
     variantsSummary:       function () { return renderVariantsMatrix(entry, defaults); },
     categoryUsageBaseline: function () { return renderCategoryUsageBaseline(defaults); },
@@ -597,6 +612,75 @@ function buildPage(slug, entry, guideline, defaults, registry, opts) {
   ];
 
   return lines.join("\n");
+}
+
+// ---------------------------------------------------------------------------
+// buildSidebarManifest — generates the components-sidebar.json consumed by
+// astro.config.mjs. Replaces autogenerate to avoid the directory+index.mdx
+// duplication that occurs with the sub-route tabs architecture.
+// ---------------------------------------------------------------------------
+
+function buildSidebarManifest(registry, opts) {
+  opts = opts || {};
+  var excludedCategories = opts.excludedCategories || new Set();
+  var collectionCategories = opts.collectionCategories || new Set();
+  var targetSection = opts.targetSection || "components";
+
+  // Pre-compute groupCounts so we can reproduce the nesting logic.
+  var groupCounts = {};
+  Object.entries(registry.components).forEach(function (pair) {
+    var e = pair[1];
+    if (!e.category || !e.group) return;
+    if (excludedCategories.has(e.category)) return;
+    if (collectionCategories.has(e.category)) return;
+    var sd = SECTION_DIRS[e.section] || DEFAULT_SECTION_DIR;
+    if (sd !== targetSection) return;
+    var cs = slugifyCategory(e.category);
+    var gs = slugifyCategory(e.group);
+    if (!cs || !gs) return;
+    groupCounts[cs + "::" + gs] = (groupCounts[cs + "::" + gs] || 0) + 1;
+  });
+
+  // category label → { label, items[] }
+  var catMap = {};
+
+  Object.entries(registry.components).forEach(function (pair) {
+    var slug = pair[0];
+    var entry = pair[1];
+    if (!entry.category) return;
+    if (excludedCategories.has(entry.category)) return;
+    if (collectionCategories.has(entry.category)) return;
+    var sd = SECTION_DIRS[entry.section] || DEFAULT_SECTION_DIR;
+    if (sd !== targetSection) return;
+
+    var catSlug = slugifyCategory(entry.category);
+    var parts = [targetSection, catSlug];
+    if (entry.group) {
+      var groupSlug = slugifyCategory(entry.group);
+      var key = catSlug + "::" + groupSlug;
+      if (groupSlug && groupCounts[key] > 1) {
+        parts.push(groupSlug);
+      }
+    }
+    parts.push(slug);
+    var link = "/" + parts.join("/") + "/";
+
+    if (!catMap[entry.category]) {
+      catMap[entry.category] = { label: entry.category, catSlug: catSlug, items: [] };
+    }
+    catMap[entry.category].items.push({ label: entry.name || slug, link: link });
+  });
+
+  // Sort categories alphabetically, sort items within each category.
+  var categories = Object.values(catMap);
+  categories.sort(function (a, b) { return a.label.localeCompare(b.label); });
+  categories.forEach(function (cat) {
+    cat.items.sort(function (a, b) { return a.label.localeCompare(b.label); });
+  });
+
+  return categories.map(function (cat) {
+    return { label: cat.label, collapsed: true, items: cat.items };
+  });
 }
 
 function main() {
@@ -818,6 +902,15 @@ function main() {
     written++;
   });
 
+  var manifest = buildSidebarManifest(registry, {
+    excludedCategories: EXCLUDED_CATEGORIES,
+    collectionCategories: COLLECTION_CATEGORIES,
+    targetSection: "components",
+  });
+  var sidebarDataPath = path.join(__dirname, "..", "src", "data", "components-sidebar.json");
+  fs.writeFileSync(sidebarDataPath, JSON.stringify(manifest, null, 2) + "\n");
+  console.log("generate-component-pages: wrote sidebar manifest → src/data/components-sidebar.json");
+
   console.log(
     "generate-component-pages: wrote " +
       written +
@@ -841,4 +934,4 @@ if (require.main === module) {
   main();
 }
 
-module.exports = { main: main, buildPage: buildPage, buildComponent: buildComponent };
+module.exports = { main: main, buildPage: buildPage, buildComponent: buildComponent, buildSidebarManifest: buildSidebarManifest };
