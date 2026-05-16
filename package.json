@@ -21,6 +21,9 @@
     "sharp": "^0.34.5"
   },
   "devDependencies": {
-    "starlight-links-validator": "^0.24.0"
+    "@axe-core/cli": "^4.11.3",
+    "http-server": "^14.1.1",
+    "starlight-links-validator": "^0.24.0",
+    "wait-on": "^9.0.10"
   }
 }

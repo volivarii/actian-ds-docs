@@ -1,0 +1,8 @@
+{
+  "pages": [
+    { "path": "/", "name": "homepage", "rationale": "editorial splash template + hero" },
+    { "path": "/components/action/button/", "name": "component-tabs-index", "rationale": "covers Track A tab layout" },
+    { "path": "/foundations/spacing/", "name": "foundations-tokens", "rationale": "TokenScale + dense tables" },
+    { "path": "/accessibility/", "name": "accessibility-page", "rationale": "the a11y guide itself" }
+  ]
+}

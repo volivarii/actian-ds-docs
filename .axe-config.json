@@ -1,0 +1,13 @@
+{
+  "rules": [
+    { "id": "color-contrast", "enabled": true },
+    { "id": "landmark-one-main", "enabled": true },
+    { "id": "page-has-heading-one", "enabled": true },
+    { "id": "region", "enabled": true },
+    { "id": "duplicate-id-aria", "enabled": true }
+  ],
+  "exclude": [
+    ["[data-astro-source-file]"],
+    [".sl-link-card"]
+  ]
+}
