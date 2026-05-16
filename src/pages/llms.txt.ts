@@ -1,5 +1,6 @@
 import type { APIRoute } from "astro";
 import { getCollection } from "astro:content";
+import tabsConfig from "../data/component-tabs.config.json";
 
 const SITE =
   process.env.SITE_URL || "https://volivarii.github.io/actian-ds-docs";
@@ -50,11 +51,50 @@ export const GET: APIRoute = async () => {
   }
 
   lines.push("", "## Components (categorized DS Kit)", "");
+
+  // Group sub-route tab IDs under their parent component slug.
+  // Detect "is tab" by checking if the last path segment matches a known non-index tab slug
+  // (e.g. "usage", "content", "design", "accessibility", "code"). This is more robust than
+  // checking parts.length === 4 because nested category paths like
+  // "components/data-display/tag-identification-key/tag-stage" have 4 segments yet are
+  // NOT tabs — their last segment is the component slug, not a tab slug.
+  const TAB_SLUGS = new Set(
+    tabsConfig.tabs.filter((t) => !t.isIndex).map((t) => t.slug),
+  );
+
+  type Entry = (typeof components)[number];
+  type Bucket = { parent: Entry; tabs: Entry[] };
+  const byComponent = new Map<string, Bucket>();
+
   for (const entry of components) {
-    const slug = entry.id.replace(/^components\//, "").replace(/\.mdx?$/, "");
+    const idNoExt = entry.id.replace(/\.mdx?$/, "");
+    const parts = idNoExt.split("/"); // ["components","action","button"] or [...,"usage"]
+    const lastSeg = parts[parts.length - 1];
+    const isTab = TAB_SLUGS.has(lastSeg);
+    // For tabs, the component key is everything except the trailing tab segment.
+    const compKey = isTab ? parts.slice(0, -1).join("/") : parts.join("/");
+
+    if (!byComponent.has(compKey)) {
+      byComponent.set(compKey, { parent: entry, tabs: [] });
+    }
+    const bucket = byComponent.get(compKey)!;
+    if (isTab) {
+      bucket.tabs.push(entry);
+    } else {
+      bucket.parent = entry;
+    }
+  }
+
+  for (const [, { parent, tabs }] of byComponent) {
+    const slug = parent.id.replace(/^components\//, "").replace(/\.mdx?$/, "");
     lines.push(
-      `- [${entry.data.title}](${SITE}/components/${slug}.md): ${entry.data.description || ""}`,
+      `- [${parent.data.title}](${SITE}/components/${slug}.md): ${parent.data.description || ""}`,
     );
+    for (const t of tabs) {
+      const tabSlug = t.id.replace(/^components\//, "").replace(/\.mdx?$/, "");
+      const tabLabel = tabSlug.split("/").pop() || "";
+      lines.push(`  - [${tabLabel}](${SITE}/components/${tabSlug}.md)`);
+    }
   }
 
   lines.push("", "## Other", "");
