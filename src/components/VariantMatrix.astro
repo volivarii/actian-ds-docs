@@ -1,18 +1,12 @@
 ---
+import { renderVariantMatrix } from "../lib/variant-matrix.mjs";
+
 interface Props {
   variantAxes: Array<{ axis: string; values: string[] }>;
 }
 const { variantAxes } = Astro.props;
+
+const html = renderVariantMatrix(variantAxes);
 ---
 
-<table>
-  <thead><tr><th>Axis</th><th>Values</th></tr></thead>
-  <tbody>
-    {variantAxes.map((a) => (
-      <tr>
-        <td><strong>{a.axis}</strong></td>
-        <td>{a.values.map((v) => <code style="margin-right:8px">{v}</code>)}</td>
-      </tr>
-    ))}
-  </tbody>
-</table>
+<Fragment set:html={html} />
