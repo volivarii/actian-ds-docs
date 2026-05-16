@@ -23,7 +23,7 @@ var fs = require("fs");
 var path = require("path");
 var PATHS = require("./lib/paths.cjs");
 var loader = require("./lib/category-defaults-loader.cjs");
-var TABS = require(path.resolve(__dirname, "..", "src", "data", "component-tabs.config.cjs")).tabs;
+var TABS = require(path.resolve(__dirname, "..", "src", "data", "component-tabs.config.json")).tabs;
 
 // ζ.5 follow-up (2026-05-13): output is now section-aware. Components,
 // Foundations, and Brand items each land in their own top-level directory
