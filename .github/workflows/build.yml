@@ -89,6 +89,22 @@ jobs:
               --exit
           done
 
+  links:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run links validator
+        run: npm run build:check
+
   # Deploy must live in the same workflow as the artifact upload — the
   # deploy-pages action reads artifacts from the current workflow run,
   # and workflow_run-triggered deploys can't see upstream artifacts.

@@ -8,7 +8,7 @@
     "dev": "astro dev",
     "start": "astro dev",
     "build": "astro build",
-    "build:check": "SITE_BASE=/ npm run build",
+    "build:check": "CHECK_LINKS=1 SITE_BASE=/ npm run build",
     "preview": "astro preview",
     "astro": "astro"
   },
