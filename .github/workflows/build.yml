@@ -66,10 +66,14 @@ jobs:
 
       - run: npm ci
 
+      # Build with SITE_BASE=/ so the local http-server serving dist/ at
+      # root URL aligns with the generated link paths. (Production uses
+      # SITE_BASE=/actian-ds-docs; here we test the rendered HTML against
+      # axe, not the production URL shape.)
       - name: Build site for a11y scan
         env:
           SITE_URL: http://localhost:4321
-          SITE_BASE: /actian-ds-docs
+          SITE_BASE: /
         run: npm run build
 
       # Background processes don't survive across GitHub Actions steps —
@@ -81,10 +85,10 @@ jobs:
           npx http-server dist -p 4321 -s &
           SERVER_PID=$!
           trap "kill $SERVER_PID 2>/dev/null || true" EXIT
-          npx wait-on http://localhost:4321/actian-ds-docs/ --timeout 30000
+          npx wait-on http://localhost:4321/ --timeout 30000
           for path in "/" "/components/action/button/" "/foundations/spacing/" "/accessibility/"; do
             echo "axe → $path"
-            npx axe "http://localhost:4321/actian-ds-docs${path}" \
+            npx axe "http://localhost:4321${path}" \
               --rules "color-contrast,landmark-one-main,page-has-heading-one,region,duplicate-id-aria" \
               --exclude "[data-astro-source-file]" \
               --exit
