@@ -897,3 +897,39 @@ button[data-open-modal] {
   background: var(--zen-color-primary-25) !important;
   border-color: var(--zen-color-primary-300) !important;
 }
+
+/* ------------------------------------------------------------------
+ * Density modes (2026-05-16 theme polish):
+ *   editorial → generous vertical rhythm, larger H1, breathable
+ *   technical → compact rows, dense tables (default for reference pages)
+ * Editorial scope: pages that contain .stats-row (the homepage editorial
+ * component grid). This site does not use Starlight's splash template
+ * (which would emit data-has-hero on <html>); the homepage is a regular
+ * doc page (index.mdx) with custom editorial components. .stats-row is
+ * the unambiguous editorial marker — it appears only in index.html.
+ * The h1 Starlight renders sits outside .sl-markdown-content in its own
+ * .content-panel, so it is targeted via .content-panel h1 when .stats-row
+ * is a sibling inside the same .sl-markdown-content wrapper.
+ * Technical is the implicit default — no scope needed.
+ * ------------------------------------------------------------------ */
+
+/* Editorial h1 — the page title sits in its own .content-panel above
+ * .sl-markdown-content. Since CSS can't scope upward with :has() on
+ * broader ancestors without knowing the exact tree, we scope the h2
+ * and p styles via the .sl-markdown-content that contains .stats-row.
+ * The h1 lives in a sibling .content-panel; style it via the
+ * .main-pane context using :has(.stats-row). */
+.main-pane:has(.stats-row) h1 {
+  font-size: clamp(2rem, 5vw, 3rem) !important;
+  line-height: 1.1 !important;
+  letter-spacing: -0.025em !important;
+}
+.sl-markdown-content:has(.stats-row) > p {
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  max-width: 64ch;
+}
+.sl-markdown-content:has(.stats-row) > h2 {
+  margin-top: 3em !important;
+  padding-top: 1.5em !important;
+}
