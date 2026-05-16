@@ -78,10 +78,9 @@
 
   --border-hairline: 1px solid
     var(--zen-color-neutral-100, var(--zen-border-default));
-  /* Track A coordination: when ComponentTabs.astro lands (PR #24),
-   * its hover/active transitions should consume --transition-base +
-   * --motion-easing-standard for visual rhythm consistency with the
-   * rest of the chrome. Wire up at Track A merge time. */
+  /* ComponentTabs.astro (Track A, merged) consumes --transition-base +
+   * --motion-easing-standard for its hover/active transitions — wired
+   * in docs-chrome.css alongside the .component-tabs__tab rule. */
   --border-hairline-strong: 1px solid
     var(--zen-color-neutral-200, var(--zen-border-default));
 }
