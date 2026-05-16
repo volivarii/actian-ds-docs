@@ -261,6 +261,47 @@ function renderStubFooter(categorySlug) {
 }
 
 // ---------------------------------------------------------------------------
+// renderConfidenceChips — emits the <div class="confidence-row"> block.
+// Mirrors the confidenceLine logic from buildPage(), extracted so
+// buildComponent()'s RENDERERS map can include it as "confidenceChips".
+// Returns "" when defaults.confidence is absent (stub case).
+// ---------------------------------------------------------------------------
+
+function renderConfidenceChips(defaults, contentDomain) {
+  if (!(defaults && defaults.confidence)) return "";
+  // Derive the content-confidence level from the content domain's status,
+  // mirroring the buildPage() logic: approved → high, draft → medium,
+  // absent/anything-else → low.
+  var contentConfidence = "low";
+  if (
+    contentDomain &&
+    Array.isArray(contentDomain.sections) &&
+    (contentDomain.status === "approved" || contentDomain.status === "draft")
+  ) {
+    contentConfidence = contentDomain.status === "approved" ? "high" : "medium";
+  }
+  var merged = Object.assign({}, defaults.confidence, { content: contentConfidence });
+  var chips = Object.entries(merged)
+    .map(function (kv) {
+      return (
+        '<span class={`confidence-chip confidence-chip--' +
+        kv[1] +
+        '`}><span class="confidence-chip__field">' +
+        kv[0] +
+        "</span><span>" +
+        kv[1] +
+        "</span></span>"
+      );
+    })
+    .join("\n  ");
+  return (
+    '<div class="confidence-row">\n  <span class="confidence-row__label">Confidence</span>\n  ' +
+    chips +
+    "\n</div>"
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Small placeholder helpers for tabs that have no real data yet.
 // ---------------------------------------------------------------------------
 
@@ -350,6 +391,7 @@ function buildComponent(slug, entry, guideline, defaults, registry, opts) {
   var categorySlug = slugifyCategory(entry.category);
 
   var RENDERERS = {
+    confidenceChips:       function () { return renderConfidenceChips(defaults, contentDomain); },
     overview:              function () { return renderOverview(entry); },
     variantsSummary:       function () { return renderVariantsMatrix(entry, defaults); },
     categoryUsageBaseline: function () { return renderCategoryUsageBaseline(defaults); },
@@ -523,6 +565,99 @@ function buildPage(slug, entry, guideline, defaults, registry, opts) {
   ];
 
   return lines.join("\n");
+}
+
+// ---------------------------------------------------------------------------
+// buildSidebarManifest — assembles the components-sidebar.json structure
+// consumed by astro.config.mjs.  Called once after main()'s per-component
+// loop so it has the full picture.
+//
+// Groups components by category (using the same EXCLUDED / COLLECTION /
+// SECTION_DIRS filters as main()). Categories and components are sorted
+// alphabetically. Nested-group components appear as siblings in the
+// category's items list — the label is the component's display name and
+// the link is the full /components/<cat>/<slug>/ path (or the nested
+// /components/<cat>/<group>/<slug>/ path when nestDepth > 0).
+//
+// Returns an array of sidebar group objects, one per category.
+// ---------------------------------------------------------------------------
+
+function buildSidebarManifest(registry, opts) {
+  opts = opts || {};
+  var excludedCategories = opts.excludedCategories || new Set();
+  var collectionCategories = opts.collectionCategories || new Set();
+  var sectionDirs = opts.sectionDirs || { Components: "components", Foundations: "foundations", "Brand Assets": "brand" };
+  var defaultSectionDir = opts.defaultSectionDir || "components";
+  // Only emit sidebar entries for the components section (the others are
+  // managed via autogenerate or static links in astro.config.mjs).
+  var targetSection = opts.targetSection || "components";
+
+  // Count group membership so we can decide on nesting (same rule as main()).
+  var groupCounts = {};
+  Object.entries(registry.components).forEach(function (pair) {
+    var e = pair[1];
+    if (!e.category || !e.group) return;
+    if (excludedCategories.has(e.category)) return;
+    if (collectionCategories.has(e.category)) return;
+    var cs = slugifyCategory(e.category);
+    var gs = slugifyCategory(e.group);
+    if (!cs || !gs) return;
+    groupCounts[cs + "::" + gs] = (groupCounts[cs + "::" + gs] || 0) + 1;
+  });
+
+  // Collect items per category.
+  var categoryMap = {};
+  Object.entries(registry.components).forEach(function (pair) {
+    var slug = pair[0];
+    var e = pair[1];
+    if (!e.category) return;
+    if (excludedCategories.has(e.category)) return;
+    if (collectionCategories.has(e.category)) return;
+    var sectionDir = sectionDirs[e.section] || defaultSectionDir;
+    if (sectionDir !== targetSection) return;
+
+    var catLabel = e.category;
+    var catSlug = slugifyCategory(catLabel);
+
+    // Determine nest path (mirrors main() logic).
+    var linkPath;
+    if (e.group) {
+      var groupSlug = slugifyCategory(e.group);
+      var groupKey = groupSlug ? (catSlug + "::" + groupSlug) : null;
+      if (groupKey && groupCounts[groupKey] > 1) {
+        linkPath = "/" + targetSection + "/" + catSlug + "/" + groupSlug + "/" + slug + "/";
+      } else {
+        linkPath = "/" + targetSection + "/" + catSlug + "/" + slug + "/";
+      }
+    } else {
+      linkPath = "/" + targetSection + "/" + catSlug + "/" + slug + "/";
+    }
+
+    if (!categoryMap[catLabel]) {
+      categoryMap[catLabel] = { label: catLabel, items: [] };
+    }
+    categoryMap[catLabel].items.push({
+      label: e.name || slug,
+      link: linkPath,
+    });
+  });
+
+  // Sort categories alphabetically, sort items within each category.
+  var groups = Object.keys(categoryMap)
+    .sort()
+    .map(function (cat) {
+      var group = categoryMap[cat];
+      group.items.sort(function (a, b) {
+        return a.label.localeCompare(b.label);
+      });
+      return {
+        label: group.label,
+        collapsed: true,
+        items: group.items,
+      };
+    });
+
+  return groups;
 }
 
 function main() {
@@ -739,6 +874,23 @@ function main() {
     written++;
   });
 
+  // Emit components-sidebar.json — consumed by astro.config.mjs as a
+  // manual `items` list for the Components sidebar group. Manual config
+  // replaces autogenerate because Starlight's autogenerate creates a
+  // directory group (<details>) AND an index.mdx child link — causing
+  // every component to appear twice in the sidebar with the sub-route
+  // tabs architecture.
+  var sidebarManifest = buildSidebarManifest(registry, {
+    excludedCategories: EXCLUDED_CATEGORIES,
+    collectionCategories: COLLECTION_CATEGORIES,
+    sectionDirs: SECTION_DIRS,
+    defaultSectionDir: DEFAULT_SECTION_DIR,
+    targetSection: "components",
+  });
+  var sidebarManifestPath = path.resolve(__dirname, "..", "src", "data", "components-sidebar.json");
+  fs.writeFileSync(sidebarManifestPath, JSON.stringify(sidebarManifest, null, 2) + "\n");
+  console.log("generate-component-pages: wrote sidebar manifest → " + path.relative(path.resolve(__dirname, ".."), sidebarManifestPath));
+
   console.log(
     "generate-component-pages: wrote " +
       written +
@@ -762,4 +914,4 @@ if (require.main === module) {
   main();
 }
 
-module.exports = { main: main, buildPage: buildPage, buildComponent: buildComponent };
+module.exports = { main: main, buildPage: buildPage, buildComponent: buildComponent, buildSidebarManifest: buildSidebarManifest };
