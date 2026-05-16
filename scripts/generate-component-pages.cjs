@@ -242,6 +242,7 @@ function renderResources(slug, entry, registry, guideline) {
   var figmaUrl = (entry.nodeId && registry && registry.fileKey)
     ? "https://www.figma.com/file/" + registry.fileKey + "?node-id=" + String(entry.nodeId).replace(":", "-")
     : null;
+  if (!figmaUrl && !guideline) return "";
   var resourceLines = [
     "## Resources",
     "",
@@ -357,7 +358,7 @@ function buildComponent(slug, entry, guideline, defaults, registry, opts) {
     motion:                function () { return renderMotion(defaults); },
     a11yRefs:              function () { return renderA11yRefs(defaults); },
     globalA11yLink:        function () { return renderGlobalA11yLink(); },
-    variantsTable:         function () { return renderVariantsMatrix(entry, defaults); },
+    variantsTable:         function () { return renderVariantsTable(entry, defaults); },
     tokensPlaceholder:     function () { return renderTokensPlaceholder(); },
     apiPlaceholder:        function () { return renderApiPlaceholder(entry); },
     resources:             function () { return renderResources(slug, entry, registry, guideline); },
