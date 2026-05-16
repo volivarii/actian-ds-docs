@@ -655,31 +655,56 @@ function buildSidebarManifest(registry, opts) {
 
     var catSlug = slugifyCategory(entry.category);
     var parts = [targetSection, catSlug];
+    var nested = false;
+    var groupLabel = null;
     if (entry.group) {
       var groupSlug = slugifyCategory(entry.group);
       var key = catSlug + "::" + groupSlug;
       if (groupSlug && groupCounts[key] > 1) {
         parts.push(groupSlug);
+        nested = true;
+        groupLabel = entry.group;
       }
     }
     parts.push(slug);
     var link = "/" + parts.join("/") + "/";
 
     if (!catMap[entry.category]) {
-      catMap[entry.category] = { label: entry.category, catSlug: catSlug, items: [] };
+      catMap[entry.category] = {
+        label: entry.category,
+        catSlug: catSlug,
+        items: [],
+        groups: {}, // groupLabel → { label, items[] }
+      };
     }
-    catMap[entry.category].items.push({ label: entry.name || slug, link: link });
+    var leaf = { label: entry.name || slug, link: link };
+    if (nested) {
+      // Wrap into a group subnode so the sidebar mirrors the URL structure
+      // (and the old Starlight-autogenerate filesystem-based nesting that
+      // was lost when buildSidebarManifest replaced autogenerate).
+      if (!catMap[entry.category].groups[groupLabel]) {
+        catMap[entry.category].groups[groupLabel] = { label: groupLabel, items: [] };
+      }
+      catMap[entry.category].groups[groupLabel].items.push(leaf);
+    } else {
+      catMap[entry.category].items.push(leaf);
+    }
   });
 
-  // Sort categories alphabetically, sort items within each category.
+  // Sort categories alphabetically; within each category interleave group
+  // subnodes and flat items A-Z by label, so the sidebar reads as one
+  // consistent list whether an entry is a single component or a
+  // collapsible group.
   var categories = Object.values(catMap);
   categories.sort(function (a, b) { return a.label.localeCompare(b.label); });
-  categories.forEach(function (cat) {
-    cat.items.sort(function (a, b) { return a.label.localeCompare(b.label); });
-  });
-
   return categories.map(function (cat) {
-    return { label: cat.label, collapsed: true, items: cat.items };
+    var groupNodes = Object.values(cat.groups || {}).map(function (g) {
+      g.items.sort(function (a, b) { return a.label.localeCompare(b.label); });
+      return { label: g.label, collapsed: true, items: g.items };
+    });
+    var merged = cat.items.concat(groupNodes);
+    merged.sort(function (a, b) { return a.label.localeCompare(b.label); });
+    return { label: cat.label, collapsed: true, items: merged };
   });
 }
 
@@ -902,14 +927,36 @@ function main() {
     written++;
   });
 
-  var manifest = buildSidebarManifest(registry, {
-    excludedCategories: EXCLUDED_CATEGORIES,
-    collectionCategories: COLLECTION_CATEGORIES,
-    targetSection: "components",
+  // Emit one manifest per generator-managed top-level section. The sub-route
+  // tabs architecture writes <slug>/index.mdx + 5 sibling tab files; Starlight's
+  // autogenerate would render BOTH the directory and the index.mdx, doubling
+  // every entry. Both components and brand need manifest-based sidebars to
+  // avoid that. Foundations stays on autogenerate (it has tracked top-level
+  // MDX files, not generated tab dirs).
+  ["components", "brand"].forEach(function (section) {
+    var manifest = buildSidebarManifest(registry, {
+      excludedCategories: EXCLUDED_CATEGORIES,
+      collectionCategories: COLLECTION_CATEGORIES,
+      targetSection: section,
+    });
+    var sidebarDataPath = path.join(
+      __dirname,
+      "..",
+      "src",
+      "data",
+      section + "-sidebar.json",
+    );
+    fs.writeFileSync(sidebarDataPath, JSON.stringify(manifest, null, 2) + "\n");
+    console.log(
+      "generate-component-pages: wrote " +
+        section +
+        " sidebar manifest → src/data/" +
+        section +
+        "-sidebar.json (" +
+        manifest.length +
+        " categories)",
+    );
   });
-  var sidebarDataPath = path.join(__dirname, "..", "src", "data", "components-sidebar.json");
-  fs.writeFileSync(sidebarDataPath, JSON.stringify(manifest, null, 2) + "\n");
-  console.log("generate-component-pages: wrote sidebar manifest → src/data/components-sidebar.json");
 
   console.log(
     "generate-component-pages: wrote " +

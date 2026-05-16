@@ -57,6 +57,62 @@ test("tab pages do not disable tableOfContents (right-rail TOC stays on)", funct
   });
 });
 
+// ---------------------------------------------------------------------------
+// buildSidebarManifest — group nesting + per-section targeting
+// ---------------------------------------------------------------------------
+
+test("buildSidebarManifest: 2+ components sharing a group wrap into a subnode", function () {
+  var miniReg = {
+    components: {
+      "tag-a": { name: "Tag A", category: "Data Display", section: "Components", group: "Tag, Identification key" },
+      "tag-b": { name: "Tag B", category: "Data Display", section: "Components", group: "Tag, Identification key" },
+      "lonely": { name: "Lonely", category: "Data Display", section: "Components", group: "Solo group" },
+      "flat":   { name: "Flat",   category: "Data Display", section: "Components" },
+    },
+  };
+  var manifest = gen.buildSidebarManifest(miniReg, { targetSection: "components" });
+  var dd = manifest.find(function (c) { return c.label === "Data Display"; });
+  assert.ok(dd, "Data Display category present");
+  var tagNode = dd.items.find(function (i) { return i.label === "Tag, Identification key"; });
+  assert.ok(tagNode, "shared-group items wrapped into one subnode");
+  assert.equal(tagNode.items.length, 2, "subnode carries both members");
+  // Solo group with one component must NOT wrap (would create a node with one child)
+  var lonely = dd.items.find(function (i) { return i.label === "Lonely"; });
+  assert.ok(lonely && lonely.link, "single-member group renders as flat leaf");
+  // Group-less component stays flat
+  var flat = dd.items.find(function (i) { return i.label === "Flat"; });
+  assert.ok(flat && flat.link, "groupless component renders as flat leaf");
+});
+
+test("buildSidebarManifest: groups and leaves interleave A-Z by label", function () {
+  var miniReg = {
+    components: {
+      "z-flat": { name: "Z Flat", category: "X", section: "Components" },
+      "a-flat": { name: "A Flat", category: "X", section: "Components" },
+      "m1":     { name: "M1",     category: "X", section: "Components", group: "M Group" },
+      "m2":     { name: "M2",     category: "X", section: "Components", group: "M Group" },
+    },
+  };
+  var manifest = gen.buildSidebarManifest(miniReg, { targetSection: "components" });
+  var labels = manifest[0].items.map(function (i) { return i.label; });
+  assert.deepEqual(labels, ["A Flat", "M Group", "Z Flat"]);
+});
+
+test("buildSidebarManifest: targetSection filters out other-section entries", function () {
+  var miniReg = {
+    components: {
+      "comp": { name: "Comp", category: "X", section: "Components" },
+      "brand-thing": { name: "Brand thing", category: "Y", section: "Brand Assets" },
+    },
+  };
+  var componentsManifest = gen.buildSidebarManifest(miniReg, { targetSection: "components" });
+  var brandManifest = gen.buildSidebarManifest(miniReg, { targetSection: "brand" });
+  assert.equal(componentsManifest.length, 1);
+  assert.equal(componentsManifest[0].label, "X");
+  assert.equal(brandManifest.length, 1);
+  assert.equal(brandManifest[0].label, "Y");
+});
+
 test(".md twin route IDs cover all six tabs (smoke build artifact check)", function () {
   var distDir = path.join(__dirname, "..", "..", "dist", "components", "action", "button");
   if (!fs.existsSync(distDir)) {

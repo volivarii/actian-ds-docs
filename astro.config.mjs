@@ -3,6 +3,7 @@ import starlight from "@astrojs/starlight";
 import remarkCustomHeaderId from "remark-custom-header-id";
 import starlightLinksValidator from "starlight-links-validator";
 import componentsSidebar from "./src/data/components-sidebar.json";
+import brandSidebar from "./src/data/brand-sidebar.json";
 
 const SITE = process.env.SITE_URL || "https://volivarii.github.io/actian-ds-docs";
 const BASE = process.env.SITE_BASE || "/actian-ds-docs";
@@ -53,7 +54,13 @@ export default defineConfig({
           // with the sub-route tabs architecture.
           items: componentsSidebar,
         },
-        { label: "Brand assets", items: [{ autogenerate: { directory: "brand" } }] },
+        {
+          label: "Brand assets",
+          // Same reasoning as Components — autogenerate would duplicate each
+          // entry (directory node + index.mdx leaf) under the sub-route tabs
+          // architecture. Manifest is emitted by generate-component-pages.cjs.
+          items: brandSidebar,
+        },
         { label: "Patterns", link: "/patterns" },
         {
           label: "Reference",
