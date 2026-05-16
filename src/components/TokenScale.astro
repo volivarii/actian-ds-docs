@@ -1,4 +1,6 @@
 ---
+import { resolveScale } from "../lib/token-scale-resolve.mjs";
+
 interface Props {
   /**
    * The DTCG sub-tree to render. E.g. tokens.color.primary, tokens.spacing,
@@ -11,7 +13,19 @@ interface Props {
    * E.g. "color-primary" → tokens with names like --zen-color-primary-500.
    * Pass without the "--zen-" prefix.
    */
-  prefix: string;
+  prefix?: string;
+
+  /**
+   * Convenience shorthand: selects a known sub-tree of `data` and sets the
+   * matching prefix automatically. Existing call sites that pass `data` +
+   * `prefix` directly are unaffected.
+   *
+   * - "spacing" → data.spacing, prefix "spacing"
+   * - "color"   → data.color,   prefix "color"
+   * - "radius"  → data.border.radius, prefix "border-radius"
+   * - "type"    → data.font.size, prefix "font-size"
+   */
+  scale?: "type" | "spacing" | "color" | "radius";
 
   /**
    * Visual kind. If omitted, auto-detect from prefix.
@@ -24,17 +38,18 @@ interface Props {
   showVisual?: boolean;
 }
 
-const { data, prefix, visualKind = "auto", showVisual } = Astro.props;
+const { data, prefix, scale, visualKind = "auto", showVisual } = Astro.props;
+const { effectiveData, effectivePrefix } = resolveScale(data, scale, prefix);
 
-function flatten(obj: any, parts: string[] = []): Array<{ Token: string; Value: string }> {
+function flatten(obj: any, pfx: string, parts: string[] = []): Array<{ Token: string; Value: string }> {
   const rows: Array<{ Token: string; Value: string }> = [];
   for (const [k, v] of Object.entries(obj || {})) {
     if (k.startsWith("$") || k.startsWith("_")) continue;
     if (v && typeof v === "object" && "$value" in (v as object)) {
-      const name = "--zen-" + [prefix, ...parts, k].filter(Boolean).join("-");
+      const name = "--zen-" + [pfx, ...parts, k].filter(Boolean).join("-");
       rows.push({ Token: name, Value: String((v as any).$value) });
     } else if (v && typeof v === "object") {
-      rows.push(...flatten(v, [...parts, k]));
+      rows.push(...flatten(v, pfx, [...parts, k]));
     }
   }
   return rows;
@@ -49,9 +64,9 @@ function autoKind(p: string): "color" | "spacing" | "radius" | "border-width" | 
 }
 
 const kind: "color" | "spacing" | "radius" | "border-width" | "none" =
-  visualKind === "auto" ? autoKind(prefix) : visualKind;
+  visualKind === "auto" ? autoKind(effectivePrefix) : visualKind;
 const willShowVisual = showVisual ?? kind !== "none";
-const rows = flatten(data);
+const rows = flatten(effectiveData, effectivePrefix);
 ---
 
 <table class="token-scale">

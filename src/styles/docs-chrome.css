@@ -933,3 +933,39 @@ button[data-open-modal] {
   margin-top: 3em !important;
   padding-top: 1.5em !important;
 }
+
+/* ------------------------------------------------------------------
+ * VariantMatrix — 2D specimen grid (PR 2 of 2026-05-16 polish).
+ * Graceful empty-cell story: cells render an em-dash until live
+ * component renders ship (deferred).
+ * ------------------------------------------------------------------ */
+.variant-matrix {
+  border-collapse: collapse;
+  margin: 16px 0 28px;
+  font-size: var(--type-meta, 0.8125rem);
+}
+.variant-matrix th,
+.variant-matrix td {
+  padding: 8px 12px;
+  border: var(--border-hairline);
+  text-align: left;
+}
+.variant-matrix__corner {
+  background: var(--zen-color-bg-subtle);
+  font-size: var(--type-micro, 0.6875rem);
+  color: var(--zen-color-text-secondary);
+  font-weight: 600;
+}
+.variant-matrix__cell {
+  text-align: center;
+  color: var(--zen-color-text-secondary);
+  background: var(--zen-color-bg-default);
+}
+.variant-matrix__dot {
+  font-family: var(--font-mono);
+  opacity: 0.5;
+}
+.variant-matrix--empty {
+  font-style: italic;
+  color: var(--zen-color-text-secondary);
+}
