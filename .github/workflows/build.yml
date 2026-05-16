@@ -72,15 +72,16 @@ jobs:
           SITE_BASE: /actian-ds-docs
         run: npm run build
 
-      - name: Start static server
-        run: npx http-server dist -p 4321 -s &
-
-      - name: Wait for server
-        run: npx wait-on http://localhost:4321/actian-ds-docs/ --timeout 30000
-
-      - name: Run axe against target pages
+      # Background processes don't survive across GitHub Actions steps —
+      # each `run:` spawns a fresh shell, killing the server. Server start
+      # + wait + axe sweep must all live in one `run:` block.
+      - name: Serve dist + run axe against target pages
         run: |
           set -e
+          npx http-server dist -p 4321 -s &
+          SERVER_PID=$!
+          trap "kill $SERVER_PID 2>/dev/null || true" EXIT
+          npx wait-on http://localhost:4321/actian-ds-docs/ --timeout 30000
           for path in "/" "/components/action/button/" "/foundations/spacing/" "/accessibility/"; do
             echo "axe → $path"
             npx axe "http://localhost:4321/actian-ds-docs${path}" \
