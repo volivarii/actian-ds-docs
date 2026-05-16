@@ -822,3 +822,45 @@ button[data-open-modal] {
   padding-top: 1.25em !important;
   margin-top: 2.5em !important;
 }
+
+/* ------------------------------------------------------------------
+ * Component sub-route tab strip — sticky below Starlight header.
+ * Mounted by TabbedComponentLayout above the MDX body slot.
+ * ------------------------------------------------------------------ */
+.component-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  position: sticky;
+  top: var(--sl-nav-height, 3.75rem);
+  z-index: 5;
+  background: var(--zen-color-bg-default);
+  border-bottom: 1px solid
+    var(--zen-color-neutral-100, var(--zen-border-default));
+  margin: 0 0 24px;
+  padding: 8px 0 0;
+}
+.component-tabs__tab {
+  display: inline-block;
+  padding: 8px 12px;
+  border-bottom: 2px solid transparent;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--zen-color-text-secondary);
+  text-decoration: none !important;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+.component-tabs__tab:hover {
+  color: var(--zen-color-primary-500);
+}
+.component-tabs__tab.is-active {
+  color: var(--zen-color-text-primary);
+  border-bottom-color: var(--zen-color-primary-500);
+}
+.component-tabs__tab:focus-visible {
+  outline: 2px solid var(--zen-color-primary-500);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
