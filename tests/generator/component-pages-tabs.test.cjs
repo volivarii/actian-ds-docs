@@ -38,13 +38,14 @@ test("stub component renders all six tabs with <StubFooter> on under-documented 
   assert.match(out.files["content.mdx"], /<StubFooter/);
 });
 
-test("every emitted page declares the TabbedComponentLayout template", function () {
+test("every emitted page sets template: doc and a valid tab: frontmatter", function () {
   var out = gen.buildComponent("button", REG.components.button, BTN_GUIDE, null, REG);
+  var validTabs = /tab:\s*"(overview|usage|content|design|accessibility|code)"/;
   Object.keys(out.files).forEach(function (f) {
-    assert.match(out.files[f], /template:\s*splash|template:\s*doc|tab:\s*[a-z]+/,
-      f + " must carry tab frontmatter");
-    // The TabbedComponentLayout signal is the `tab:` key; Starlight's
-    // template selection uses head.template, set inside buildComponent.
+    assert.match(out.files[f], /template:\s*doc/,
+      f + " must set template: doc");
+    assert.match(out.files[f], validTabs,
+      f + " must declare a valid tab: frontmatter key");
   });
 });
 

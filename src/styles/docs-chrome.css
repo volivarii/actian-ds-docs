@@ -825,7 +825,8 @@ button[data-open-modal] {
 
 /* ------------------------------------------------------------------
  * Component sub-route tab strip — sticky below Starlight header.
- * Mounted by TabbedComponentLayout above the MDX body slot.
+ * Rendered by <ComponentTabs/> embedded in each per-tab MDX file by
+ * renderTabMdx() in scripts/generate-component-pages.cjs.
  * ------------------------------------------------------------------ */
 .component-tabs {
   display: flex;
