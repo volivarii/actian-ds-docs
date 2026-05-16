@@ -44,6 +44,11 @@ export default defineConfig({
         { label: "Accessibility", link: "/accessibility" },
         {
           label: "Components",
+          // autogenerate respects per-page `sidebar: { hidden: true }`. Each
+          // component now lives in its own subdir with six MDX tabs; only the
+          // index.mdx is sidebar-visible (other tabs set hidden:true via the
+          // generator). See scripts/generate-component-pages.cjs +
+          // src/data/component-tabs.config.json.
           items: [{ autogenerate: { directory: "components" } }],
         },
         { label: "Brand assets", items: [{ autogenerate: { directory: "brand" } }] },
