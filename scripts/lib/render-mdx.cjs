@@ -13,6 +13,7 @@
 
 var { escapeMdxIdentifiers } = require("./mdx-escape.cjs");
 var { KNOWLEDGE_REPO_URL } = require("./constants.cjs");
+var loader = require("./category-defaults-loader.cjs");
 
 // ---------------------------------------------------------------------------
 // Private helpers shared across render functions
@@ -320,7 +321,12 @@ function renderVariantsTable(entry, defaults) {
 
 function renderMotion(defaults) {
   if (!(defaults && defaults.card_motion && Array.isArray(defaults.card_motion.patternRefs))) return "";
-  return "## Motion\n\n<MotionPattern patternRefs={" + jsLit(defaults.card_motion.patternRefs) + "} />";
+  // Pre-resolve at build time — Astro component no longer needs to
+  // load the loader at SSR (Phase 4b: ~360 redundant requires removed).
+  var resolved = defaults.card_motion.patternRefs.map(function (r) {
+    return { ref: r, pattern: loader.resolveMotionRef(r.ref) };
+  });
+  return "## Motion\n\n<MotionPattern resolvedPatterns={" + jsLit(resolved) + "} />";
 }
 
 function renderContentDomain(contentDomain, WARNINGS) {
@@ -332,7 +338,10 @@ function renderContentDomain(contentDomain, WARNINGS) {
 
 function renderA11yRefs(defaults) {
   if (!(defaults && defaults.card_accessibility && Array.isArray(defaults.card_accessibility.requirementRefs))) return "";
-  return "## Accessibility\n\n<AccessibilityRefs requirementRefs={" + jsLit(defaults.card_accessibility.requirementRefs) + "} />";
+  var resolved = defaults.card_accessibility.requirementRefs.map(function (r) {
+    return { ref: r, section: loader.resolveAccessibilityRef(r.ref) };
+  });
+  return "## Accessibility\n\n<AccessibilityRefs resolvedRefs={" + jsLit(resolved) + "} />";
 }
 
 function renderConfidenceChips(defaults, contentDomain) {
