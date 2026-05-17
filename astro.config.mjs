@@ -92,27 +92,21 @@ export default defineConfig({
               // starlight-links-validator 0.24 API.
               exclude: ({ file, link }) => {
                 // content.md is auto-generated from vendor/content/dist/global.md
-                // by scripts/sync-vendored-md.cjs on every build. The upstream
-                // document uses bare component slugs as relative links; the four
-                // below reference components without pages yet (validation-messages,
-                // wizards) or would need upstream global.md edits that would be
-                // clobbered on next sync. Only these specific slugs are suppressed;
-                // all other content.md links are validated normally.
+                // by scripts/sync-vendored-md.cjs on every build. The 3 slugs
+                // below reference concepts (forms, validation-messages, wizards)
+                // that don't have dedicated component pages in the DS Kit —
+                // the bare-slug links are intentional cross-section references,
+                // not component links. All other content.md links are validated.
+                //
+                // 5 previously-excluded slugs (alert-banner, popover, stepper,
+                // checkbox, filters) were converted to absolute paths upstream
+                // in knowledge#76 (knowledge v0.14.1+). They're now validated
+                // normally.
                 if (file.endsWith("/content.md") || file.endsWith("\\content.md")) {
                   const unfixableSlugs = [
-                    // Components without pages yet — fixing requires upstream
-                    // knowledge-repo global.md edits:
+                    "forms",
                     "validation-messages",
                     "wizards",
-                    "filters",
-                    "stepper",
-                    // Components WITH pages but linked via bare slug (relative
-                    // links in vendor/content/dist/global.md that would need
-                    // upstream global.md → absolute path edits):
-                    "checkbox",
-                    "alert-banner",
-                    "popover",
-                    "forms",
                   ];
                   if (unfixableSlugs.some((s) => link === s || link.endsWith("/" + s))) return true;
                 }
