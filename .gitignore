@@ -40,3 +40,4 @@ src/content/docs/content.md
 
 # Generated at prebuild by scripts/generate-foundations-pages.cjs
 src/content/docs/foundations/design-guidelines.mdx
+src/content/docs/categories/
