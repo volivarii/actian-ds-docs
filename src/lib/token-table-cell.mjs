@@ -23,13 +23,15 @@ export function renderCell(value) {
 }
 
 /**
- * Compose a status cell from a row. Back-compat: if `row.Status` exists,
- * it wins (returned as-is; legacy data already contains the rendered HTML
- * or plain text the author intended — don't double-process it). Otherwise
- * compose from `row.status` (emoji key) + `row.status_note`.
+ * Compose a status cell from a row. Reads `row.status` (emoji key) +
+ * `row.status_note`.
+ *
+ * Pre-floor (knowledge < v0.14.0) had a `row.Status` field with pre-rendered
+ * HTML. Knowledge floor enforcement guarantees the modern shape — that
+ * fallback is removed. If pre-floor data sneaks in, the status cell will be
+ * empty rather than rendering raw HTML — a clean failure mode.
  */
 export function renderStatus(row) {
-  if (row.Status) return row.Status;
   const emoji = STATUS_EMOJI[row.status] || "";
   const text = row.status_note || row.status || "";
   if (!text && !emoji) return "";

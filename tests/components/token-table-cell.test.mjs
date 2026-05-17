@@ -18,10 +18,6 @@ test("renderCell: asterisks → <em>", () => {
   assert.equal(renderCell("foo *bar* baz"), "foo <em>bar</em> baz");
 });
 
-test("renderStatus: row.Status wins (legacy back-compat)", () => {
-  assert.equal(renderStatus({ Status: "Custom **bold**" }), "Custom **bold**");
-});
-
 test("renderStatus: lowercase status + status_note composed with emoji", () => {
   const out = renderStatus({ status: "shipped", status_note: "Shipped *(v1.0)*" });
   assert.equal(out, STATUS_EMOJI.shipped + " Shipped <em>(v1.0)</em>");
