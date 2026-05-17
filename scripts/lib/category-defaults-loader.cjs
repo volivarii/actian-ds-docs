@@ -74,21 +74,19 @@ function loadDefaultsForCategory(input) {
   if (Object.prototype.hasOwnProperty.call(categoryCache, slug)) {
     return categoryCache[slug];
   }
-  // Knowledge v0.5.1 renamed the collection: PATHS.components.categoryDefaults.byKey
-  // is a (slug) => path function. (Pre-v0.5.1 was PATHS.components.categoryDefaults
-  // — collection collided with sibling per-category leaf paths under the same
-  // namespace; renamed for leaf-XOR-namespace compliance.)
-  var distPath;
-  if (
-    PATHS.components &&
-    PATHS.components.categoryDefaults &&
-    typeof PATHS.components.categoryDefaults.byKey === "function"
-  ) {
-    distPath = PATHS.components.categoryDefaults.byKey(slug);
-  } else {
-    categoryCache[slug] = null;
-    return null;
+  // Modern path: PATHS.components.categoryDefaults.byKey is a (slug) => path function.
+  // The pre-v0.5.1 alternative (PATHS.components.categoryDefaults as a flat collection)
+  // is dropped — MIN_SUPPORTED_KNOWLEDGE (v0.14.0) guarantees the modern shape.
+  var byKey = PATHS.components &&
+              PATHS.components.categoryDefaults &&
+              PATHS.components.categoryDefaults.byKey;
+  if (typeof byKey !== "function") {
+    throw new Error(
+      "PATHS.components.categoryDefaults.byKey is not a function. " +
+      "Vendor manifest may be malformed; refresh vendor."
+    );
   }
+  var distPath = byKey(slug);
   if (!fs.existsSync(distPath)) {
     categoryCache[slug] = null;
     return null;

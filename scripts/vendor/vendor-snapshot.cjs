@@ -241,7 +241,6 @@ function readVendoredJson() {
   if (!fs.existsSync(VENDORED_JSON_PATH)) {
     return {
       knowledge_repo: KNOWLEDGE_REPO,
-      knowledge_repo_sha: null,
     };
   }
   return JSON.parse(fs.readFileSync(VENDORED_JSON_PATH, "utf8"));
@@ -327,7 +326,6 @@ function main() {
   //   1. --sha <sha>     → use SHA directly (back-compat for manual override)
   //   2. --range <range> → resolve via that range
   //   3. vendored.json.knowledge_repo_version_range → resolve via stored range
-  //   4. vendored.json.knowledge_repo_sha → legacy fallback (deprecated)
   var sha = args.sha;
   var resolvedVersion = null;
   var resolvedRange =
@@ -361,10 +359,6 @@ function main() {
     // Lets designers see range staleness in the CI summary instead of
     // discovering it via user-reported drift (the 2026-05-13 symptom).
     notifyIfNewerAvailable(tags, resolvedRange, matchedTag);
-  }
-
-  if (!sha) {
-    sha = current.knowledge_repo_sha; // legacy fallback
   }
 
   if (!sha) {

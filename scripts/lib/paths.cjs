@@ -23,11 +23,41 @@ var VENDORED_JSON_PATH = path.join(REPO_ROOT, "vendored.json");
 
 var SUPPORTED_SCHEMA_VERSION = "v1";
 
+/**
+ * Knowledge floor — vendored knowledge must be at or above this version.
+ * Bump procedure:
+ *   1. Confirm all backcompat scaffolding for versions BELOW the new floor
+ *      has been retired (greppable: comments referencing "v<old.version>").
+ *   2. Update this constant.
+ *   3. Run npm run validate — should pass if vendored is at/above the new floor.
+ *   4. Commit + ship.
+ *
+ * Set to v0.14.0 (Plan E baseline) — locks in the leaf-XOR-namespace rename
+ * (foundations.tokens.index) and the foundations.tokens.motion manifest leaf
+ * from knowledge PR #75.
+ */
+var MIN_SUPPORTED_KNOWLEDGE = "0.14.0";
+
 // Strip leading "v" so git tag "v0.3.1" compares equal to
 // package.json#version "0.3.1".
 function normalizeVersion(v) {
   if (v == null) return null;
   return String(v).replace(/^v/, "");
+}
+
+// Semver floor helpers — used by the MIN_SUPPORTED_KNOWLEDGE check below.
+var SEMVER = /^(\d+)\.(\d+)\.(\d+)$/;
+function parseV(v) {
+  var m = SEMVER.exec(String(v || ""));
+  if (!m) return null;
+  return [parseInt(m[1], 10), parseInt(m[2], 10), parseInt(m[3], 10)];
+}
+function isBelow(a, b) {
+  for (var i = 0; i < 3; i++) {
+    if (a[i] < b[i]) return true;
+    if (a[i] > b[i]) return false;
+  }
+  return false;
 }
 
 // Vendor-integrity check — confirms the vendored manifest's
@@ -171,6 +201,16 @@ function loadAndBuildPaths() {
     );
   }
   verifyVendorIntegrity(manifest, VENDORED_JSON_PATH);
+  // Floor enforcement — prevent silently running against pre-floor vendor data.
+  var vendored = parseV(manifest.knowledge_version);
+  var floor = parseV(MIN_SUPPORTED_KNOWLEDGE);
+  if (vendored && floor && isBelow(vendored, floor)) {
+    throw new Error(
+      "vendored knowledge v" + manifest.knowledge_version +
+      " is below the supported floor v" + MIN_SUPPORTED_KNOWLEDGE + ".\n" +
+      "Refresh vendor (gh workflow run vendor-snapshot.yml) or pin the manifest higher."
+    );
+  }
   return buildPathsFromManifest(manifest, VENDOR);
 }
 
@@ -189,3 +229,4 @@ module.exports.buildPathsFromManifest = buildPathsFromManifest;
 module.exports.verifyVendorIntegrity = verifyVendorIntegrity;
 module.exports.normalizeVersion = normalizeVersion;
 module.exports.SUPPORTED_SCHEMA_VERSION = SUPPORTED_SCHEMA_VERSION;
+module.exports.MIN_SUPPORTED_KNOWLEDGE = MIN_SUPPORTED_KNOWLEDGE;
