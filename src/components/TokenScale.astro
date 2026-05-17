@@ -1,5 +1,6 @@
 ---
 import { resolveScale } from "../lib/token-scale-resolve.mjs";
+import { flatten, autoKind } from "../lib/token-scale-flatten.mjs";
 
 interface Props {
   /**
@@ -40,28 +41,6 @@ interface Props {
 
 const { data, prefix, scale, visualKind = "auto", showVisual } = Astro.props;
 const { effectiveData, effectivePrefix } = resolveScale(data, scale, prefix);
-
-function flatten(obj: any, pfx: string, parts: string[] = []): Array<{ Token: string; Value: string }> {
-  const rows: Array<{ Token: string; Value: string }> = [];
-  for (const [k, v] of Object.entries(obj || {})) {
-    if (k.startsWith("$") || k.startsWith("_")) continue;
-    if (v && typeof v === "object" && "$value" in (v as object)) {
-      const name = "--zen-" + [pfx, ...parts, k].filter(Boolean).join("-");
-      rows.push({ Token: name, Value: String((v as any).$value) });
-    } else if (v && typeof v === "object") {
-      rows.push(...flatten(v, pfx, [...parts, k]));
-    }
-  }
-  return rows;
-}
-
-function autoKind(p: string): "color" | "spacing" | "radius" | "border-width" | "none" {
-  if (p.startsWith("color") || p === "focus-ring-error" || p === "focus-ring-primary") return "color";
-  if (p === "border-radius" || p.startsWith("border-radius")) return "radius";
-  if (p === "border-width" || p.startsWith("border-width")) return "border-width";
-  if (p.startsWith("spacing") || p.startsWith("size") || p.startsWith("icon")) return "spacing";
-  return "none";
-}
 
 const kind: "color" | "spacing" | "radius" | "border-width" | "none" =
   visualKind === "auto" ? autoKind(effectivePrefix) : visualKind;
