@@ -53,27 +53,6 @@ function stripFirstH1(body) {
   return body.replace(/^\s*#[^\n#][^\n]*\n+/, "");
 }
 
-function convertJekyllFrontmatterToHeadings(body) {
-  // Historically, the vendored content bundle concatenated source files
-  // that each retained a Jekyll-style frontmatter block (`--- title: ...
-  // ---`) as their de-facto section header, with no `## Title` heading in
-  // the body. This converted those blocks into real `## Title` headings.
-  //
-  // As of Phase 4b the docs source is `content/dist/global.md`, which the
-  // knowledge repo's derive-content.js already emits with proper `## `
-  // section headings (frontmatter stripped at derive time). So this
-  // function is now effectively a no-op on the current input — the regex
-  // finds nothing to convert. It is retained defensively: it is harmless
-  // on frontmatter-free input, and still covers the `accessibility.md`
-  // page + any future source that reverts to the Jekyll-block shape.
-  return body.replace(
-    /\n---\n[ \t]*title:[ \t]*"((?:[^"\\]|\\.)*)"[ \t]*\n(?:[^\n]*\n){0,10}---\n/g,
-    function (_, title) {
-      return "\n## " + title.replace(/\\(.)/g, "$1").trim() + "\n";
-    },
-  );
-}
-
 function buildFrontmatter(page) {
   var twinHref = "/actian-ds-docs/" + page.slug + ".md";
   return [
@@ -108,7 +87,7 @@ function main() {
       return;
     }
     var raw = fs.readFileSync(srcPath, "utf8");
-    var body = convertJekyllFrontmatterToHeadings(stripFirstH1(raw));
+    var body = stripFirstH1(raw);
     var out = buildFrontmatter(page) + body;
     fs.writeFileSync(path.join(OUT_DIR, page.slug + ".md"), out);
     console.log("sync-vendored-md: wrote src/content/docs/" + page.slug + ".md");
