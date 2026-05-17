@@ -1,9 +1,12 @@
 import type { APIRoute } from "astro";
 import { getCollection } from "astro:content";
 import tabsConfig from "../data/component-tabs.config.json";
+import { createRequire } from "node:module";
+import path from "node:path";
 
-const SITE =
-  process.env.SITE_URL || "https://volivarii.github.io/actian-ds-docs";
+const { SITE_URL: SITE } = createRequire(import.meta.url)(
+  path.resolve(process.cwd(), "scripts/lib/site-url.cjs"),
+);
 
 export const GET: APIRoute = async () => {
   const docs = await getCollection("docs");

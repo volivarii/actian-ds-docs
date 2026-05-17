@@ -1,6 +1,7 @@
 ---
 import dskit from "../../vendor/components/dist/registries/dskit.json";
 import { normalizeCategorySlug } from "../lib/slugify-category.mjs";
+import { getBase } from "../lib/base-url.mjs";
 
 interface ComponentEntry {
   key: string;
@@ -11,7 +12,7 @@ interface ComponentEntry {
 }
 
 // BASE_URL prefix for component deep-links so they survive deploy under /actian-ds-docs/.
-const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+const base = getBase(import.meta.env.BASE_URL);
 
 const ICON_NAME_PATTERNS = ["icon", "chevron", "arrow", "caret", "close", "plus", "minus", "check"];
 

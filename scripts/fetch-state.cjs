@@ -12,11 +12,13 @@
 var fs = require("fs");
 var path = require("path");
 var https = require("https");
+var { KNOWLEDGE_REPO } = require("./lib/constants.cjs");
 
 var OUT = path.resolve(__dirname, "..", "src", "data", "state.json");
 
+var [KNOWLEDGE_OWNER, KNOWLEDGE_NAME] = KNOWLEDGE_REPO.split("/");
 var REPOS = [
-  { owner: "volivarii", repo: "actian-ds-knowledge", label: "Knowledge" },
+  { owner: KNOWLEDGE_OWNER, repo: KNOWLEDGE_NAME, label: "Knowledge" },
   { owner: "volivarii", repo: "Actian-DS-Claude-plugin", label: "Plugin" },
   { owner: "volivarii", repo: "actian-ds-docs", label: "Docs" },
 ];

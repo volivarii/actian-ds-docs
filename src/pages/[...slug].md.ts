@@ -27,28 +27,44 @@ export const getStaticPaths: GetStaticPaths = async () => {
   // Note: accessibility + content used to live here but moved into the
   // docs collection (synced from vendor at prebuild). They're now picked
   // up automatically by the getCollection("docs") loop above.
-  const standalone = [
-    {
-      slug: "about",
-      title: "About",
-      desc: "How the three-repo ecosystem works.",
-    },
-    {
-      slug: "inventory",
+
+  // Richer titles/descriptions for .astro pages that lack frontmatter.
+  const OVERRIDES: Record<string, { title: string; desc: string }> = {
+    inventory: {
       title: "Inventory",
       desc: "All 322 DS Kit components, browseable.",
     },
-    {
-      slug: "migrations",
-      title: "Migrations",
-      desc: "Schema transitions, parallel-change discipline.",
-    },
-    {
-      slug: "state",
+    state: {
       title: "Ecosystem state",
       desc: "Live state of the three-repo ecosystem.",
     },
-  ];
+  };
+
+  // Discover standalone pages under src/pages/ that aren't part of the
+  // docs collection or a templated route. Each gets a .md twin for AI agents.
+  const pageModules = import.meta.glob<{
+    frontmatter?: { title?: string; description?: string };
+  }>("/src/pages/*.{mdx,astro}", { eager: true });
+
+  const standalone = Object.entries(pageModules)
+    .map(([filePath, mod]) => {
+      const slug = filePath
+        .replace(/^.*\/pages\//, "")
+        .replace(/\.(mdx|astro)$/, "");
+      // Skip templated routes and this file itself
+      if (slug.startsWith("[")) return null;
+      const fm = (mod as any).frontmatter || {};
+      const override = OVERRIDES[slug];
+      return {
+        slug,
+        title:
+          override?.title ??
+          fm.title ??
+          slug.charAt(0).toUpperCase() + slug.slice(1),
+        desc: override?.desc ?? fm.description ?? `Standalone page: ${slug}`,
+      };
+    })
+    .filter(Boolean) as Array<{ slug: string; title: string; desc: string }>;
   for (const page of standalone) {
     paths.push({
       params: { slug: page.slug },

@@ -26,6 +26,12 @@ var loader = require("./lib/category-defaults-loader.cjs");
 var { computeImportPrefix } = require("./lib/import-prefix.cjs");
 var TABS = require(path.resolve(__dirname, "..", "src", "data", "component-tabs.config.json")).tabs;
 var { escapeMdxIdentifiers } = require("./lib/mdx-escape.cjs");
+var { KNOWLEDGE_REPO_URL } = require("./lib/constants.cjs");
+
+// Aggregated warning counters — incremented by warning-emitting sites below;
+// summarized in one line at end of main(). Existing stderr writes preserved for
+// per-occurrence detail during build.
+var WARNINGS = { unknownContentShapes: 0, unparseableGuidelines: 0 };
 
 // Canonical list of valid renderer keys. Must match the keys of the
 // RENDERERS object built in buildComponent() below. Boot assertion (see
@@ -376,6 +382,7 @@ function renderContentItems(items, headingForDiag) {
   if (unknown.length) {
     process.stderr.write("[generate] WARNING: unknown content item shape(s) in section '"
       + (headingForDiag || "") + "': " + JSON.stringify(unknown) + "\n");
+    WARNINGS.unknownContentShapes += 1;
   }
 
   return parts.join("\n\n");
@@ -454,10 +461,7 @@ function renderConfidenceChips(defaults, contentDomain) {
   else if (contentDomain && contentDomain.status === "draft") contentConfidence = "medium";
   var merged = Object.assign({}, defaults.confidence, { content: contentConfidence });
   var chips = Object.entries(merged).map(function (kv) {
-    return '<span class={`confidence-chip confidence-chip--' + kv[1] + '`}>'
-      + '<span class="confidence-chip__field">' + kv[0] + '</span>'
-      + '<span>' + kv[1] + '</span>'
-      + '</span>';
+    return '<ConfidenceChip variant="' + kv[1] + '" field="' + kv[0] + '" value="' + kv[1] + '" />';
   }).join("\n  ");
   return '<div class="confidence-row">\n  <span class="confidence-row__label">Confidence</span>\n  ' + chips + '\n</div>';
 }
@@ -473,7 +477,7 @@ function renderResources(slug, entry, registry, guideline) {
   ];
   if (figmaUrl) resourceLines.push("- [Open in Figma](" + figmaUrl + ")");
   if (guideline) {
-    var knowledgeUrl = "https://github.com/volivarii/actian-ds-knowledge/tree/main/components/src/" + slug;
+    var knowledgeUrl = KNOWLEDGE_REPO_URL + "/tree/main/components/src/" + slug;
     resourceLines.push("- [Knowledge source](" + knowledgeUrl + ")");
   }
   return resourceLines.join("\n");
@@ -530,7 +534,7 @@ function renderTabMdx(ctx) {
   var imports = [
     "Anatomy", "VariantMatrix", "MotionPattern", "AccessibilityRefs",
     "PageMetadata", "StubFooter", "DoDont", "Callout", "TermList",
-    "ComponentTabs",
+    "ComponentTabs", "ConfidenceChip",
   ].map(function (name) {
     return 'import ' + name + ' from "' + ctx.importPrefix + "/" + name + '.astro";';
   }).join("\n");
@@ -913,6 +917,7 @@ function main() {
         guideline = JSON.parse(fs.readFileSync(guidelinePath, "utf8"));
       } catch (err) {
         process.stderr.write("[generate] WARNING: couldn't parse " + guidelinePath + " — " + err.message + "\n");
+        WARNINGS.unparseableGuidelines += 1;
       }
     }
 
@@ -1006,6 +1011,15 @@ function main() {
       Array.from(COLLECTION_CATEGORIES).join(", ") +
       ")",
   );
+  var totalWarnings = WARNINGS.unknownContentShapes + WARNINGS.unparseableGuidelines;
+  if (totalWarnings > 0) {
+    console.log(
+      "[generate-component-pages] " + totalWarnings + " warnings (" +
+      WARNINGS.unknownContentShapes + " unknown content shape" + (WARNINGS.unknownContentShapes === 1 ? "" : "s") + ", " +
+      WARNINGS.unparseableGuidelines + " unparseable guideline" + (WARNINGS.unparseableGuidelines === 1 ? "" : "s") +
+      ")"
+    );
+  }
 }
 
 if (require.main === module) {

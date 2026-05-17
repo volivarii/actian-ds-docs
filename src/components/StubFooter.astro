@@ -1,11 +1,12 @@
 ---
+import { getBase } from "../lib/base-url.mjs";
 interface Props {
   category: string;
 }
 const { category } = Astro.props;
 
 // BASE_URL prefix so deep links survive base-prefixed deploys.
-const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+const base = getBase(import.meta.env.BASE_URL);
 ---
 
 <aside class="stub-footer">

@@ -73,7 +73,7 @@ function renderListItem(item) {
   return `- ${escapeMdx(JSON.stringify(item))}`;
 }
 
-function renderTable(block) {
+function renderMarkdownTable(block) {
   const headers = block.headers || [];
   const rows = block.rows || [];
   if (headers.length === 0) return "";
@@ -98,7 +98,7 @@ function renderBlocks(blocks) {
         return (block.items || []).map(renderListItem).join("\n");
       }
       if (block.type === "table") {
-        return renderTable(block);
+        return renderMarkdownTable(block);
       }
       return "";
     })

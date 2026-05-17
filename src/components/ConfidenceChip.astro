@@ -1,0 +1,28 @@
+---
+/**
+ * ConfidenceChip — single source for the confidence chip markup.
+ *
+ * Used by:
+ * - generate-component-pages.cjs (in renderConfidenceChips and the
+ *   sidebar confidenceLine)
+ * - src/pages/confidence.mdx (chip examples + the level table)
+ *
+ * Props:
+ *   variant: "high" | "medium" | "low" — drives the BEM modifier
+ *   field: string — the field label rendered in the left segment
+ *   value?: string — optional value rendered in the right segment; if
+ *           absent, the right segment is empty (used in the level table)
+ */
+
+interface Props {
+  variant: "high" | "medium" | "low";
+  field: string;
+  value?: string;
+}
+const { variant, field, value } = Astro.props;
+---
+
+<span class={`confidence-chip confidence-chip--${variant}`}>
+  <span class="confidence-chip__field">{field}</span>
+  <span>{value ?? ""}</span>
+</span>
