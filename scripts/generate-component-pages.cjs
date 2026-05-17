@@ -24,6 +24,51 @@ var path = require("path");
 var PATHS = require("./lib/paths.cjs");
 var loader = require("./lib/category-defaults-loader.cjs");
 var TABS = require(path.resolve(__dirname, "..", "src", "data", "component-tabs.config.json")).tabs;
+var { escapeMdxIdentifiers } = require("./lib/mdx-escape.cjs");
+
+// Canonical list of valid renderer keys. Must match the keys of the
+// RENDERERS object built in buildComponent() below. Boot assertion (see
+// validateRendererConfig()) ensures component-tabs.config.json never
+// references a key absent from this list — silent-stub fallback was the
+// root of a debugging session worth ~half a day.
+var VALID_RENDERER_KEYS = new Set([
+  "confidenceChips",
+  "overview",
+  "variantsSummary",
+  "categoryUsageBaseline",
+  "contentDomain",
+  "anatomy",
+  "motion",
+  "a11yRefs",
+  "globalA11yLink",
+  "variantsTable",
+  "tokensPlaceholder",
+  "apiPlaceholder",
+  "resources",
+]);
+
+function validateRendererConfig(tabs) {
+  for (var i = 0; i < tabs.length; i++) {
+    var tab = tabs[i];
+    if (!Array.isArray(tab.renderers)) {
+      throw new Error(
+        "component-tabs.config.json: tab '" + tab.slug + "' is missing 'renderers' array"
+      );
+    }
+    for (var j = 0; j < tab.renderers.length; j++) {
+      var key = tab.renderers[j];
+      if (!VALID_RENDERER_KEYS.has(key)) {
+        throw new Error(
+          "component-tabs.config.json: tab '" + tab.slug +
+          "' references unknown renderer '" + key +
+          "' (valid: " + Array.from(VALID_RENDERER_KEYS).sort().join(", ") + ")"
+        );
+      }
+    }
+  }
+}
+
+validateRendererConfig(TABS);
 
 // ζ.5 follow-up (2026-05-13): output is now section-aware. Components,
 // Foundations, and Brand items each land in their own top-level directory
@@ -127,11 +172,10 @@ function rewriteComponentLinks(s) {
 // "Expected a closing tag for `<assetNames>`".
 function escapeMdxPlaceholders(s) {
   if (typeof s !== "string") return s;
-  // Rewrite bare-slug markdown links to absolute paths first, so the
-  // MDX validator sees real links rather than relative slug references.
+  // Step 1: link rewriting (component-specific — bare slug → absolute path).
   s = rewriteComponentLinks(s);
-  // Convert <foo>, <foo-bar>, <FooBar>, <a.b> into `<foo>` etc.
-  return s.replace(/<([a-zA-Z][\w.-]*)>/g, "`<$1>`");
+  // Step 2: angle-bracket escape (shared via lib/mdx-escape.cjs).
+  return escapeMdxIdentifiers(s);
 }
 
 // Render a { headers, rows } table as a GitHub-flavored markdown table.
@@ -526,7 +570,15 @@ function buildComponent(slug, entry, guideline, defaults, registry, opts) {
   var files = {};
   TABS.forEach(function (tab) {
     var body = tab.renderers
-      .map(function (r) { return RENDERERS[r] ? RENDERERS[r]() : ""; })
+      .map(function (r) {
+          if (!RENDERERS[r]) {
+            // Should be unreachable — validateRendererConfig(TABS) at module-top
+            // catches unknown keys. Throw rather than silently emit an empty
+            // string in case the config is mutated at runtime.
+            throw new Error("internal: unknown renderer '" + r + "' (config validator should have caught this)");
+          }
+          return RENDERERS[r]();
+        })
       .filter(function (s) { return s && s.trim() !== ""; })
       .join("\n\n");
 
