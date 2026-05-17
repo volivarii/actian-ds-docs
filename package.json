@@ -6,7 +6,7 @@
     "node": ">=22.12.0"
   },
   "scripts": {
-    "prebuild": "node scripts/fetch-state.cjs && node scripts/sync-vendored-md.cjs && node scripts/generate-component-pages.cjs && node scripts/generate-foundations-pages.cjs",
+    "prebuild": "node scripts/fetch-state.cjs && node scripts/sync-vendored-md.cjs && node scripts/generate-component-pages.cjs && node scripts/generate-foundations-pages.cjs && node scripts/generate-category-pages.cjs",
     "predev": "npm run prebuild",
     "dev": "astro dev",
     "start": "astro dev",
@@ -14,7 +14,7 @@
     "build:check": "CHECK_LINKS=1 SITE_BASE=/ npm run build",
     "preview": "astro preview",
     "astro": "astro",
-    "test": "node --test tests/lib/paths.test.cjs tests/lib/category-defaults-loader.test.cjs tests/validation/validate-build.test.cjs tests/vendor/version-range-resolution.test.cjs",
+    "test": "node --test tests/lib/paths.test.cjs tests/lib/category-defaults-loader.test.cjs tests/validation/validate-build.test.cjs tests/vendor/version-range-resolution.test.cjs tests/generator/category-pages.test.cjs",
     "validate": "node scripts/validation/validate-build.cjs"
   },
   "dependencies": {

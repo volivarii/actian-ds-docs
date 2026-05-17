@@ -1,5 +1,12 @@
 ---
 import dskit from "../../vendor/components/dist/registries/dskit.json";
+// TODO(phase-3 consolidation): use scripts/lib/category-defaults-loader.cjs#normalizeCategorySlug
+function normalizeCategorySlug(input: string | null | undefined): string | null {
+  if (input == null) return null;
+  let s = String(input).trim().toLowerCase().replace(/&/g, " ");
+  s = s.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  return s.length === 0 ? null : s;
+}
 
 interface ComponentEntry {
   key: string;
@@ -52,7 +59,7 @@ const uncategorized = nonIcons.filter(c => !c.category);
   <div class="inventory-grid">
     {categorized.map(c => (
       <div class="inventory-row">
-        <a href={`${base}components/${c.slug}`}><strong>{c.name}</strong></a>
+        <a href={`${base}components/${normalizeCategorySlug(c.category)}/${c.slug}/`}><strong>{c.name}</strong></a>
         <div><code>{c.category}</code></div>
       </div>
     ))}
