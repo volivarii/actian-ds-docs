@@ -1,38 +1,19 @@
 ---
 import config from "../data/component-tabs.config.json";
+import { derivePrefix, buildTabs } from "../lib/component-tab-href.mjs";
 
 interface Props {
   component: string;
   activeTab: string;
 }
 const { component, activeTab } = Astro.props;
-const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
-
-// Derive sibling URLs by walking up from the current page URL until we
-// find the segment matching `component`, then append each tab slug.
-// The current page's pathname looks like
-// "/actian-ds-docs/components/action/button/usage/" — we need the
-// "/components/action/button/" prefix.
-//
-// Use lastIndexOf, not indexOf: for nested-group components whose slug
-// matches the group name (e.g. stepper in /navigation/stepper/stepper/
-// or global-header in /navigation/global-header/global-header/),
-// indexOf would match the group segment and drop the component slug —
-// every tab would then 404. The component slug is always the LAST
-// occurrence in the path (before the optional tab segment).
-const path = Astro.url.pathname;
-const compIdx = path.lastIndexOf("/" + component + "/");
-const prefix =
-  compIdx >= 0
-    ? path.slice(0, compIdx + component.length + 2)
-    : base + "components/" + component + "/";
-
-const tabs = config.tabs.map((t) => ({
-  slug: t.slug,
-  label: t.label,
-  href: t.isIndex ? prefix : prefix + t.slug + "/",
-  isActive: t.slug === activeTab,
-}));
+const base = import.meta.env.BASE_URL;
+const prefix = derivePrefix({
+  pathname: Astro.url.pathname,
+  component,
+  base,
+});
+const tabs = buildTabs({ config: config.tabs, prefix, activeTab });
 ---
 
 <nav class="component-tabs" role="tablist" aria-label={`${component} sections`}>

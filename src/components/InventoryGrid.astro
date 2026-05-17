@@ -1,12 +1,6 @@
 ---
 import dskit from "../../vendor/components/dist/registries/dskit.json";
-// TODO(phase-3 consolidation): use scripts/lib/category-defaults-loader.cjs#normalizeCategorySlug
-function normalizeCategorySlug(input: string | null | undefined): string | null {
-  if (input == null) return null;
-  let s = String(input).trim().toLowerCase().replace(/&/g, " ");
-  s = s.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
-  return s.length === 0 ? null : s;
-}
+import { normalizeCategorySlug } from "../lib/slugify-category.mjs";
 
 interface ComponentEntry {
   key: string;
