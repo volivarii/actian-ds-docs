@@ -23,6 +23,7 @@ var fs = require("fs");
 var path = require("path");
 var PATHS = require("./lib/paths.cjs");
 var loader = require("./lib/category-defaults-loader.cjs");
+var { computeImportPrefix } = require("./lib/import-prefix.cjs");
 var TABS = require(path.resolve(__dirname, "..", "src", "data", "component-tabs.config.json")).tabs;
 var { escapeMdxIdentifiers } = require("./lib/mdx-escape.cjs");
 
@@ -67,6 +68,26 @@ function validateRendererConfig(tabs) {
     }
   }
 }
+
+var Ajv = require("ajv");
+var COMPONENT_TABS_SCHEMA = require(path.resolve(__dirname, "..", "src", "data", "component-tabs.config.schema.json"));
+
+function validateTabsConfigShape(config) {
+  var ajv = new Ajv({ allErrors: true });
+  var validate = ajv.compile(COMPONENT_TABS_SCHEMA);
+  if (!validate(config)) {
+    var errors = validate.errors.map(function (e) {
+      return "  - " + (e.instancePath || "<root>") + ": " + e.message;
+    }).join("\n");
+    throw new Error(
+      "component-tabs.config.json failed schema validation:\n" + errors
+    );
+  }
+}
+
+// Load the full config (not just .tabs) so the schema can see the root shape.
+var FULL_CONFIG = require(path.resolve(__dirname, "..", "src", "data", "component-tabs.config.json"));
+validateTabsConfigShape(FULL_CONFIG);
 
 validateRendererConfig(TABS);
 
@@ -543,7 +564,15 @@ function buildComponent(slug, entry, guideline, defaults, registry, opts) {
   // Tab MDX files live one level deeper than the legacy flat layout:
   // src/content/docs/<section>/<category>/<slug>/<tab>.mdx
   // → import paths need +1 "../" vs old (4 → 5; nested +1 again → 6).
-  var importPrefix = "../".repeat(5 + nestDepth) + "components";
+  // Use path.relative so the count is derived from real paths rather than
+  // a magic constant that can silently break if the emit-path structure changes.
+  var representativeEmit = nestDepth === 0
+    ? path.join(DOCS_ROOT, "components", "_cat", "_slug", "index.mdx")
+    : path.join(DOCS_ROOT, "components", "_cat", "_group", "_slug", "index.mdx");
+  var importPrefix = computeImportPrefix(
+    representativeEmit,
+    path.join(__dirname, "..", "src", "components")
+  );
 
   var contentDomain = guideline && guideline.domains && guideline.domains.content;
   var hasContent = !!(contentDomain
@@ -628,8 +657,16 @@ function buildPage(slug, entry, guideline, defaults, registry, opts) {
   // (e.g., data-display/tag-identification-key/tag-default.mdx), the
   // relative import path back to src/components/ needs one extra "../".
   // nestDepth=0 → 4 ups (flat layout, unchanged); nestDepth=1 → 5 ups.
+  // Use path.relative so the count is derived from real paths rather than
+  // a magic constant that can silently break if the emit-path structure changes.
   var nestDepth = opts.nestDepth || 0;
-  var importPrefix = "../".repeat(4 + nestDepth) + "components";
+  var representativeEmit = nestDepth === 0
+    ? path.join(DOCS_ROOT, "components", "_cat", "_slug.mdx")
+    : path.join(DOCS_ROOT, "components", "_cat", "_group", "_slug.mdx");
+  var importPrefix = computeImportPrefix(
+    representativeEmit,
+    path.join(__dirname, "..", "src", "components")
+  );
   var title = entry.name || slug;
   var description = (entry.description && entry.description.trim())
     || `Component documentation for ${title}.`;
