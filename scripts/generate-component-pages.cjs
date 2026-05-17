@@ -17,6 +17,9 @@
  *
  * Uncategorized components (250) get NO page here — they're rendered on
  * /inventory only (Task 9).
+ *
+ * Phase 4a (2026-05-17): render helpers extracted to scripts/lib/render-mdx.cjs;
+ * sidebar builders extracted to scripts/lib/sidebar-manifest.cjs.
  */
 
 var fs = require("fs");
@@ -25,8 +28,8 @@ var PATHS = require("./lib/paths.cjs");
 var loader = require("./lib/category-defaults-loader.cjs");
 var { computeImportPrefix } = require("./lib/import-prefix.cjs");
 var TABS = require(path.resolve(__dirname, "..", "src", "data", "component-tabs.config.json")).tabs;
-var { escapeMdxIdentifiers } = require("./lib/mdx-escape.cjs");
-var { KNOWLEDGE_REPO_URL } = require("./lib/constants.cjs");
+var renderMdx = require("./lib/render-mdx.cjs");
+var { buildSidebarManifest } = require("./lib/sidebar-manifest.cjs");
 
 // Aggregated warning counters — incremented by warning-emitting sites below;
 // summarized in one line at end of main(). Existing stderr writes preserved for
@@ -115,387 +118,15 @@ function slugifyCategory(label) {
   return loader.normalizeCategorySlug(label);
 }
 
-function jsLit(value) {
-  // Safely embed a JS-object literal into MDX. JSON.stringify produces
-  // a valid JS expression for the shapes we render (arrays of objects
-  // with string values + nested string arrays).
-  return JSON.stringify(value);
-}
-
-// Module-level slug-to-absolute-path map.
-// Populated once in main() from the registry before any pages are written.
-// Used by rewriteComponentLinks() to fix bare-slug markdown links that come
-// from the knowledge-repo guideline JSONs (e.g. `[ghost buttons](button)`).
-var _slugToPath = {};
-
-/**
- * Build the slug → absolute doc path map from the registry.
- * Called once in main() so all renderContentItems() calls can use it.
- * @param {Object} registry - dskit.json parsed object
- * @param {Object} groupCounts - { "catSlug::groupSlug": count } from main()
- */
-function buildSlugToPathMap(registry, groupCounts) {
-  var map = {};
-  Object.entries(registry.components).forEach(function (pair) {
-    var slug = pair[0];
-    var entry = pair[1];
-    if (!entry.category) return;
-    var sd = SECTION_DIRS[entry.section] || DEFAULT_SECTION_DIR;
-    var catSlug = slugifyCategory(entry.category);
-    var parts = [sd, catSlug];
-    if (entry.group) {
-      var groupSlug = slugifyCategory(entry.group);
-      var key = catSlug + "::" + groupSlug;
-      if (groupSlug && groupCounts[key] > 1) {
-        parts.push(groupSlug);
-      }
-    }
-    parts.push(slug);
-    map[slug] = "/" + parts.join("/") + "/";
-  });
-  _slugToPath = map;
-}
-
-// Slug aliases: knowledge-repo content uses legacy or shorthand names that
-// differ from the canonical registry slugs. Map the knowledge alias → the
-// canonical dskit.json slug so rewriteComponentLinks() can resolve the path.
-// "forms" is intentionally absent: no standalone component page exists, so
-// the link is removed entirely (see the REMOVE_LINK_SLUGS set below).
-var SLUG_ALIASES = {
-  "notification-toast": "notification",  // alert-banner.json references old name
-  "tag": "tag-interactive",              // tag-default.json links to generic "tag"
-};
-
-// Slugs with no component page that should have their markdown link syntax
-// removed entirely, leaving just the link text. This prevents both broken
-// links and relative-link validator errors.
-var REMOVE_LINK_SLUGS = new Set(["forms"]);
-
-/**
- * Rewrite bare-slug markdown links to absolute doc paths.
- * Converts `[label](slug)` to `[label](/components/category/slug/)`
- * when `slug` is a known component. Unknown slugs are left untouched
- * so the validator can still flag genuinely broken links.
- * @param {string} s - input markdown/MDX text
- * @returns {string}
- */
-function rewriteComponentLinks(s) {
-  if (typeof s !== "string") return s;
-  // Match markdown link targets that look like a bare slug (no / prefix,
-  // no http://, not a hash anchor). Must be followed by ) to close the link.
-  return s.replace(/\[([^\]]+)\]\(([a-z][a-z0-9-]*)\)/g, function (match, label, slug) {
-    // Remove link syntax entirely for slugs with no component page.
-    if (REMOVE_LINK_SLUGS.has(slug)) return label;
-    // Resolve via alias first, then direct slug lookup.
-    var canonical = SLUG_ALIASES[slug] || slug;
-    var abs = _slugToPath[canonical];
-    return abs ? ("[" + label + "](" + abs + ")") : match;
-  });
-}
-
-// Wrap <placeholder> spans in code ticks so MDX doesn't try to parse them
-// as JSX tags. Knowledge content uses '<assetNames>'-style placeholders in
-// rule prose ("Search in <assetNames>"); without this, MDX bails on
-// "Expected a closing tag for `<assetNames>`".
-function escapeMdxPlaceholders(s) {
-  if (typeof s !== "string") return s;
-  // Step 1: link rewriting (component-specific — bare slug → absolute path).
-  s = rewriteComponentLinks(s);
-  // Step 2: angle-bracket escape (shared via lib/mdx-escape.cjs).
-  return escapeMdxIdentifiers(s);
-}
-
-// Render a { headers, rows } table as a GitHub-flavored markdown table.
-// All-empty rows are dropped: the upstream guideline-md-parser can leave a
-// trailing ["", ""] artifact row when a source table is followed by a
-// Jekyll `{: .do-dont-table}` annotation line — rendering it would produce
-// a stray blank row in the docs table.
-function renderMarkdownTable(headers, rows) {
-  var esc = function (c) {
-    return escapeMdxPlaceholders(String(c == null ? "" : c)).replace(/\|/g, "\\|");
-  };
-  var nonEmptyRows = (rows || []).filter(function (row) {
-    return (row || []).some(function (c) {
-      return c != null && String(c).trim() !== "";
-    });
-  });
-  var lines = [];
-  lines.push("| " + headers.map(esc).join(" | ") + " |");
-  lines.push("|" + headers.map(function () { return "---"; }).join("|") + "|");
-  nonEmptyRows.forEach(function (row) {
-    lines.push("| " + (row || []).map(esc).join(" | ") + " |");
-  });
-  return lines.join("\n");
-}
-
-// content[] items come from the knowledge repo's guideline-md-parser in
-// these shapes (current schema; see actian-ds-knowledge/schemas/guideline-
-// component.json $defs.contentItem):
-//
-//   - { prose: string }                       ← standalone paragraph
-//   - { bullets: [strings] }                  ← one markdown list
-//   - { note: string }                        ← blockquote (opt-in callout)
-//   - { do, dont } | { do } | { dont }        ← do/don't table rows or solos
-//   - { term, rule|definition }               ← terminology table rows
-//   - { table: { headers, rows } }            ← generic table
-//   - { example } | { examples: [strings] }   ← code/example blocks
-//   - string                                  ← LEGACY bullet (pre-prose
-//                                               parser); kept for backwards
-//                                               compatibility with old JSON
-//
-// Items appear in authored source order. We walk them once and emit in that
-// same order. The only "bucketing" is collapsing CONSECUTIVE same-type runs
-// into one compound component:
-//   - consecutive {do,dont} pairs collapse into one <DoDont pairs={[...]}>
-//   - consecutive terminology rows collapse into one <TermList items={[...]}>
-//   - consecutive legacy strings (or solos like all dos, all donts) collapse
-//     into one block
-// Different types adjacent to each other emit as separate blocks, preserving
-// authored order. This matches universal precedent (Primer, Polaris, Carbon,
-// Starlight, Markdoc): the renderer never reorders blocks within a section.
-function renderContentItems(items, headingForDiag) {
-  if (!items || !items.length) return "";
-
-  function isPair(it) { return it && typeof it === "object" && it.do && it.dont; }
-  function isSoloDo(it) {
-    return it && typeof it === "object" && it.do && !it.dont;
-  }
-  function isSoloDont(it) {
-    return it && typeof it === "object" && it.dont && !it.do;
-  }
-  function isTerm(it) { return it && typeof it === "object" && it.term; }
-  function isLegacyBullet(it) { return typeof it === "string"; }
-
-  // Greedy: from index `i`, collect a contiguous run for which predicate(it)
-  // is true. Returns { items: [...], next: index-past-the-run }.
-  function takeRun(arr, i, predicate) {
-    var run = [];
-    var j = i;
-    while (j < arr.length && predicate(arr[j])) { run.push(arr[j]); j++; }
-    return { items: run, next: j };
-  }
-
-  function renderDoDontPairs(pairs) {
-    var pairsJsx = pairs.map(function (p) {
-      return "{ do: " + JSON.stringify(escapeMdxPlaceholders(p.do))
-        + ", dont: " + JSON.stringify(escapeMdxPlaceholders(p.dont)) + " }";
-    }).join(", ");
-    return "<DoDont pairs={[" + pairsJsx + "]} />";
-  }
-
-  function renderTermList(rows) {
-    var jsx = rows.map(function (t) {
-      var def = t.definition || t.rule;
-      return "{ term: " + JSON.stringify(escapeMdxPlaceholders(t.term))
-        + (def ? ", definition: " + JSON.stringify(escapeMdxPlaceholders(def)) : "")
-        + " }";
-    }).join(", ");
-    return "<TermList items={[" + jsx + "]} />";
-  }
-
-  function renderBullets(strings) {
-    return strings.map(function (s) {
-      return "- " + escapeMdxPlaceholders(s);
-    }).join("\n");
-  }
-
-  function renderCallout(text) {
-    return "<Callout variant=\"note\">\n" + escapeMdxPlaceholders(text) + "\n</Callout>";
-  }
-
-  var parts = [];
-  var unknown = [];
-  var i = 0;
-  while (i < items.length) {
-    var it = items[i];
-
-    // Consecutive runs that collapse into one compound component.
-    if (isPair(it)) {
-      var run = takeRun(items, i, isPair);
-      parts.push(renderDoDontPairs(run.items));
-      i = run.next; continue;
-    }
-    if (isTerm(it)) {
-      var trun = takeRun(items, i, isTerm);
-      parts.push(renderTermList(trun.items));
-      i = trun.next; continue;
-    }
-    if (isLegacyBullet(it)) {
-      // Collapse consecutive legacy bullet strings into one <ul>. Newer JSON
-      // uses {bullets:[...]} so each list is already a unit.
-      var brun = takeRun(items, i, isLegacyBullet);
-      parts.push(renderBullets(brun.items));
-      i = brun.next; continue;
-    }
-    if (isSoloDo(it)) {
-      var drun = takeRun(items, i, isSoloDo);
-      parts.push(drun.items.map(function (x) {
-        return "<DoDont do={" + JSON.stringify(escapeMdxPlaceholders(x.do)) + "} />";
-      }).join("\n\n"));
-      i = drun.next; continue;
-    }
-    if (isSoloDont(it)) {
-      var xrun = takeRun(items, i, isSoloDont);
-      parts.push(xrun.items.map(function (x) {
-        return "<DoDont dont={" + JSON.stringify(escapeMdxPlaceholders(x.dont)) + "} />";
-      }).join("\n\n"));
-      i = xrun.next; continue;
-    }
-
-    // Single-item shapes — emit in source order, no run collapsing.
-    if (it && typeof it === "object") {
-      if (Array.isArray(it.bullets)) {
-        parts.push(renderBullets(it.bullets));
-        i++; continue;
-      }
-      if (typeof it.prose === "string") {
-        parts.push(escapeMdxPlaceholders(it.prose));
-        i++; continue;
-      }
-      if (typeof it.note === "string") {
-        parts.push(renderCallout(it.note));
-        i++; continue;
-      }
-      if (it.table && Array.isArray(it.table.headers)) {
-        parts.push(renderMarkdownTable(it.table.headers, it.table.rows));
-        i++; continue;
-      }
-      if (Array.isArray(it.examples) || typeof it.examples === "string") {
-        var ex = Array.isArray(it.examples) ? it.examples : [it.examples];
-        parts.push("**Examples:** " + ex.map(function (e) { return "`" + e + "`"; }).join(", "));
-        i++; continue;
-      }
-      if (typeof it.example === "string") {
-        parts.push("**Example:** `" + it.example + "`");
-        i++; continue;
-      }
-      if (typeof it.rule === "string") {
-        // Bare {rule} (no do/dont/term sibling) — treat as prose.
-        parts.push(escapeMdxPlaceholders(it.rule));
-        i++; continue;
-      }
-      unknown.push(it);
-    }
-    i++;
-  }
-
-  if (unknown.length) {
-    process.stderr.write("[generate] WARNING: unknown content item shape(s) in section '"
-      + (headingForDiag || "") + "': " + JSON.stringify(unknown) + "\n");
-    WARNINGS.unknownContentShapes += 1;
-  }
-
-  return parts.join("\n\n");
-}
-
-// Render one domains.content section: an H3 heading (skipped when empty —
-// the parser emits an untitled lead section before the first heading) plus
-// its content[], plus one reserved level of `subsections` (H4).
-function renderContentSection(s) {
-  var parts = [];
-  if (s.heading) parts.push("### " + s.heading);
-  var body = renderContentItems(s.content, s.heading);
-  if (body) parts.push(body);
-  (s.subsections || []).forEach(function (sub) {
-    if (sub.subheading) parts.push("#### " + sub.subheading);
-    var subBody = renderContentItems(sub.content, sub.subheading);
-    if (subBody) parts.push(subBody);
-  });
-  return parts.join("\n\n");
-}
-
-// ---------------------------------------------------------------------------
-// Named render helpers — extracted from the original buildPage body so that
-// buildComponent can dispatch them individually by tab config.
-// Each helper returns "" when its inputs are absent (stub case).
-// ---------------------------------------------------------------------------
-
-function renderOverview(entry) {
-  var overviewText = (entry.description && entry.description.trim()) || "";
-  if (!overviewText) return "";
-  return "## Overview\n\n" + escapeMdxPlaceholders(overviewText);
-}
-
-function renderAnatomy(defaults) {
-  if (!(defaults && defaults.card_anatomy && Array.isArray(defaults.card_anatomy.parts) && defaults.card_anatomy.parts.length)) return "";
-  return "## Anatomy\n\n<Anatomy parts={" + jsLit(defaults.card_anatomy.parts) + "} />";
-}
-
-function renderVariantsMatrix(entry, defaults) {
-  if (entry.variants && Object.keys(entry.variants).length) {
-    var axes = Object.entries(entry.variants).map(function (pair) {
-      return { axis: pair[0], values: pair[1] };
-    });
-    return "## Variants\n\n<VariantMatrix variantAxes={" + jsLit(axes) + "} />";
-  }
-  if (defaults && defaults.card_component && Array.isArray(defaults.card_component.variantAxes) && defaults.card_component.variantAxes.length) {
-    return "## Variants\n\n<VariantMatrix variantAxes={" + jsLit(defaults.card_component.variantAxes) + "} />";
-  }
-  return "";
-}
-
-// Alias — used by the "code" tab's variantsTable renderer key.
-function renderVariantsTable(entry, defaults) {
-  return renderVariantsMatrix(entry, defaults);
-}
-
-function renderMotion(defaults) {
-  if (!(defaults && defaults.card_motion && Array.isArray(defaults.card_motion.patternRefs))) return "";
-  return "## Motion\n\n<MotionPattern patternRefs={" + jsLit(defaults.card_motion.patternRefs) + "} />";
-}
-
-function renderContentDomain(contentDomain) {
-  if (!contentDomain) return "";
-  return "## Content guidelines\n\n" + contentDomain.sections.map(renderContentSection).join("\n\n");
-}
-
-function renderA11yRefs(defaults) {
-  if (!(defaults && defaults.card_accessibility && Array.isArray(defaults.card_accessibility.requirementRefs))) return "";
-  return "## Accessibility\n\n<AccessibilityRefs requirementRefs={" + jsLit(defaults.card_accessibility.requirementRefs) + "} />";
-}
-
-function renderConfidenceChips(defaults, contentDomain) {
-  if (!defaults || !defaults.confidence) return "";
-  var contentConfidence = "low";
-  if (contentDomain && contentDomain.status === "approved") contentConfidence = "high";
-  else if (contentDomain && contentDomain.status === "draft") contentConfidence = "medium";
-  var merged = Object.assign({}, defaults.confidence, { content: contentConfidence });
-  var chips = Object.entries(merged).map(function (kv) {
-    return '<ConfidenceChip variant="' + kv[1] + '" field="' + kv[0] + '" value="' + kv[1] + '" />';
-  }).join("\n  ");
-  return '<div class="confidence-row">\n  <span class="confidence-row__label">Confidence</span>\n  ' + chips + '\n</div>';
-}
-
-function renderResources(slug, entry, registry, guideline) {
-  var figmaUrl = (entry.nodeId && registry && registry.fileKey)
-    ? "https://www.figma.com/file/" + registry.fileKey + "?node-id=" + String(entry.nodeId).replace(":", "-")
-    : null;
-  if (!figmaUrl && !guideline) return "";
-  var resourceLines = [
-    "## Resources",
-    "",
-  ];
-  if (figmaUrl) resourceLines.push("- [Open in Figma](" + figmaUrl + ")");
-  if (guideline) {
-    var knowledgeUrl = KNOWLEDGE_REPO_URL + "/tree/main/components/src/" + slug;
-    resourceLines.push("- [Knowledge source](" + knowledgeUrl + ")");
-  }
-  return resourceLines.join("\n");
-}
-
-function renderStubFooter(categorySlug) {
-  if (!categorySlug) return "";
-  return '<StubFooter category="' + categorySlug + '" />';
-}
-
 // ---------------------------------------------------------------------------
 // Small placeholder helpers for tabs that have no real data yet.
+// These close over nothing from render-mdx, so they stay in main.
 // ---------------------------------------------------------------------------
 
 function renderCategoryUsageBaseline(defaults) {
   if (!defaults || !defaults.card_usage || !Array.isArray(defaults.card_usage.points)) return "";
   return "## When to use\n\n" + defaults.card_usage.points
-    .map(function (p) { return "- " + escapeMdxPlaceholders(p); }).join("\n");
+    .map(function (p) { return "- " + renderMdx.escapeMdxPlaceholders(p); }).join("\n");
 }
 
 function renderGlobalA11yLink() {
@@ -585,19 +216,19 @@ function buildComponent(slug, entry, guideline, defaults, registry, opts) {
   var categorySlug = slugifyCategory(entry.category);
 
   var RENDERERS = {
-    confidenceChips:       function () { return renderConfidenceChips(defaults, contentDomain); },
-    overview:              function () { return renderOverview(entry); },
-    variantsSummary:       function () { return renderVariantsMatrix(entry, defaults); },
+    confidenceChips:       function () { return renderMdx.renderConfidenceChips(defaults, contentDomain); },
+    overview:              function () { return renderMdx.renderOverview(entry); },
+    variantsSummary:       function () { return renderMdx.renderVariantsTable(entry, defaults); },
     categoryUsageBaseline: function () { return renderCategoryUsageBaseline(defaults); },
-    contentDomain:         function () { return hasContent ? renderContentDomain(contentDomain) : ""; },
-    anatomy:               function () { return renderAnatomy(defaults); },
-    motion:                function () { return renderMotion(defaults); },
-    a11yRefs:              function () { return renderA11yRefs(defaults); },
+    contentDomain:         function () { return hasContent ? renderMdx.renderContentDomain(contentDomain, WARNINGS) : ""; },
+    anatomy:               function () { return renderMdx.renderAnatomy(defaults); },
+    motion:                function () { return renderMdx.renderMotion(defaults); },
+    a11yRefs:              function () { return renderMdx.renderA11yRefs(defaults); },
     globalA11yLink:        function () { return renderGlobalA11yLink(); },
-    variantsTable:         function () { return renderVariantsTable(entry, defaults); },
+    variantsTable:         function () { return renderMdx.renderVariantsTable(entry, defaults); },
     tokensPlaceholder:     function () { return renderTokensPlaceholder(); },
     apiPlaceholder:        function () { return renderApiPlaceholder(entry); },
-    resources:             function () { return renderResources(slug, entry, registry, guideline); },
+    resources:             function () { return renderMdx.renderResources(slug, entry, registry, guideline); },
   };
 
   var files = {};
@@ -617,7 +248,7 @@ function buildComponent(slug, entry, guideline, defaults, registry, opts) {
 
     var isStubTab = body.trim() === "";
     if (isStubTab && categorySlug) {
-      body = renderStubFooter(categorySlug);
+      body = renderMdx.renderStubFooter(categorySlug);
     }
 
     var tabStatus = "stub";
@@ -647,100 +278,6 @@ function buildComponent(slug, entry, guideline, defaults, registry, opts) {
     });
   });
   return { files: files };
-}
-
-// ---------------------------------------------------------------------------
-// buildSidebarManifest — generates the components-sidebar.json consumed by
-// astro.config.mjs. Replaces autogenerate to avoid the directory+index.mdx
-// duplication that occurs with the sub-route tabs architecture.
-// ---------------------------------------------------------------------------
-
-function buildSidebarManifest(registry, opts) {
-  opts = opts || {};
-  var excludedCategories = opts.excludedCategories || new Set();
-  var collectionCategories = opts.collectionCategories || new Set();
-  var targetSection = opts.targetSection || "components";
-
-  // Pre-compute groupCounts so we can reproduce the nesting logic.
-  var groupCounts = {};
-  Object.entries(registry.components).forEach(function (pair) {
-    var e = pair[1];
-    if (!e.category || !e.group) return;
-    if (excludedCategories.has(e.category)) return;
-    if (collectionCategories.has(e.category)) return;
-    var sd = SECTION_DIRS[e.section] || DEFAULT_SECTION_DIR;
-    if (sd !== targetSection) return;
-    var cs = slugifyCategory(e.category);
-    var gs = slugifyCategory(e.group);
-    if (!cs || !gs) return;
-    groupCounts[cs + "::" + gs] = (groupCounts[cs + "::" + gs] || 0) + 1;
-  });
-
-  // category label → { label, items[] }
-  var catMap = {};
-
-  Object.entries(registry.components).forEach(function (pair) {
-    var slug = pair[0];
-    var entry = pair[1];
-    if (!entry.category) return;
-    if (excludedCategories.has(entry.category)) return;
-    if (collectionCategories.has(entry.category)) return;
-    var sd = SECTION_DIRS[entry.section] || DEFAULT_SECTION_DIR;
-    if (sd !== targetSection) return;
-
-    var catSlug = slugifyCategory(entry.category);
-    var parts = [targetSection, catSlug];
-    var nested = false;
-    var groupLabel = null;
-    if (entry.group) {
-      var groupSlug = slugifyCategory(entry.group);
-      var key = catSlug + "::" + groupSlug;
-      if (groupSlug && groupCounts[key] > 1) {
-        parts.push(groupSlug);
-        nested = true;
-        groupLabel = entry.group;
-      }
-    }
-    parts.push(slug);
-    var link = "/" + parts.join("/") + "/";
-
-    if (!catMap[entry.category]) {
-      catMap[entry.category] = {
-        label: entry.category,
-        catSlug: catSlug,
-        items: [],
-        groups: {}, // groupLabel → { label, items[] }
-      };
-    }
-    var leaf = { label: entry.name || slug, link: link };
-    if (nested) {
-      // Wrap into a group subnode so the sidebar mirrors the URL structure
-      // (and the old Starlight-autogenerate filesystem-based nesting that
-      // was lost when buildSidebarManifest replaced autogenerate).
-      if (!catMap[entry.category].groups[groupLabel]) {
-        catMap[entry.category].groups[groupLabel] = { label: groupLabel, items: [] };
-      }
-      catMap[entry.category].groups[groupLabel].items.push(leaf);
-    } else {
-      catMap[entry.category].items.push(leaf);
-    }
-  });
-
-  // Sort categories alphabetically; within each category interleave group
-  // subnodes and flat items A-Z by label, so the sidebar reads as one
-  // consistent list whether an entry is a single component or a
-  // collapsible group.
-  var categories = Object.values(catMap);
-  categories.sort(function (a, b) { return a.label.localeCompare(b.label); });
-  return categories.map(function (cat) {
-    var groupNodes = Object.values(cat.groups || {}).map(function (g) {
-      g.items.sort(function (a, b) { return a.label.localeCompare(b.label); });
-      return { label: g.label, collapsed: true, items: g.items };
-    });
-    var merged = cat.items.concat(groupNodes);
-    merged.sort(function (a, b) { return a.label.localeCompare(b.label); });
-    return { label: cat.label, collapsed: true, items: merged };
-  });
 }
 
 function main() {
@@ -888,7 +425,7 @@ function main() {
   // Build the slug → absolute-path lookup before the write loop so that
   // rewriteComponentLinks() (called inside escapeMdxPlaceholders) can convert
   // bare-slug markdown links in guideline JSON content to absolute doc paths.
-  buildSlugToPathMap(registry, groupCounts);
+  renderMdx.buildSlugToPathMap(registry, groupCounts, SECTION_DIRS, DEFAULT_SECTION_DIR, slugifyCategory);
 
   var written = 0;
   var skipped = 0;
@@ -974,6 +511,9 @@ function main() {
       excludedCategories: EXCLUDED_CATEGORIES,
       collectionCategories: COLLECTION_CATEGORIES,
       targetSection: section,
+      sectionDirs: SECTION_DIRS,
+      defaultSectionDir: DEFAULT_SECTION_DIR,
+      slugifyCategory: slugifyCategory,
     });
     var sidebarDataPath = path.join(
       __dirname,
