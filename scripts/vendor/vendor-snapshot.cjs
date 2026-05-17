@@ -25,7 +25,7 @@ var { execFileSync } = require("child_process");
 var REPO_ROOT = path.resolve(__dirname, "..", "..");
 var VENDORED_JSON_PATH = path.join(REPO_ROOT, "vendored.json");
 var VENDOR_DIR = path.join(REPO_ROOT, "vendor");
-var KNOWLEDGE_REPO = "volivarii/actian-ds-knowledge";
+var { KNOWLEDGE_REPO } = require("../lib/constants.cjs");
 
 // Top-level entries in the knowledge repo NOT to vendor — knowledge-repo's
 // own infrastructure (CI scripts, workflows, package manifests, meta files)

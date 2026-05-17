@@ -4,8 +4,9 @@ import remarkCustomHeaderId from "remark-custom-header-id";
 import starlightLinksValidator from "starlight-links-validator";
 import componentsSidebar from "./src/data/components-sidebar.json";
 import brandSidebar from "./src/data/brand-sidebar.json";
+import { createRequire } from "node:module";
 
-const SITE = process.env.SITE_URL || "https://volivarii.github.io/actian-ds-docs";
+const { SITE_URL: SITE } = createRequire(import.meta.url)("./scripts/lib/site-url.cjs");
 const BASE = process.env.SITE_BASE || "/actian-ds-docs";
 
 export default defineConfig({

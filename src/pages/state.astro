@@ -5,6 +5,7 @@ import EcosystemDiagram from "../components/EcosystemDiagram.astro";
 import vendored from "../../vendored.json";
 import dskit from "../../vendor/components/dist/registries/dskit.json";
 import categories from "../../vendor/components/dist/categories/categories.bundle.json";
+import { getBase } from "../lib/base-url.mjs";
 
 // state.json is generated at prebuild — fall back to empty if missing
 let state: any = { repos: [] };
@@ -14,7 +15,7 @@ try {
   // build continues with empty state
 }
 
-const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+const base = getBase(import.meta.env.BASE_URL);
 
 const totalDsKit = Object.keys(dskit.components).length;
 const categorizedDsKit = Object.values(dskit.components).filter((c: any) => c.category).length;
