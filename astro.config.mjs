@@ -85,24 +85,45 @@ export default defineConfig({
               // comment explaining why the link is intentionally unresolved.
               errorOnRelativeLinks: true,
               errorOnInvalidHashes: true,
-              // exclude(context) receives {file, link, slug} for each link under
-              // validation. Return true to skip that link check.
-              // `file` is the absolute path to the source file.
-              exclude: ({ file }) => {
-                // content is auto-generated from vendor/content/dist/global.md
+              // Per-link excludes (replaces broader per-file excludes). Each
+              // entry has a comment explaining why the link cannot be validated.
+              // exclude(context) receives {file, link, slug} per the
+              // starlight-links-validator 0.24 API.
+              exclude: ({ file, link }) => {
+                // content.md is auto-generated from vendor/content/dist/global.md
                 // by scripts/sync-vendored-md.cjs on every build. The upstream
-                // document uses bare component slugs (e.g. `filters`, `stepper`)
-                // as relative links — several reference components without pages
-                // yet (validation-messages, wizards) and others that would need
-                // upstream global.md edits. Fixing the generated output would be
-                // clobbered on next sync; suppress until knowledge-repo links are
-                // updated to absolute paths.
-                if (file.endsWith("/content.md") || file.endsWith("\\content.md")) return true;
+                // document uses bare component slugs as relative links; the four
+                // below reference components without pages yet (validation-messages,
+                // wizards) or would need upstream global.md edits that would be
+                // clobbered on next sync. Only these specific slugs are suppressed;
+                // all other content.md links are validated normally.
+                if (file.endsWith("/content.md") || file.endsWith("\\content.md")) {
+                  const unfixableSlugs = [
+                    // Components without pages yet — fixing requires upstream
+                    // knowledge-repo global.md edits:
+                    "validation-messages",
+                    "wizards",
+                    "filters",
+                    "stepper",
+                    // Components WITH pages but linked via bare slug (relative
+                    // links in vendor/content/dist/global.md that would need
+                    // upstream global.md → absolute path edits):
+                    "checkbox",
+                    "alert-banner",
+                    "popover",
+                    "forms",
+                  ];
+                  if (unfixableSlugs.some((s) => link === s || link.endsWith("/" + s))) return true;
+                }
                 // confidence.mdx links to /migrations and /state, which are real
                 // pages served from src/pages/ (custom Astro pages, not Starlight
-                // content-collection pages). Validator flags them as
-                // "invalid link to custom page" — they resolve fine at runtime.
-                if (file.endsWith("/confidence.mdx") || file.endsWith("\\confidence.mdx")) return true;
+                // content-collection pages). starlight-links-validator 0.24 flags
+                // them as "invalid link to custom page" — they resolve fine at
+                // runtime. Suppressed specifically by link value.
+                if (
+                  (file.endsWith("/confidence.mdx") || file.endsWith("\\confidence.mdx")) &&
+                  (link === "/migrations" || link === "/state")
+                ) return true;
                 return false;
               },
             }),

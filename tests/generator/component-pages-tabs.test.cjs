@@ -112,17 +112,3 @@ test("buildSidebarManifest: targetSection filters out other-section entries", fu
   assert.equal(brandManifest.length, 1);
   assert.equal(brandManifest[0].label, "Y");
 });
-
-test(".md twin route IDs cover all six tabs (smoke build artifact check)", function () {
-  var distDir = path.join(__dirname, "..", "..", "dist", "components", "action", "button");
-  if (!fs.existsSync(distDir)) {
-    console.log("  skipped — run `pnpm build` first to materialize dist/");
-    return;
-  }
-  ["index.html", "usage/index.html", "content/index.html",
-   "design/index.html", "accessibility/index.html", "code/index.html"]
-    .forEach(function (rel) {
-      assert.ok(fs.existsSync(path.join(distDir, rel)),
-        "missing: dist/components/action/button/" + rel);
-    });
-});

@@ -17,6 +17,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const { escapeMarkdown: escapeMdx } = require("./lib/mdx-escape.cjs");
 
 const ROOT = path.resolve(__dirname, "..");
 const DG_DIR = path.join(
@@ -62,17 +63,6 @@ function loadBundle() {
   return bundle;
 }
 
-// Escape characters that have meaning in MDX / JSX context. The content is
-// destined for `## Heading` markdown lines + paragraph text — preserve user
-// text but neutralize stray `<`, `{`, `}` that JSX would parse as expressions.
-function escapeMdx(text) {
-  if (text == null) return "";
-  return String(text)
-    .replace(/\\/g, "\\\\")
-    .replace(/\{/g, "\\{")
-    .replace(/\}/g, "\\}")
-    .replace(/</g, "&lt;");
-}
 
 function renderListItem(item) {
   if (typeof item === "string") return `- ${escapeMdx(item)}`;
