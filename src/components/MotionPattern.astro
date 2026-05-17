@@ -1,29 +1,20 @@
 ---
-import { createRequire } from "module";
-import path from "path";
 import { getBase } from "../lib/base-url.mjs";
-const require = createRequire(import.meta.url);
-const loader = require(
-  path.resolve(process.cwd(), "scripts/lib/category-defaults-loader.cjs"),
-);
 
 interface Props {
-  patternRefs: Array<{ ref: string; note?: string }>;
+  resolvedPatterns: Array<{
+    ref: { ref: string; note?: string };
+    pattern: { name: string } | null;
+  }>;
 }
-const { patternRefs } = Astro.props;
+const { resolvedPatterns } = Astro.props;
 
 // import.meta.env.BASE_URL respects astro.config.mjs `base` (e.g. "/actian-ds-docs")
-// so deep links survive deploy to a base-prefixed domain. Astro doesn't normalize
-// the trailing slash, so we force one with a regex to keep URL construction simple.
+// so deep links survive deploy to a base-prefixed domain.
 const base = getBase(import.meta.env.BASE_URL);
-
-const resolved = patternRefs.map((r) => ({
-  ref: r,
-  pattern: loader.resolveMotionRef(r.ref),
-}));
 ---
 
-{resolved.map(({ ref, pattern }) => (
+{resolvedPatterns.map(({ ref, pattern }) => (
   <section>
     <h3>{pattern ? pattern.name : ref.ref}</h3>
     <p>
