@@ -349,6 +349,11 @@ function renderConfidenceChips(defaults, contentDomain) {
   var contentConfidence = "low";
   if (contentDomain && contentDomain.status === "approved") contentConfidence = "high";
   else if (contentDomain && contentDomain.status === "draft") contentConfidence = "medium";
+  // synthesized (knowledge v0.15.0+ pattern fan-out) = approved pattern source
+  // but no per-component authored copy. Medium chip honestly reflects "we have
+  // content, but not component-specific" — coverage gap stays visible via
+  // tabStatus + dashboard, not via the chip alone.
+  else if (contentDomain && contentDomain.status === "synthesized") contentConfidence = "medium";
   var merged = Object.assign({}, defaults.confidence, { content: contentConfidence });
   var chips = Object.entries(merged).map(function (kv) {
     return '<ConfidenceChip variant="' + kv[1] + '" field="' + kv[0] + '" value="' + kv[1] + '" />';
