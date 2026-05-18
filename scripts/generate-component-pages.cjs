@@ -210,9 +210,15 @@ function buildComponent(slug, entry, guideline, defaults, registry, opts) {
   );
 
   var contentDomain = guideline && guideline.domains && guideline.domains.content;
+  // Three content-bearing statuses: approved + draft (per-component authored)
+  // + synthesized (pattern fan-out only; knowledge v0.15.0+). All three carry
+  // a `sections[]` array the renderer can display. Pattern-sourced sections
+  // are marked with `section.source = "pattern:<slug>"` for future provenance UI.
   var hasContent = !!(contentDomain
     && Array.isArray(contentDomain.sections)
-    && (contentDomain.status === "approved" || contentDomain.status === "draft"));
+    && (contentDomain.status === "approved"
+        || contentDomain.status === "draft"
+        || contentDomain.status === "synthesized"));
   var categorySlug = slugifyCategory(entry.category);
 
   var RENDERERS = {
@@ -260,6 +266,10 @@ function buildComponent(slug, entry, guideline, defaults, registry, opts) {
         .filter(Boolean);
       if (domStatuses.indexOf("approved") !== -1) tabStatus = "approved";
       else if (domStatuses.indexOf("draft") !== -1) tabStatus = "draft";
+      // synthesized (knowledge v0.15.0+ pattern fan-out) is content-bearing
+      // but indicates no per-component authored copy — sits between draft and
+      // inherited in the cascade so the coverage signal stays visible.
+      else if (domStatuses.indexOf("synthesized") !== -1) tabStatus = "synthesized";
       else if (domStatuses.indexOf("inherited") !== -1) tabStatus = "inherited";
     }
 

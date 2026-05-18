@@ -38,6 +38,43 @@ test("stub component renders all six tabs with <StubFooter> on under-documented 
   assert.match(out.files["content.mdx"], /<StubFooter/);
 });
 
+test("synthesized content domain (knowledge v0.15.0+ pattern fan-out) renders content sections, not stub footer", function () {
+  // Pattern fan-out produces a guideline doc with status='synthesized' and
+  // sections marked with section.source. The content tab must render those
+  // sections (NOT the StubFooter) so pattern-only components surface their
+  // pattern-derived guidance.
+  var synthesizedGuide = {
+    _schema_version: 1,
+    _meta: {
+      auto_generated: true,
+      source: "(patterns)",
+      do_not_edit: "Edit the per-domain source files; CI regenerates this file.",
+    },
+    slug: "button",
+    component: "Buttons",
+    meta: { category: "action" },
+    domains: {
+      content: {
+        status: "synthesized",
+        sections: [
+          {
+            heading: "Empty state",
+            source: "pattern:empty-and-system-states",
+            content: [{ prose: "Empty states explain what to do next." }],
+          },
+        ],
+      },
+    },
+  };
+  var out = gen.buildComponent(
+    "button", REG.components.button, synthesizedGuide, null, REG);
+  // content.mdx must NOT be the stub-footer-only shell
+  assert.doesNotMatch(out.files["content.mdx"], /<StubFooter\b/,
+    "synthesized status is content-bearing — must not render StubFooter");
+  // Pattern-derived heading text must appear in the rendered body
+  assert.match(out.files["content.mdx"], /Empty state/);
+});
+
 test("every emitted page sets template: doc and a valid tab: frontmatter", function () {
   var out = gen.buildComponent("button", REG.components.button, BTN_GUIDE, null, REG);
   var validTabs = /tab:\s*"(overview|usage|content|design|accessibility|code)"/;
