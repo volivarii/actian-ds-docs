@@ -298,7 +298,7 @@ function renderOverview(entry) {
 
 function renderAnatomy(defaults) {
   if (!(defaults && defaults.card_anatomy && Array.isArray(defaults.card_anatomy.parts) && defaults.card_anatomy.parts.length)) return "";
-  return "## Anatomy\n\n<Anatomy parts={" + jsLit(defaults.card_anatomy.parts) + "} />";
+  return '<h2 id="anatomy">Anatomy</h2>\n\n<Anatomy parts={' + jsLit(defaults.card_anatomy.parts) + '} />';
 }
 
 function renderVariantsMatrix(entry, defaults) {
@@ -306,10 +306,10 @@ function renderVariantsMatrix(entry, defaults) {
     var axes = Object.entries(entry.variants).map(function (pair) {
       return { axis: pair[0], values: pair[1] };
     });
-    return "## Variants\n\n<VariantMatrix variantAxes={" + jsLit(axes) + "} />";
+    return '<h2 id="variants">Variants</h2>\n\n<VariantMatrix variantAxes={' + jsLit(axes) + '} />';
   }
   if (defaults && defaults.card_component && Array.isArray(defaults.card_component.variantAxes) && defaults.card_component.variantAxes.length) {
-    return "## Variants\n\n<VariantMatrix variantAxes={" + jsLit(defaults.card_component.variantAxes) + "} />";
+    return '<h2 id="variants">Variants</h2>\n\n<VariantMatrix variantAxes={' + jsLit(defaults.card_component.variantAxes) + '} />';
   }
   return "";
 }
@@ -326,7 +326,7 @@ function renderMotion(defaults) {
   var resolved = defaults.card_motion.patternRefs.map(function (r) {
     return { ref: r, pattern: loader.resolveMotionRef(r.ref) };
   });
-  return "## Motion\n\n<MotionPattern resolvedPatterns={" + jsLit(resolved) + "} />";
+  return '<h2 id="motion">Motion</h2>\n\n<MotionPattern resolvedPatterns={' + jsLit(resolved) + '} />';
 }
 
 function renderContentDomain(contentDomain, WARNINGS) {

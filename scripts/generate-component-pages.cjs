@@ -126,7 +126,7 @@ function slugifyCategory(label) {
 
 function renderCategoryUsageBaseline(defaults) {
   if (!defaults || !defaults.card_usage || !Array.isArray(defaults.card_usage.points)) return "";
-  return "## When to use\n\n" + defaults.card_usage.points
+  return '<h2 id="usage">When to use</h2>\n\n' + defaults.card_usage.points
     .map(function (p) { return "- " + renderMdx.escapeMdxPlaceholders(p); }).join("\n");
 }
 

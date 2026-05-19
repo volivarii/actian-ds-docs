@@ -195,3 +195,16 @@ test("buildSidebarManifest: emoji-less labels are unchanged", function () {
   var manifest = gen.buildSidebarManifest(miniReg, { targetSection: "components" });
   assert.equal(manifest[0].label, "Button");
 });
+
+test("overview tab body carries anchor IDs on anatomy/variants/motion/usage H2s", function () {
+  var out = gen.buildComponent("button", REG.components.button, BTN_GUIDE, null, REG);
+  var body = out.files["index.mdx"];
+  // MDX-native syntax: explicit <h2 id="..."> elements (NOT `## Title {#id}`,
+  // which acorn interprets as a JSX expression and breaks the build).
+  // Starlight's TOC picks up HTML h2 elements with id attributes the same
+  // way it does markdown headings.
+  if (/<Anatomy /.test(body))      assert.match(body, /<h2 id="anatomy">Anatomy<\/h2>/);
+  if (/<VariantMatrix /.test(body)) assert.match(body, /<h2 id="variants">Variants<\/h2>/);
+  if (/<MotionPattern /.test(body)) assert.match(body, /<h2 id="motion">Motion<\/h2>/);
+  if (/When to use/.test(body))    assert.match(body, /<h2 id="usage">When to use<\/h2>/);
+});
