@@ -160,3 +160,40 @@ test("buildSidebarManifest: targetSection filters out other-section entries", fu
   assert.equal(brandManifest.length, 1);
   assert.equal(brandManifest[0].label, "Brand thing");
 });
+
+test("buildSidebarManifest: strips leading emoji from leaf labels", function () {
+  var miniReg = {
+    components: {
+      "popover": { name: "⛔️ Popover", category: "Overlays", section: "Components" },
+      "alert":   { name: "⚠️ Alert",  category: "Feedback", section: "Components" },
+      "wip":     { name: "✍️ WIP",   category: "Action",    section: "Components" },
+      "clean":   { name: "Clean",      category: "Action",    section: "Components" },
+    },
+  };
+  var manifest = gen.buildSidebarManifest(miniReg, { targetSection: "components" });
+  var labels = manifest.map(function (n) { return n.label; }).sort();
+  assert.deepEqual(labels, ["Alert", "Clean", "Popover", "WIP"]);
+});
+
+test("buildSidebarManifest: strips emoji from group labels too", function () {
+  var miniReg = {
+    components: {
+      "a": { name: "A", category: "X", section: "Components", group: "⛔️ Deprecated group" },
+      "b": { name: "B", category: "X", section: "Components", group: "⛔️ Deprecated group" },
+    },
+  };
+  var manifest = gen.buildSidebarManifest(miniReg, { targetSection: "components" });
+  var groupNode = manifest.find(function (n) { return /Deprecated group/.test(n.label); });
+  assert.ok(groupNode);
+  assert.equal(groupNode.label, "Deprecated group");
+});
+
+test("buildSidebarManifest: emoji-less labels are unchanged", function () {
+  var miniReg = {
+    components: {
+      "btn": { name: "Button", category: "Action", section: "Components" },
+    },
+  };
+  var manifest = gen.buildSidebarManifest(miniReg, { targetSection: "components" });
+  assert.equal(manifest[0].label, "Button");
+});

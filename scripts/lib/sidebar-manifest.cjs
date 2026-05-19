@@ -19,6 +19,14 @@
 // duplication that occurs with the sub-route tabs architecture.
 // ---------------------------------------------------------------------------
 
+function stripEmojiPrefix(label) {
+  if (typeof label !== "string") return label;
+  // Drop leading Extended_Pictographic runs (incl. variation selectors U+FE0F)
+  // plus trailing whitespace. Conservative: only affects characters at the
+  // start of the string; embedded emoji mid-name are preserved.
+  return label.replace(/^(?:[\p{Extended_Pictographic}️]+\s*)+/u, "");
+}
+
 /**
  * @param {Object} registry - dskit.json parsed object
  * @param {Object} opts
@@ -86,12 +94,12 @@ function buildSidebarManifest(registry, opts) {
       if (groupSlug && groupCounts[key] > 1) {
         parts.push(groupSlug);
         nested = true;
-        groupLabel = entry.group;
+        groupLabel = stripEmojiPrefix(entry.group);
       }
     }
     parts.push(slug);
     var link = "/" + parts.join("/") + "/";
-    var leaf = { label: entry.name || slug, link: link };
+    var leaf = { label: stripEmojiPrefix(entry.name || slug), link: link };
 
     if (nested) {
       if (!groupNodes[groupLabel]) {
@@ -114,4 +122,5 @@ function buildSidebarManifest(registry, opts) {
 
 module.exports = {
   buildSidebarManifest: buildSidebarManifest,
+  stripEmojiPrefix: stripEmojiPrefix,
 };
