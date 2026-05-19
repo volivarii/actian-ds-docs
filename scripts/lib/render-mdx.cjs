@@ -45,7 +45,14 @@ var SLUG_ALIASES = {
 // Slugs with no component page that should have their markdown link syntax
 // removed entirely, leaving just the link text. This prevents both broken
 // links and relative-link validator errors.
-var REMOVE_LINK_SLUGS = new Set(["forms"]);
+//
+// `forms`, `validation-messages`, `wizards` are concept-level slugs in
+// vendor/content/dist/global.md + pattern-fanout content that don't have
+// dedicated component pages. The astro.config.mjs links-validator exclude
+// covers the global /content.md page; this set covers per-component
+// content.mdx files (e.g. components/form-input-selection/*/content.mdx)
+// where pattern fanout injects the same cross-references.
+var REMOVE_LINK_SLUGS = new Set(["forms", "validation-messages", "wizards"]);
 
 /**
  * Rewrite bare-slug markdown links to absolute doc paths.
@@ -298,7 +305,7 @@ function renderOverview(entry) {
 
 function renderAnatomy(defaults) {
   if (!(defaults && defaults.card_anatomy && Array.isArray(defaults.card_anatomy.parts) && defaults.card_anatomy.parts.length)) return "";
-  return "## Anatomy\n\n<Anatomy parts={" + jsLit(defaults.card_anatomy.parts) + "} />";
+  return '<h2 id="anatomy">Anatomy</h2>\n\n<Anatomy parts={' + jsLit(defaults.card_anatomy.parts) + '} />';
 }
 
 function renderVariantsMatrix(entry, defaults) {
@@ -306,10 +313,10 @@ function renderVariantsMatrix(entry, defaults) {
     var axes = Object.entries(entry.variants).map(function (pair) {
       return { axis: pair[0], values: pair[1] };
     });
-    return "## Variants\n\n<VariantMatrix variantAxes={" + jsLit(axes) + "} />";
+    return '<h2 id="variants">Variants</h2>\n\n<VariantMatrix variantAxes={' + jsLit(axes) + '} />';
   }
   if (defaults && defaults.card_component && Array.isArray(defaults.card_component.variantAxes) && defaults.card_component.variantAxes.length) {
-    return "## Variants\n\n<VariantMatrix variantAxes={" + jsLit(defaults.card_component.variantAxes) + "} />";
+    return '<h2 id="variants">Variants</h2>\n\n<VariantMatrix variantAxes={' + jsLit(defaults.card_component.variantAxes) + '} />';
   }
   return "";
 }
@@ -326,7 +333,7 @@ function renderMotion(defaults) {
   var resolved = defaults.card_motion.patternRefs.map(function (r) {
     return { ref: r, pattern: loader.resolveMotionRef(r.ref) };
   });
-  return "## Motion\n\n<MotionPattern resolvedPatterns={" + jsLit(resolved) + "} />";
+  return '<h2 id="motion">Motion</h2>\n\n<MotionPattern resolvedPatterns={' + jsLit(resolved) + '} />';
 }
 
 function renderContentDomain(contentDomain, WARNINGS) {
@@ -420,6 +427,16 @@ function buildSlugToPathMap(registry, groupCounts, sectionDirs, defaultSectionDi
   _slugToPath = map;
 }
 
+function renderMediaPreview(guideline) {
+  if (!guideline || !guideline.media || !guideline.media.preview) return "";
+  // <MediaAsset> is imported by renderTabMdx's import block (added in this task).
+  // No prose header — the image is the visual entry point under chips,
+  // before the overview prose + anatomy block.
+  // Inline only the media subtree; MediaAsset only needs guideline.media.
+  var glLit = JSON.stringify({ media: guideline.media });
+  return '<MediaAsset role="preview" guideline={' + glLit + '} alt="" />';
+}
+
 module.exports = {
   escapeMdxPlaceholders: escapeMdxPlaceholders,
   renderMarkdownTable: renderMarkdownTable,
@@ -430,6 +447,7 @@ module.exports = {
   renderContentDomain: renderContentDomain,
   renderA11yRefs: renderA11yRefs,
   renderConfidenceChips: renderConfidenceChips,
+  renderMediaPreview: renderMediaPreview,
   renderResources: renderResources,
   renderStubFooter: renderStubFooter,
   buildSlugToPathMap: buildSlugToPathMap,

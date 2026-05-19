@@ -10,12 +10,11 @@ var REG = JSON.parse(fs.readFileSync(
 var BTN_GUIDE = JSON.parse(fs.readFileSync(
   path.join(__dirname, "..", "fixtures", "guidelines", "button.json"), "utf8"));
 
-test("generator emits six sibling files per component (one per tab)", function () {
+test("generator emits four sibling files per component (one per tab)", function () {
   var out = gen.buildComponent("button", REG.components.button, BTN_GUIDE, null, REG);
   var rels = Object.keys(out.files).sort();
   assert.deepEqual(rels, [
-    "accessibility.mdx", "code.mdx", "content.mdx",
-    "design.mdx", "index.mdx", "usage.mdx",
+    "accessibility.mdx", "code.mdx", "content.mdx", "index.mdx",
   ]);
 });
 
@@ -23,17 +22,16 @@ test("non-index pages set sidebar: { hidden: true }", function () {
   var out = gen.buildComponent("button", REG.components.button, BTN_GUIDE, null, REG);
   assert.ok(out.files["index.mdx"].indexOf("sidebar:") === -1,
     "index.mdx must not hide itself from sidebar");
-  ["usage.mdx", "content.mdx", "design.mdx", "accessibility.mdx", "code.mdx"]
-    .forEach(function (f) {
-      assert.match(out.files[f], /sidebar:\s*\{\s*hidden:\s*true\s*\}/,
-        f + " must hide itself from sidebar");
-    });
+  ["content.mdx", "accessibility.mdx", "code.mdx"].forEach(function (f) {
+    assert.match(out.files[f], /sidebar:\s*\{\s*hidden:\s*true\s*\}/,
+      f + " must hide itself from sidebar");
+  });
 });
 
-test("stub component renders all six tabs with <StubFooter> on under-documented bodies", function () {
+test("stub component renders all four tabs with <StubFooter> on under-documented bodies", function () {
   var out = gen.buildComponent(
     "sticky-footer", REG.components["sticky-footer"], null, null, REG);
-  assert.equal(Object.keys(out.files).length, 6);
+  assert.equal(Object.keys(out.files).length, 4);
   // content domain absent → content.mdx must show stub footer
   assert.match(out.files["content.mdx"], /<StubFooter/);
 });
@@ -77,7 +75,7 @@ test("synthesized content domain (knowledge v0.15.0+ pattern fan-out) renders co
 
 test("every emitted page sets template: doc and a valid tab: frontmatter", function () {
   var out = gen.buildComponent("button", REG.components.button, BTN_GUIDE, null, REG);
-  var validTabs = /tab:\s*"(overview|usage|content|design|accessibility|code)"/;
+  var validTabs = /tab:\s*"(overview|content|accessibility|code)"/;
   Object.keys(out.files).forEach(function (f) {
     assert.match(out.files[f], /template:\s*doc/,
       f + " must set template: doc");
@@ -98,30 +96,41 @@ test("tab pages do not disable tableOfContents (right-rail TOC stays on)", funct
 // buildSidebarManifest — group nesting + per-section targeting
 // ---------------------------------------------------------------------------
 
-test("buildSidebarManifest: 2+ components sharing a group wrap into a subnode", function () {
+test("buildSidebarManifest: flat — no category wrapper, components at top level", function () {
   var miniReg = {
     components: {
-      "tag-a": { name: "Tag A", category: "Data Display", section: "Components", group: "Tag, Identification key" },
-      "tag-b": { name: "Tag B", category: "Data Display", section: "Components", group: "Tag, Identification key" },
+      "btn":   { name: "Button", category: "Action", section: "Components" },
+      "card":  { name: "Card",   category: "Data Display", section: "Components" },
+      "modal": { name: "Modal",  category: "Overlays", section: "Components" },
+    },
+  };
+  var manifest = gen.buildSidebarManifest(miniReg, { targetSection: "components" });
+  var labels = manifest.map(function (n) { return n.label; }).sort();
+  assert.deepEqual(labels, ["Button", "Card", "Modal"]);
+  // Top-level nodes are leaves (have link), not category wrappers.
+  manifest.forEach(function (n) { assert.ok(n.link, "top-level entries must be leaves: " + n.label); });
+});
+
+test("buildSidebarManifest: 2+ components sharing a group wrap into a subnode (preserved)", function () {
+  var miniReg = {
+    components: {
+      "tag-a":  { name: "Tag A",  category: "Data Display", section: "Components", group: "Tag, Identification key" },
+      "tag-b":  { name: "Tag B",  category: "Data Display", section: "Components", group: "Tag, Identification key" },
       "lonely": { name: "Lonely", category: "Data Display", section: "Components", group: "Solo group" },
       "flat":   { name: "Flat",   category: "Data Display", section: "Components" },
     },
   };
   var manifest = gen.buildSidebarManifest(miniReg, { targetSection: "components" });
-  var dd = manifest.find(function (c) { return c.label === "Data Display"; });
-  assert.ok(dd, "Data Display category present");
-  var tagNode = dd.items.find(function (i) { return i.label === "Tag, Identification key"; });
-  assert.ok(tagNode, "shared-group items wrapped into one subnode");
-  assert.equal(tagNode.items.length, 2, "subnode carries both members");
-  // Solo group with one component must NOT wrap (would create a node with one child)
-  var lonely = dd.items.find(function (i) { return i.label === "Lonely"; });
+  var tagNode = manifest.find(function (n) { return n.label === "Tag, Identification key"; });
+  assert.ok(tagNode && tagNode.items && tagNode.items.length === 2,
+    "shared-group items wrap into one subnode at top level");
+  var lonely = manifest.find(function (n) { return n.label === "Lonely"; });
   assert.ok(lonely && lonely.link, "single-member group renders as flat leaf");
-  // Group-less component stays flat
-  var flat = dd.items.find(function (i) { return i.label === "Flat"; });
+  var flat = manifest.find(function (n) { return n.label === "Flat"; });
   assert.ok(flat && flat.link, "groupless component renders as flat leaf");
 });
 
-test("buildSidebarManifest: groups and leaves interleave A-Z by label", function () {
+test("buildSidebarManifest: flat leaves + group nodes interleave A-Z by label", function () {
   var miniReg = {
     components: {
       "z-flat": { name: "Z Flat", category: "X", section: "Components" },
@@ -131,7 +140,7 @@ test("buildSidebarManifest: groups and leaves interleave A-Z by label", function
     },
   };
   var manifest = gen.buildSidebarManifest(miniReg, { targetSection: "components" });
-  var labels = manifest[0].items.map(function (i) { return i.label; });
+  var labels = manifest.map(function (n) { return n.label; });
   assert.deepEqual(labels, ["A Flat", "M Group", "Z Flat"]);
 });
 
@@ -145,7 +154,71 @@ test("buildSidebarManifest: targetSection filters out other-section entries", fu
   var componentsManifest = gen.buildSidebarManifest(miniReg, { targetSection: "components" });
   var brandManifest = gen.buildSidebarManifest(miniReg, { targetSection: "brand" });
   assert.equal(componentsManifest.length, 1);
-  assert.equal(componentsManifest[0].label, "X");
+  assert.equal(componentsManifest[0].label, "Comp");
   assert.equal(brandManifest.length, 1);
-  assert.equal(brandManifest[0].label, "Y");
+  assert.equal(brandManifest[0].label, "Brand thing");
+});
+
+test("buildSidebarManifest: strips leading emoji from leaf labels", function () {
+  var miniReg = {
+    components: {
+      "popover": { name: "⛔️ Popover", category: "Overlays", section: "Components" },
+      "alert":   { name: "⚠️ Alert",  category: "Feedback", section: "Components" },
+      "wip":     { name: "✍️ WIP",   category: "Action",    section: "Components" },
+      "clean":   { name: "Clean",      category: "Action",    section: "Components" },
+    },
+  };
+  var manifest = gen.buildSidebarManifest(miniReg, { targetSection: "components" });
+  var labels = manifest.map(function (n) { return n.label; }).sort();
+  assert.deepEqual(labels, ["Alert", "Clean", "Popover", "WIP"]);
+});
+
+test("buildSidebarManifest: strips emoji from group labels too", function () {
+  var miniReg = {
+    components: {
+      "a": { name: "A", category: "X", section: "Components", group: "⛔️ Deprecated group" },
+      "b": { name: "B", category: "X", section: "Components", group: "⛔️ Deprecated group" },
+    },
+  };
+  var manifest = gen.buildSidebarManifest(miniReg, { targetSection: "components" });
+  var groupNode = manifest.find(function (n) { return /Deprecated group/.test(n.label); });
+  assert.ok(groupNode);
+  assert.equal(groupNode.label, "Deprecated group");
+});
+
+test("buildSidebarManifest: emoji-less labels are unchanged", function () {
+  var miniReg = {
+    components: {
+      "btn": { name: "Button", category: "Action", section: "Components" },
+    },
+  };
+  var manifest = gen.buildSidebarManifest(miniReg, { targetSection: "components" });
+  assert.equal(manifest[0].label, "Button");
+});
+
+test("overview tab body carries anchor IDs on anatomy/variants/motion/usage H2s", function () {
+  var out = gen.buildComponent("button", REG.components.button, BTN_GUIDE, null, REG);
+  var body = out.files["index.mdx"];
+  // MDX-native syntax: explicit <h2 id="..."> elements (NOT `## Title {#id}`,
+  // which acorn interprets as a JSX expression and breaks the build).
+  // Starlight's TOC picks up HTML h2 elements with id attributes the same
+  // way it does markdown headings.
+  if (/<Anatomy /.test(body))      assert.match(body, /<h2 id="anatomy">Anatomy<\/h2>/);
+  if (/<VariantMatrix /.test(body)) assert.match(body, /<h2 id="variants">Variants<\/h2>/);
+  if (/<MotionPattern /.test(body)) assert.match(body, /<h2 id="motion">Motion<\/h2>/);
+  if (/When to use/.test(body))    assert.match(body, /<h2 id="usage">When to use<\/h2>/);
+});
+
+test("PageMetadata receives updated prop from guideline.updated_at when present", function () {
+  var guide = JSON.parse(JSON.stringify(BTN_GUIDE));
+  guide.updated_at = "2026-05-12T14:33:22+00:00";
+  var out = gen.buildComponent("button", REG.components.button, guide, null, REG);
+  // The generated frontmatter/preamble passes the date (YYYY-MM-DD only, not
+  // full ISO) into PageMetadata.
+  assert.match(out.files["index.mdx"], /<PageMetadata[\s\S]*updated="2026-05-12"/);
+});
+
+test("PageMetadata omits updated prop when guideline has no updated_at", function () {
+  var out = gen.buildComponent("button", REG.components.button, BTN_GUIDE, null, REG);
+  assert.doesNotMatch(out.files["index.mdx"], /<PageMetadata[\s\S]*updated="/);
 });

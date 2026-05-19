@@ -19,6 +19,14 @@
 // duplication that occurs with the sub-route tabs architecture.
 // ---------------------------------------------------------------------------
 
+function stripEmojiPrefix(label) {
+  if (typeof label !== "string") return label;
+  // Drop leading Extended_Pictographic runs (incl. variation selectors U+FE0F)
+  // plus trailing whitespace. Conservative: only affects characters at the
+  // start of the string; embedded emoji mid-name are preserved.
+  return label.replace(/^(?:[\p{Extended_Pictographic}️]+\s*)+/u, "");
+}
+
 /**
  * @param {Object} registry - dskit.json parsed object
  * @param {Object} opts
@@ -35,9 +43,17 @@ function buildSidebarManifest(registry, opts) {
   var excludedCategories = opts.excludedCategories || new Set();
   var collectionCategories = opts.collectionCategories || new Set();
   var targetSection = opts.targetSection || "components";
-  var sectionDirs = opts.sectionDirs;
-  var defaultSectionDir = opts.defaultSectionDir;
-  var slugifyCategory = opts.slugifyCategory;
+  var sectionDirs = opts.sectionDirs || {
+    Components: "components",
+    "Brand Assets": "brand",
+  };
+  var defaultSectionDir = opts.defaultSectionDir || "components";
+  var slugifyCategory = opts.slugifyCategory || function (label) {
+    return String(label || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+  };
 
   // Pre-compute groupCounts so we can reproduce the nesting logic.
   var groupCounts = {};
@@ -54,8 +70,10 @@ function buildSidebarManifest(registry, opts) {
     groupCounts[cs + "::" + gs] = (groupCounts[cs + "::" + gs] || 0) + 1;
   });
 
-  // category label → { label, items[] }
-  var catMap = {};
+  // Flat sidebar (Kristina docs-feedback #1): components/groups are top-level,
+  // categories are NOT rendered as wrapper nodes. URLs unchanged.
+  var groupNodes = {}; // groupLabel → { label, items[] }
+  var flatLeaves = [];
 
   Object.entries(registry.components).forEach(function (pair) {
     var slug = pair[0];
@@ -76,51 +94,33 @@ function buildSidebarManifest(registry, opts) {
       if (groupSlug && groupCounts[key] > 1) {
         parts.push(groupSlug);
         nested = true;
-        groupLabel = entry.group;
+        groupLabel = stripEmojiPrefix(entry.group);
       }
     }
     parts.push(slug);
     var link = "/" + parts.join("/") + "/";
+    var leaf = { label: stripEmojiPrefix(entry.name || slug), link: link };
 
-    if (!catMap[entry.category]) {
-      catMap[entry.category] = {
-        label: entry.category,
-        catSlug: catSlug,
-        items: [],
-        groups: {}, // groupLabel → { label, items[] }
-      };
-    }
-    var leaf = { label: entry.name || slug, link: link };
     if (nested) {
-      // Wrap into a group subnode so the sidebar mirrors the URL structure
-      // (and the old Starlight-autogenerate filesystem-based nesting that
-      // was lost when buildSidebarManifest replaced autogenerate).
-      if (!catMap[entry.category].groups[groupLabel]) {
-        catMap[entry.category].groups[groupLabel] = { label: groupLabel, items: [] };
+      if (!groupNodes[groupLabel]) {
+        groupNodes[groupLabel] = { label: groupLabel, items: [] };
       }
-      catMap[entry.category].groups[groupLabel].items.push(leaf);
+      groupNodes[groupLabel].items.push(leaf);
     } else {
-      catMap[entry.category].items.push(leaf);
+      flatLeaves.push(leaf);
     }
   });
 
-  // Sort categories alphabetically; within each category interleave group
-  // subnodes and flat items A-Z by label, so the sidebar reads as one
-  // consistent list whether an entry is a single component or a
-  // collapsible group.
-  var categories = Object.values(catMap);
-  categories.sort(function (a, b) { return a.label.localeCompare(b.label); });
-  return categories.map(function (cat) {
-    var groupNodes = Object.values(cat.groups || {}).map(function (g) {
-      g.items.sort(function (a, b) { return a.label.localeCompare(b.label); });
-      return { label: g.label, collapsed: true, items: g.items };
-    });
-    var merged = cat.items.concat(groupNodes);
-    merged.sort(function (a, b) { return a.label.localeCompare(b.label); });
-    return { label: cat.label, collapsed: true, items: merged };
+  var groupArr = Object.values(groupNodes).map(function (g) {
+    g.items.sort(function (a, b) { return a.label.localeCompare(b.label); });
+    return { label: g.label, collapsed: true, items: g.items };
   });
+  var merged = flatLeaves.concat(groupArr);
+  merged.sort(function (a, b) { return a.label.localeCompare(b.label); });
+  return merged;
 }
 
 module.exports = {
   buildSidebarManifest: buildSidebarManifest,
+  stripEmojiPrefix: stripEmojiPrefix,
 };

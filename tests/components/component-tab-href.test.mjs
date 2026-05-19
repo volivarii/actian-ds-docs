@@ -13,12 +13,33 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { derivePrefix, buildTabs } from "../../src/lib/component-tab-href.mjs";
+import config from "../../src/data/component-tabs.config.json" with { type: "json" };
 
 const TABS_CONFIG = [
   { slug: "overview", label: "Overview", isIndex: true },
   { slug: "design", label: "Design" },
   { slug: "usage", label: "Usage" },
 ];
+
+test("4 tabs in expected order", () => {
+  const slugs = config.tabs.map((t) => t.slug);
+  assert.deepEqual(slugs, ["overview", "content", "accessibility", "code"]);
+});
+
+test("overview tab carries the merged renderers + new mediaPreview slot", () => {
+  const overview = config.tabs.find((t) => t.slug === "overview");
+  assert.deepEqual(overview.renderers, [
+    "confidenceChips",
+    "mediaPreview",
+    "overview",
+    "anatomy",
+    "variantsTable",
+    "motion",
+    "categoryUsageBaseline",
+    "resources",
+  ]);
+  assert.deepEqual(overview.domains, ["design", "behavior", "usage"]);
+});
 
 test("derivePrefix: flat slug, base path with trailing slash", () => {
   const prefix = derivePrefix({

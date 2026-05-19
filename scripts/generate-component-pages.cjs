@@ -43,8 +43,8 @@ var WARNINGS = { unknownContentShapes: 0, unparseableGuidelines: 0 };
 // root of a debugging session worth ~half a day.
 var VALID_RENDERER_KEYS = new Set([
   "confidenceChips",
+  "mediaPreview",
   "overview",
-  "variantsSummary",
   "categoryUsageBaseline",
   "contentDomain",
   "anatomy",
@@ -125,7 +125,7 @@ function slugifyCategory(label) {
 
 function renderCategoryUsageBaseline(defaults) {
   if (!defaults || !defaults.card_usage || !Array.isArray(defaults.card_usage.points)) return "";
-  return "## When to use\n\n" + defaults.card_usage.points
+  return '<h2 id="usage">When to use</h2>\n\n' + defaults.card_usage.points
     .map(function (p) { return "- " + renderMdx.escapeMdxPlaceholders(p); }).join("\n");
 }
 
@@ -165,10 +165,25 @@ function renderTabMdx(ctx) {
   var imports = [
     "Anatomy", "VariantMatrix", "MotionPattern", "AccessibilityRefs",
     "PageMetadata", "StubFooter", "DoDont", "Callout", "TermList",
-    "ComponentTabs", "ConfidenceChip",
+    "ComponentTabs", "ConfidenceChip", "MediaAsset",
   ].map(function (name) {
     return 'import ' + name + ' from "' + ctx.importPrefix + "/" + name + '.astro";';
   }).join("\n");
+
+  var pageMetaProps = [
+    '  slug="components.' + ctx.slug + '.' + ctx.tabSlug + '"',
+    '  source="components/dist/registries/dskit.json#' + ctx.slug + '"',
+    "  schema={1}",
+  ];
+  if (ctx.updated) {
+    // Render date-only (YYYY-MM-DD), not full ISO.
+    var raw = String(ctx.updated);
+    // Guard: only emit `updated="..."` if the value looks ISO-8601 (YYYY-MM-DD prefix).
+    // A malformed value silently becomes garbage if sliced blind, so we drop the prop
+    // entirely when the prefix doesn't match.
+    var dateOnly = /^\d{4}-\d{2}-\d{2}/.test(raw) ? raw.slice(0, 10) : null;
+    if (dateOnly) pageMetaProps.push('  updated="' + dateOnly + '"');
+  }
 
   return [
     fm.join("\n"),
@@ -176,16 +191,14 @@ function renderTabMdx(ctx) {
     imports,
     "",
     "<PageMetadata",
-    '  slug="components.' + ctx.slug + '.' + ctx.tabSlug + '"',
-    '  source="components/dist/registries/dskit.json#' + ctx.slug + '"',
-    "  schema={1}",
+  ].concat(pageMetaProps).concat([
     "/>",
     "",
     "<ComponentTabs component={" + JSON.stringify(ctx.slug) + "} activeTab={" + JSON.stringify(ctx.tabSlug) + "} />",
     "",
     ctx.body,
     "",
-  ].join("\n");
+  ]).join("\n");
 }
 
 // ---------------------------------------------------------------------------
@@ -223,8 +236,8 @@ function buildComponent(slug, entry, guideline, defaults, registry, opts) {
 
   var RENDERERS = {
     confidenceChips:       function () { return renderMdx.renderConfidenceChips(defaults, contentDomain); },
+    mediaPreview:          function () { return renderMdx.renderMediaPreview(guideline); },
     overview:              function () { return renderMdx.renderOverview(entry); },
-    variantsSummary:       function () { return renderMdx.renderVariantsTable(entry, defaults); },
     categoryUsageBaseline: function () { return renderCategoryUsageBaseline(defaults); },
     contentDomain:         function () { return hasContent ? renderMdx.renderContentDomain(contentDomain, WARNINGS) : ""; },
     anatomy:               function () { return renderMdx.renderAnatomy(defaults); },
@@ -285,6 +298,7 @@ function buildComponent(slug, entry, guideline, defaults, registry, opts) {
       tabLabel: tab.label,
       status: tabStatus,
       body: body,
+      updated: guideline && guideline.updated_at,
     });
   });
   return { files: files };
@@ -540,9 +554,75 @@ function main() {
         section +
         "-sidebar.json (" +
         manifest.length +
-        " categories)",
+        " top-level entries)",
     );
   });
+
+  // Emit redirects manifest — preserves deep links from the legacy
+  // /components/<cat>/<slug>/{design,usage}/ tab URLs (now merged into the
+  // Overview tab) by mapping them to fragment anchors on the parent page.
+  // Astro 6's `redirects` config generates static HTML with <meta http-equiv="refresh">
+  // entries from this JSON. Astro picks the manifest up via an import at the
+  // top of astro.config.mjs (added in this task).
+  //   /<base>/design/ → /<base>/#anatomy   (Anatomy is the upstream design-domain heading)
+  //   /<base>/usage/  → /<base>/#usage     (When to use heading on Overview)
+  var redirects = {};
+  Object.entries(registry.components).forEach(function (pair) {
+    var slug = pair[0];
+    var entry = pair[1];
+    if (!entry.category) return;
+    if (EXCLUDED_CATEGORIES.has(entry.category)) return;
+    if (COLLECTION_CATEGORIES.has(entry.category)) return;
+    var sd = SECTION_DIRS[entry.section] || DEFAULT_SECTION_DIR;
+    var catSlug = slugifyCategory(entry.category);
+    var parts = [sd, catSlug];
+    if (entry.group) {
+      var groupSlug = slugifyCategory(entry.group);
+      var key = catSlug + "::" + groupSlug;
+      if (groupSlug && groupCounts[key] > 1) parts.push(groupSlug);
+    }
+    parts.push(slug);
+    var base = "/" + parts.join("/") + "/";
+    redirects[base + "design/"] = base + "#anatomy";
+    redirects[base + "usage/"]  = base + "#usage";
+  });
+  var redirectsPath = path.join(__dirname, "..", "src", "data", "redirects-manifest.json");
+  fs.writeFileSync(redirectsPath, JSON.stringify(redirects, null, 2) + "\n");
+  console.log("generate-component-pages: wrote " + Object.keys(redirects).length + " redirects → src/data/redirects-manifest.json");
+
+  // Mirror vendor binary media into public/ so Astro can serve it.
+  // Source: vendor/components/dist/media/<slug>/<file> (CI-origin assets
+  // synced from Figma via the media-preview phase in actian-ds-knowledge).
+  // Target: public/media/<slug>/<file> (Astro serves these at BASE/media/...
+  // — see media-asset-resolver.mjs).
+  // Reset the target on every prebuild so removed assets don't linger.
+  var vendorMedia = path.resolve(__dirname, "..", "vendor", "components", "dist", "media");
+  var publicMedia = path.resolve(__dirname, "..", "public", "media");
+  if (fs.existsSync(vendorMedia)) {
+    fs.rmSync(publicMedia, { recursive: true, force: true });
+    fs.mkdirSync(publicMedia, { recursive: true });
+    var copyTree = function (srcRoot, dstRoot) {
+      fs.readdirSync(srcRoot, { withFileTypes: true }).forEach(function (e) {
+        var s = path.join(srcRoot, e.name);
+        var d = path.join(dstRoot, e.name);
+        if (e.isDirectory()) {
+          fs.mkdirSync(d, { recursive: true });
+          copyTree(s, d);
+        } else if (e.isFile()) {
+          fs.copyFileSync(s, d);
+        }
+      });
+    };
+    copyTree(vendorMedia, publicMedia);
+    var count = 0;
+    fs.readdirSync(publicMedia, { withFileTypes: true }).forEach(function (e) {
+      if (e.isDirectory()) {
+        var slugDir = path.join(publicMedia, e.name);
+        fs.readdirSync(slugDir).forEach(function () { count++; });
+      }
+    });
+    console.log("generate-component-pages: mirrored " + count + " vendor media files → public/media/");
+  }
 
   console.log(
     "generate-component-pages: wrote " +

@@ -11,6 +11,8 @@ interface Props {
 const { slug, source, schema = 1, updated } = Astro.props;
 const version = vendored.knowledge_repo_resolved_version || "unknown";
 const updatedAt = updated || vendored.vendored_at || "";
+const isIso = /^\d{4}-\d{2}-\d{2}/.test(updatedAt);
+const updatedDate = isIso ? updatedAt.slice(0, 10) : "";
 const mdHref = Astro.url.pathname.replace(/\/$/, "") + ".md";
 ---
 
@@ -20,3 +22,15 @@ const mdHref = Astro.url.pathname.replace(/\/$/, "") + ".md";
 <meta name="actian-ds-updated" content={updatedAt} />
 <meta name="actian-ds-schema" content={String(schema)} />
 <link rel="alternate" type="text/markdown" href={mdHref} />
+
+{updatedDate && (
+  <p class="actian-updated-line">Updated {updatedDate}</p>
+)}
+
+<style>
+  .actian-updated-line {
+    font-size: 0.875rem;
+    color: var(--sl-color-gray-3, #888);
+    margin: 0 0 1rem 0;
+  }
+</style>
