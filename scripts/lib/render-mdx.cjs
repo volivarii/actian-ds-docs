@@ -45,7 +45,14 @@ var SLUG_ALIASES = {
 // Slugs with no component page that should have their markdown link syntax
 // removed entirely, leaving just the link text. This prevents both broken
 // links and relative-link validator errors.
-var REMOVE_LINK_SLUGS = new Set(["forms"]);
+//
+// `forms`, `validation-messages`, `wizards` are concept-level slugs in
+// vendor/content/dist/global.md + pattern-fanout content that don't have
+// dedicated component pages. The astro.config.mjs links-validator exclude
+// covers the global /content.md page; this set covers per-component
+// content.mdx files (e.g. components/form-input-selection/*/content.mdx)
+// where pattern fanout injects the same cross-references.
+var REMOVE_LINK_SLUGS = new Set(["forms", "validation-messages", "wizards"]);
 
 /**
  * Rewrite bare-slug markdown links to absolute doc paths.
