@@ -43,3 +43,4 @@ src/content/docs/foundations/design-guidelines.mdx
 src/content/docs/categories/
 src/data/components-sidebar.json
 src/data/brand-sidebar.json
+src/data/redirects-manifest.json

@@ -546,6 +546,38 @@ function main() {
     );
   });
 
+  // Emit redirects manifest — preserves deep links from the legacy
+  // /components/<cat>/<slug>/{design,usage}/ tab URLs (now merged into the
+  // Overview tab) by mapping them to fragment anchors on the parent page.
+  // Astro 6's `redirects` config generates static HTML with <meta http-equiv="refresh">
+  // entries from this JSON. Astro picks the manifest up via an import at the
+  // top of astro.config.mjs (added in this task).
+  //   /<base>/design/ → /<base>/#anatomy   (Anatomy is the upstream design-domain heading)
+  //   /<base>/usage/  → /<base>/#usage     (When to use heading on Overview)
+  var redirects = {};
+  Object.entries(registry.components).forEach(function (pair) {
+    var slug = pair[0];
+    var entry = pair[1];
+    if (!entry.category) return;
+    if (EXCLUDED_CATEGORIES.has(entry.category)) return;
+    if (COLLECTION_CATEGORIES.has(entry.category)) return;
+    var sd = SECTION_DIRS[entry.section] || DEFAULT_SECTION_DIR;
+    var catSlug = slugifyCategory(entry.category);
+    var parts = [sd, catSlug];
+    if (entry.group) {
+      var groupSlug = slugifyCategory(entry.group);
+      var key = catSlug + "::" + groupSlug;
+      if (groupSlug && groupCounts[key] > 1) parts.push(groupSlug);
+    }
+    parts.push(slug);
+    var base = "/" + parts.join("/") + "/";
+    redirects[base + "design/"] = base + "#anatomy";
+    redirects[base + "usage/"]  = base + "#usage";
+  });
+  var redirectsPath = path.join(__dirname, "..", "src", "data", "redirects-manifest.json");
+  fs.writeFileSync(redirectsPath, JSON.stringify(redirects, null, 2) + "\n");
+  console.log("generate-component-pages: wrote " + Object.keys(redirects).length + " redirects → src/data/redirects-manifest.json");
+
   console.log(
     "generate-component-pages: wrote " +
       written +

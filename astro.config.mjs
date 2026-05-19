@@ -4,6 +4,7 @@ import remarkCustomHeaderId from "remark-custom-header-id";
 import starlightLinksValidator from "starlight-links-validator";
 import componentsSidebar from "./src/data/components-sidebar.json";
 import brandSidebar from "./src/data/brand-sidebar.json";
+import redirectsManifest from "./src/data/redirects-manifest.json";
 import { createRequire } from "node:module";
 
 const { SITE_URL: SITE } = createRequire(import.meta.url)("./scripts/lib/site-url.cjs");
@@ -12,6 +13,7 @@ const BASE = process.env.SITE_BASE || "/actian-ds-docs";
 export default defineConfig({
   site: SITE,
   base: BASE,
+  redirects: redirectsManifest,
   markdown: {
     // Parse `## Title {#slug}` anchor syntax used by vendored MDs
     // (accessibility.md, content.md). Plugin emits proper id attributes
