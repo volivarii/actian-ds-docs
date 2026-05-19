@@ -1,0 +1,33 @@
+---
+import { resolveMediaPath } from "./media-asset-resolver.mjs";
+
+interface Props {
+  role: string;
+  guideline?: any;
+  alt?: string;
+}
+
+const { role, guideline, alt } = Astro.props;
+const resolvedPath = resolveMediaPath(guideline, role);
+const BASE = import.meta.env.BASE_URL.replace(/\/?$/, "");
+const src = resolvedPath ? BASE + resolvedPath : null;
+---
+
+{src && (
+  <figure class="actian-media">
+    <img src={src} loading="lazy" alt={alt || ""} />
+  </figure>
+)}
+
+<style>
+  .actian-media {
+    margin: 0 0 1.5rem 0;
+  }
+  .actian-media img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 0.5rem;
+    background: var(--sl-color-gray-6, #f3f3f3);
+  }
+</style>

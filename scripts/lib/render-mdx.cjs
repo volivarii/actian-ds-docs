@@ -420,10 +420,15 @@ function buildSlugToPathMap(registry, groupCounts, sectionDirs, defaultSectionDi
   _slugToPath = map;
 }
 
-// Stub — replaced with real implementation in Task 17 (MediaAsset wiring).
-// Returning "" keeps the generator boot validator happy until the media
-// pipeline + MediaAsset import block are in place.
-function renderMediaPreview() { return ""; }
+function renderMediaPreview(guideline) {
+  if (!guideline || !guideline.media || !guideline.media.preview) return "";
+  // <MediaAsset> is imported by renderTabMdx's import block (added in this task).
+  // No prose header — the image is the visual entry point under chips,
+  // before the overview prose + anatomy block.
+  // Inline only the media subtree; MediaAsset only needs guideline.media.
+  var glLit = JSON.stringify({ media: guideline.media });
+  return '<MediaAsset role="preview" guideline={' + glLit + '} alt="" />';
+}
 
 module.exports = {
   escapeMdxPlaceholders: escapeMdxPlaceholders,

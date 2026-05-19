@@ -166,7 +166,7 @@ function renderTabMdx(ctx) {
   var imports = [
     "Anatomy", "VariantMatrix", "MotionPattern", "AccessibilityRefs",
     "PageMetadata", "StubFooter", "DoDont", "Callout", "TermList",
-    "ComponentTabs", "ConfidenceChip",
+    "ComponentTabs", "ConfidenceChip", "MediaAsset",
   ].map(function (name) {
     return 'import ' + name + ' from "' + ctx.importPrefix + "/" + name + '.astro";';
   }).join("\n");
