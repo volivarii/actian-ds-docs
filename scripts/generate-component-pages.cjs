@@ -588,6 +588,40 @@ function main() {
   fs.writeFileSync(redirectsPath, JSON.stringify(redirects, null, 2) + "\n");
   console.log("generate-component-pages: wrote " + Object.keys(redirects).length + " redirects → src/data/redirects-manifest.json");
 
+  // Mirror vendor binary media into public/ so Astro can serve it.
+  // Source: vendor/components/dist/media/<slug>/<file> (CI-origin assets
+  // synced from Figma via the media-preview phase in actian-ds-knowledge).
+  // Target: public/media/<slug>/<file> (Astro serves these at BASE/media/...
+  // — see media-asset-resolver.mjs).
+  // Reset the target on every prebuild so removed assets don't linger.
+  var vendorMedia = path.resolve(__dirname, "..", "vendor", "components", "dist", "media");
+  var publicMedia = path.resolve(__dirname, "..", "public", "media");
+  if (fs.existsSync(vendorMedia)) {
+    fs.rmSync(publicMedia, { recursive: true, force: true });
+    fs.mkdirSync(publicMedia, { recursive: true });
+    var copyTree = function (srcRoot, dstRoot) {
+      fs.readdirSync(srcRoot, { withFileTypes: true }).forEach(function (e) {
+        var s = path.join(srcRoot, e.name);
+        var d = path.join(dstRoot, e.name);
+        if (e.isDirectory()) {
+          fs.mkdirSync(d, { recursive: true });
+          copyTree(s, d);
+        } else if (e.isFile()) {
+          fs.copyFileSync(s, d);
+        }
+      });
+    };
+    copyTree(vendorMedia, publicMedia);
+    var count = 0;
+    fs.readdirSync(publicMedia, { withFileTypes: true }).forEach(function (e) {
+      if (e.isDirectory()) {
+        var slugDir = path.join(publicMedia, e.name);
+        fs.readdirSync(slugDir).forEach(function () { count++; });
+      }
+    });
+    console.log("generate-component-pages: mirrored " + count + " vendor media files → public/media/");
+  }
+
   console.log(
     "generate-component-pages: wrote " +
       written +

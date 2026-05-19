@@ -58,3 +58,25 @@ test("registry-wide coverage: every categorized component has design+usage redir
   assert.equal(Object.keys(m).length, n * 2,
     "expected " + (n * 2) + " redirect entries for " + n + " categorized components");
 });
+
+test("public/media/ mirrors vendor/components/dist/media/ after prebuild", function () {
+  var pubMedia = path.resolve(__dirname, "..", "..", "public", "media");
+  var vendorMedia = path.resolve(__dirname, "..", "..", "vendor", "components", "dist", "media");
+  if (!fs.existsSync(vendorMedia)) {
+    console.log("skip: vendor has no media yet (pre-knowledge-MINOR vendor pull)");
+    return;
+  }
+  // For each <slug>/preview.png present in vendor, public mirror must exist.
+  fs.readdirSync(vendorMedia, { withFileTypes: true }).forEach(function (entry) {
+    if (!entry.isDirectory()) return;
+    var slug = entry.name;
+    var src = path.join(vendorMedia, slug, "preview.png");
+    if (!fs.existsSync(src)) return;
+    var dst = path.join(pubMedia, slug, "preview.png");
+    assert.ok(fs.existsSync(dst), "expected mirror at " + dst);
+    // Sanity: bytes must match (this is a copy, not a re-encode).
+    var srcBytes = fs.readFileSync(src);
+    var dstBytes = fs.readFileSync(dst);
+    assert.equal(srcBytes.length, dstBytes.length, "byte length mismatch: " + slug);
+  });
+});
