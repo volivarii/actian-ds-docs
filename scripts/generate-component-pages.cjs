@@ -171,22 +171,31 @@ function renderTabMdx(ctx) {
     return 'import ' + name + ' from "' + ctx.importPrefix + "/" + name + '.astro";';
   }).join("\n");
 
+  var pageMetaProps = [
+    '  slug="components.' + ctx.slug + '.' + ctx.tabSlug + '"',
+    '  source="components/dist/registries/dskit.json#' + ctx.slug + '"',
+    "  schema={1}",
+  ];
+  if (ctx.updated) {
+    // Render date-only (YYYY-MM-DD), not full ISO.
+    var dateOnly = String(ctx.updated).slice(0, 10);
+    pageMetaProps.push('  updated="' + dateOnly + '"');
+  }
+
   return [
     fm.join("\n"),
     "",
     imports,
     "",
     "<PageMetadata",
-    '  slug="components.' + ctx.slug + '.' + ctx.tabSlug + '"',
-    '  source="components/dist/registries/dskit.json#' + ctx.slug + '"',
-    "  schema={1}",
+  ].concat(pageMetaProps).concat([
     "/>",
     "",
     "<ComponentTabs component={" + JSON.stringify(ctx.slug) + "} activeTab={" + JSON.stringify(ctx.tabSlug) + "} />",
     "",
     ctx.body,
     "",
-  ].join("\n");
+  ]).join("\n");
 }
 
 // ---------------------------------------------------------------------------
@@ -287,6 +296,7 @@ function buildComponent(slug, entry, guideline, defaults, registry, opts) {
       tabLabel: tab.label,
       status: tabStatus,
       body: body,
+      updated: guideline && guideline.updated_at,
     });
   });
   return { files: files };

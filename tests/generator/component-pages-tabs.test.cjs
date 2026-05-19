@@ -208,3 +208,17 @@ test("overview tab body carries anchor IDs on anatomy/variants/motion/usage H2s"
   if (/<MotionPattern /.test(body)) assert.match(body, /<h2 id="motion">Motion<\/h2>/);
   if (/When to use/.test(body))    assert.match(body, /<h2 id="usage">When to use<\/h2>/);
 });
+
+test("PageMetadata receives updated prop from guideline.updated_at when present", function () {
+  var guide = JSON.parse(JSON.stringify(BTN_GUIDE));
+  guide.updated_at = "2026-05-12T14:33:22+00:00";
+  var out = gen.buildComponent("button", REG.components.button, guide, null, REG);
+  // The generated frontmatter/preamble passes the date (YYYY-MM-DD only, not
+  // full ISO) into PageMetadata.
+  assert.match(out.files["index.mdx"], /<PageMetadata[\s\S]*updated="2026-05-12"/);
+});
+
+test("PageMetadata omits updated prop when guideline has no updated_at", function () {
+  var out = gen.buildComponent("button", REG.components.button, BTN_GUIDE, null, REG);
+  assert.doesNotMatch(out.files["index.mdx"], /<PageMetadata[\s\S]*updated="/);
+});
