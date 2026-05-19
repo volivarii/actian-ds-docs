@@ -266,7 +266,10 @@
           "status": "not-started"
         }
       },
-      "updated_at": "2026-05-14T16:07:17+02:00"
+      "updated_at": "2026-05-14T16:07:17+02:00",
+      "media": {
+        "preview": "components/dist/media/alert-banner/preview.png"
+      }
     },
     "badge": {
       "_schema_version": 1,
@@ -331,7 +334,10 @@
           "status": "not-started"
         }
       },
-      "updated_at": "2026-05-14T16:07:17+02:00"
+      "updated_at": "2026-05-14T16:07:17+02:00",
+      "media": {
+        "preview": "components/dist/media/badge/preview.png"
+      }
     },
     "breadcrumbs": {
       "_schema_version": 1,
@@ -394,7 +400,10 @@
           "status": "not-started"
         }
       },
-      "updated_at": "2026-05-14T16:07:17+02:00"
+      "updated_at": "2026-05-14T16:07:17+02:00",
+      "media": {
+        "preview": "components/dist/media/breadcrumbs/preview.png"
+      }
     },
     "button": {
       "_schema_version": 1,
@@ -541,7 +550,10 @@
           "status": "not-started"
         }
       },
-      "updated_at": "2026-05-14T16:07:17+02:00"
+      "updated_at": "2026-05-14T16:07:17+02:00",
+      "media": {
+        "preview": "components/dist/media/button/preview.png"
+      }
     },
     "card": {
       "_schema_version": 1,
@@ -683,7 +695,10 @@
           "status": "not-started"
         }
       },
-      "updated_at": "2026-05-14T16:07:17+02:00"
+      "updated_at": "2026-05-14T16:07:17+02:00",
+      "media": {
+        "preview": "components/dist/media/card/preview.png"
+      }
     },
     "checkbox": {
       "_schema_version": 1,
@@ -1979,7 +1994,10 @@
           "status": "not-started"
         }
       },
-      "updated_at": "2026-05-14T16:07:17+02:00"
+      "updated_at": "2026-05-14T16:07:17+02:00",
+      "media": {
+        "preview": "components/dist/media/confirmation/preview.png"
+      }
     },
     "drawer-side-panel": {
       "_schema_version": 1,
@@ -3318,7 +3336,10 @@
           "status": "not-started"
         }
       },
-      "updated_at": "2026-05-14T16:07:17+02:00"
+      "updated_at": "2026-05-14T16:07:17+02:00",
+      "media": {
+        "preview": "components/dist/media/global-header/preview.png"
+      }
     },
     "inline-toast": {
       "_schema_version": 1,
@@ -4649,7 +4670,10 @@
           "status": "not-started"
         }
       },
-      "updated_at": "2026-05-14T16:07:17+02:00"
+      "updated_at": "2026-05-14T16:07:17+02:00",
+      "media": {
+        "preview": "components/dist/media/link/preview.png"
+      }
     },
     "loader": {
       "_schema_version": 1,
@@ -4872,157 +4896,6 @@
                         "Label each step in a stepper with a short noun or verb phrase.",
                         "Show current step and total step count. For example, `Step 2 of 4`.",
                         "For upload progress, show percentage or file size transferred."
-                      ]
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        }
-      }
-    },
-    "maintenance-banner": {
-      "_schema_version": 1,
-      "_meta": {
-        "auto_generated": true,
-        "source": "(patterns)",
-        "do_not_edit": "Edit the per-domain source files; CI regenerates this file."
-      },
-      "slug": "maintenance-banner",
-      "component": "Maintenance banner",
-      "meta": {
-        "category": "feedback"
-      },
-      "domains": {
-        "content": {
-          "status": "synthesized",
-          "sections": [
-            {
-              "heading": "Notification",
-              "source": "pattern:notifications-and-messaging",
-              "content": [
-                {
-                  "prose": "Notifications inform users of updates, background task completions, or events that require their attention. They appear in the notification panel or dropdown."
-                }
-              ],
-              "subsections": [
-                {
-                  "subheading": "When to use",
-                  "content": [
-                    {
-                      "bullets": [
-                        "To inform users of updates, background task completions, or events that require their attention."
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "subheading": "Style",
-                  "content": [
-                    {
-                      "bullets": [
-                        "Use direct, concise language. One to two sentences.",
-                        "Include a timestamp.",
-                        "Include a link or action if the user must do something in response.",
-                        "Do not use generic text like `You have a new notification`."
-                      ]
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "heading": "Notification toast",
-              "source": "pattern:notifications-and-messaging",
-              "content": [
-                {
-                  "prose": "Toasts confirm that a background action completed, or surface non-critical errors and warnings that do not block the user."
-                }
-              ],
-              "subsections": [
-                {
-                  "subheading": "When to use",
-                  "content": [
-                    {
-                      "bullets": [
-                        "To confirm that a background action completed.",
-                        "To surface non-critical errors or warnings that do not block the user.",
-                        "Do not use toasts for actions that require user input.",
-                        "For routine confirmations that need persistence, use an [alert / banner](/components/feedback/alert-banner/) instead."
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "subheading": "Style",
-                  "content": [
-                    {
-                      "bullets": [
-                        "Keep to one short sentence.",
-                        "Include an undo action where relevant."
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "subheading": "Examples",
-                  "content": [
-                    {
-                      "table": {
-                        "headers": [
-                          "Scenario",
-                          "Toast text"
-                        ],
-                        "rows": [
-                          [
-                            "Dataset deleted",
-                            "Dataset deleted. Undo"
-                          ],
-                          [
-                            "Export complete",
-                            "Export ready. Download"
-                          ],
-                          [
-                            "Connection failed",
-                            "Connection failed. Try again"
-                          ]
-                        ]
-                      }
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "heading": "Tooltip",
-              "source": "pattern:notifications-and-messaging",
-              "content": [
-                {
-                  "prose": "Tooltips provide short contextual help on hover or focus. They are best for icon-only controls that need a label, or for brief supplementary information that does not need to be persistently visible."
-                }
-              ],
-              "subsections": [
-                {
-                  "subheading": "When to use",
-                  "content": [
-                    {
-                      "bullets": [
-                        "To provide short contextual help on hover or focus.",
-                        "For icon-only controls that require a label.",
-                        "Do not use tooltips for critical information — users should not be required to hover to understand the UI."
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "subheading": "Style",
-                  "content": [
-                    {
-                      "bullets": [
-                        "Limit to a few words or one concise sentence.",
-                        "Do not repeat the label of the element being described.",
-                        "For multi-sentence explanations, use a [popover](/components/overlays/popover/) or inline help text instead."
                       ]
                     }
                   ]
@@ -5383,7 +5256,10 @@
           "status": "not-started"
         }
       },
-      "updated_at": "2026-05-14T16:07:17+02:00"
+      "updated_at": "2026-05-14T16:07:17+02:00",
+      "media": {
+        "preview": "components/dist/media/modal/preview.png"
+      }
     },
     "multi-select": {
       "_schema_version": 1,
@@ -5848,7 +5724,10 @@
           "status": "not-started"
         }
       },
-      "updated_at": "2026-05-14T16:07:17+02:00"
+      "updated_at": "2026-05-14T16:07:17+02:00",
+      "media": {
+        "preview": "components/dist/media/popover/preview.png"
+      }
     },
     "radio-button": {
       "_schema_version": 1,
@@ -6402,7 +6281,10 @@
           "status": "not-started"
         }
       },
-      "updated_at": "2026-05-14T16:07:17+02:00"
+      "updated_at": "2026-05-14T16:07:17+02:00",
+      "media": {
+        "preview": "components/dist/media/search/preview.png"
+      }
     },
     "search-filters": {
       "_schema_version": 1,
@@ -6911,7 +6793,10 @@
           "status": "not-started"
         }
       },
-      "updated_at": "2026-05-14T16:07:17+02:00"
+      "updated_at": "2026-05-14T16:07:17+02:00",
+      "media": {
+        "preview": "components/dist/media/side-nav/preview.png"
+      }
     },
     "spinner": {
       "_schema_version": 1,
@@ -7178,7 +7063,10 @@
           "status": "not-started"
         }
       },
-      "updated_at": "2026-05-14T16:07:17+02:00"
+      "updated_at": "2026-05-14T16:07:17+02:00",
+      "media": {
+        "preview": "components/dist/media/stepper/preview.png"
+      }
     },
     "stepper-buttons": {
       "_schema_version": 1,
@@ -7408,7 +7296,10 @@
           "status": "not-started"
         }
       },
-      "updated_at": "2026-05-14T16:07:17+02:00"
+      "updated_at": "2026-05-14T16:07:17+02:00",
+      "media": {
+        "preview": "components/dist/media/sticky-footer/preview.png"
+      }
     },
     "table": {
       "_schema_version": 1,
@@ -7601,7 +7492,10 @@
           "status": "not-started"
         }
       },
-      "updated_at": "2026-05-14T16:07:17+02:00"
+      "updated_at": "2026-05-14T16:07:17+02:00",
+      "media": {
+        "preview": "components/dist/media/tabs/preview.png"
+      }
     },
     "tag": {
       "_schema_version": 1,
