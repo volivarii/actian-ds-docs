@@ -98,30 +98,41 @@ test("tab pages do not disable tableOfContents (right-rail TOC stays on)", funct
 // buildSidebarManifest — group nesting + per-section targeting
 // ---------------------------------------------------------------------------
 
-test("buildSidebarManifest: 2+ components sharing a group wrap into a subnode", function () {
+test("buildSidebarManifest: flat — no category wrapper, components at top level", function () {
   var miniReg = {
     components: {
-      "tag-a": { name: "Tag A", category: "Data Display", section: "Components", group: "Tag, Identification key" },
-      "tag-b": { name: "Tag B", category: "Data Display", section: "Components", group: "Tag, Identification key" },
+      "btn":   { name: "Button", category: "Action", section: "Components" },
+      "card":  { name: "Card",   category: "Data Display", section: "Components" },
+      "modal": { name: "Modal",  category: "Overlays", section: "Components" },
+    },
+  };
+  var manifest = gen.buildSidebarManifest(miniReg, { targetSection: "components" });
+  var labels = manifest.map(function (n) { return n.label; }).sort();
+  assert.deepEqual(labels, ["Button", "Card", "Modal"]);
+  // Top-level nodes are leaves (have link), not category wrappers.
+  manifest.forEach(function (n) { assert.ok(n.link, "top-level entries must be leaves: " + n.label); });
+});
+
+test("buildSidebarManifest: 2+ components sharing a group wrap into a subnode (preserved)", function () {
+  var miniReg = {
+    components: {
+      "tag-a":  { name: "Tag A",  category: "Data Display", section: "Components", group: "Tag, Identification key" },
+      "tag-b":  { name: "Tag B",  category: "Data Display", section: "Components", group: "Tag, Identification key" },
       "lonely": { name: "Lonely", category: "Data Display", section: "Components", group: "Solo group" },
       "flat":   { name: "Flat",   category: "Data Display", section: "Components" },
     },
   };
   var manifest = gen.buildSidebarManifest(miniReg, { targetSection: "components" });
-  var dd = manifest.find(function (c) { return c.label === "Data Display"; });
-  assert.ok(dd, "Data Display category present");
-  var tagNode = dd.items.find(function (i) { return i.label === "Tag, Identification key"; });
-  assert.ok(tagNode, "shared-group items wrapped into one subnode");
-  assert.equal(tagNode.items.length, 2, "subnode carries both members");
-  // Solo group with one component must NOT wrap (would create a node with one child)
-  var lonely = dd.items.find(function (i) { return i.label === "Lonely"; });
+  var tagNode = manifest.find(function (n) { return n.label === "Tag, Identification key"; });
+  assert.ok(tagNode && tagNode.items && tagNode.items.length === 2,
+    "shared-group items wrap into one subnode at top level");
+  var lonely = manifest.find(function (n) { return n.label === "Lonely"; });
   assert.ok(lonely && lonely.link, "single-member group renders as flat leaf");
-  // Group-less component stays flat
-  var flat = dd.items.find(function (i) { return i.label === "Flat"; });
+  var flat = manifest.find(function (n) { return n.label === "Flat"; });
   assert.ok(flat && flat.link, "groupless component renders as flat leaf");
 });
 
-test("buildSidebarManifest: groups and leaves interleave A-Z by label", function () {
+test("buildSidebarManifest: flat leaves + group nodes interleave A-Z by label", function () {
   var miniReg = {
     components: {
       "z-flat": { name: "Z Flat", category: "X", section: "Components" },
@@ -131,7 +142,7 @@ test("buildSidebarManifest: groups and leaves interleave A-Z by label", function
     },
   };
   var manifest = gen.buildSidebarManifest(miniReg, { targetSection: "components" });
-  var labels = manifest[0].items.map(function (i) { return i.label; });
+  var labels = manifest.map(function (n) { return n.label; });
   assert.deepEqual(labels, ["A Flat", "M Group", "Z Flat"]);
 });
 
@@ -145,7 +156,7 @@ test("buildSidebarManifest: targetSection filters out other-section entries", fu
   var componentsManifest = gen.buildSidebarManifest(miniReg, { targetSection: "components" });
   var brandManifest = gen.buildSidebarManifest(miniReg, { targetSection: "brand" });
   assert.equal(componentsManifest.length, 1);
-  assert.equal(componentsManifest[0].label, "X");
+  assert.equal(componentsManifest[0].label, "Comp");
   assert.equal(brandManifest.length, 1);
-  assert.equal(brandManifest[0].label, "Y");
+  assert.equal(brandManifest[0].label, "Brand thing");
 });

@@ -540,7 +540,7 @@ function main() {
         section +
         "-sidebar.json (" +
         manifest.length +
-        " categories)",
+        " top-level entries)",
     );
   });
 
