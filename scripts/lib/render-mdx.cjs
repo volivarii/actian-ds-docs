@@ -427,14 +427,28 @@ function buildSlugToPathMap(registry, groupCounts, sectionDirs, defaultSectionDi
   _slugToPath = map;
 }
 
-function renderMediaPreview(guideline) {
-  if (!guideline || !guideline.media || !guideline.media.preview) return "";
-  // <MediaAsset> is imported by renderTabMdx's import block (added in this task).
-  // No prose header — the image is the visual entry point under chips,
-  // before the overview prose + anatomy block.
-  // Inline only the media subtree; MediaAsset only needs guideline.media.
-  var glLit = JSON.stringify({ media: guideline.media });
-  return '<MediaAsset role="preview" guideline={' + glLit + '} alt="" />';
+// Module-scoped media index — populated once at prebuild via setMediaIndex
+// by generate-component-pages.cjs reading vendor/components/dist/media/
+// _index.json (knowledge v0.17.0+ sidecar). Reading from this index instead
+// of guideline.media decouples media availability from guideline coverage —
+// components with media but no guideline doc (e.g. avatar) still surface.
+// Falls back gracefully to "" (no <MediaAsset> emission) when the index
+// hasn't been provided or doesn't contain the slug.
+var _mediaIndex = null;
+
+function setMediaIndex(idx) {
+  _mediaIndex = idx;
+}
+
+function renderMediaPreview(slug) {
+  if (!_mediaIndex || !_mediaIndex.media) return "";
+  var entry = _mediaIndex.media[slug];
+  if (!entry || !entry.preview) return "";
+  // entry.preview = "components/dist/media/<slug>/preview.png" → strip the
+  // vendor prefix; the vendor → public/ mirror in generate-component-pages.cjs
+  // puts the file at public/media/<slug>/preview.png.
+  var publicPath = "/" + String(entry.preview).replace(/^components\/dist\/media\//, "media/");
+  return "<MediaAsset src=" + JSON.stringify(publicPath) + ' alt="" />';
 }
 
 module.exports = {
@@ -448,6 +462,7 @@ module.exports = {
   renderA11yRefs: renderA11yRefs,
   renderConfidenceChips: renderConfidenceChips,
   renderMediaPreview: renderMediaPreview,
+  setMediaIndex: setMediaIndex,
   renderResources: renderResources,
   renderStubFooter: renderStubFooter,
   buildSlugToPathMap: buildSlugToPathMap,

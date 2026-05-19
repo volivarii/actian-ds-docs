@@ -236,7 +236,7 @@ function buildComponent(slug, entry, guideline, defaults, registry, opts) {
 
   var RENDERERS = {
     confidenceChips:       function () { return renderMdx.renderConfidenceChips(defaults, contentDomain); },
-    mediaPreview:          function () { return renderMdx.renderMediaPreview(guideline); },
+    mediaPreview:          function () { return renderMdx.renderMediaPreview(slug); },
     overview:              function () { return renderMdx.renderOverview(entry); },
     categoryUsageBaseline: function () { return renderCategoryUsageBaseline(defaults); },
     contentDomain:         function () { return hasContent ? renderMdx.renderContentDomain(contentDomain, WARNINGS) : ""; },
@@ -450,6 +450,25 @@ function main() {
   // rewriteComponentLinks() (called inside escapeMdxPlaceholders) can convert
   // bare-slug markdown links in guideline JSON content to absolute doc paths.
   renderMdx.buildSlugToPathMap(registry, groupCounts, SECTION_DIRS, DEFAULT_SECTION_DIR, slugifyCategory);
+
+  // Load the media index sidecar (knowledge v0.17.0+). Components with media
+  // but no guideline doc (e.g. avatar) appear here even though they have no
+  // components/dist/guidelines/<slug>.json. Falls back gracefully when the
+  // sidecar is missing — renderMediaPreview returns "" and no <MediaAsset>
+  // tags get emitted (matches pre-0.17.0 behavior).
+  var mediaIndexPath = path.resolve(__dirname, "..", "vendor", "components", "dist", "media", "_index.json");
+  var mediaIndex = null;
+  if (fs.existsSync(mediaIndexPath)) {
+    try {
+      mediaIndex = JSON.parse(fs.readFileSync(mediaIndexPath, "utf8"));
+    } catch (err) {
+      process.stderr.write(
+        "[generate] WARNING: couldn't parse media index " + mediaIndexPath +
+        " — " + err.message + "\n"
+      );
+    }
+  }
+  renderMdx.setMediaIndex(mediaIndex);
 
   var written = 0;
   var skipped = 0;

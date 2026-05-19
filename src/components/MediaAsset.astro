@@ -1,26 +1,26 @@
 ---
-import { resolveMediaPath } from "./media-asset-resolver.mjs";
+// Presentational wrapper for a media asset. Receives an already-resolved
+// public path (e.g. "/media/avatar/preview.png") and BASE-prefixes it for
+// the runtime URL. Path resolution from the slug+role+index sidecar lives
+// at MDX-generation time in scripts/lib/render-mdx.cjs — the renderer
+// emits `<MediaAsset src="..." />` only when a real path resolves, so this
+// component just decorates the <img>.
 
 interface Props {
-  role: string;
-  guideline?: any;
+  src?: string | null;
   alt?: string;
 }
 
-const { role, guideline, alt } = Astro.props;
-const resolvedPath = resolveMediaPath(guideline, role);
-// Inline BASE_URL handling — getBase() in src/lib/base-url.mjs normalizes to a
-// trailing-slash form ("/" or "/actian-ds-docs/"), but resolveMediaPath always
-// returns a leading-slash path ("/media/<slug>/<file>"). Concatenating those
-// would emit a double slash. Strip the trailing slash here so BASE + path
-// yields exactly one separator.
+const { src, alt } = Astro.props;
+// Inline BASE_URL handling — `src` always starts with "/", BASE_URL ends with
+// "/", so trim BASE to exactly one separator before concatenation.
 const BASE = import.meta.env.BASE_URL.replace(/\/?$/, "");
-const src = resolvedPath ? BASE + resolvedPath : null;
+const fullSrc = src ? BASE + src : null;
 ---
 
-{src && (
+{fullSrc && (
   <figure class="actian-media">
-    <img src={src} loading="lazy" alt={alt || ""} />
+    <img src={fullSrc} loading="lazy" alt={alt || ""} />
   </figure>
 )}
 
