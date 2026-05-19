@@ -45,7 +45,6 @@ var VALID_RENDERER_KEYS = new Set([
   "confidenceChips",
   "mediaPreview",
   "overview",
-  "variantsSummary",
   "categoryUsageBaseline",
   "contentDomain",
   "anatomy",
@@ -178,8 +177,12 @@ function renderTabMdx(ctx) {
   ];
   if (ctx.updated) {
     // Render date-only (YYYY-MM-DD), not full ISO.
-    var dateOnly = String(ctx.updated).slice(0, 10);
-    pageMetaProps.push('  updated="' + dateOnly + '"');
+    var raw = String(ctx.updated);
+    // Guard: only emit `updated="..."` if the value looks ISO-8601 (YYYY-MM-DD prefix).
+    // A malformed value silently becomes garbage if sliced blind, so we drop the prop
+    // entirely when the prefix doesn't match.
+    var dateOnly = /^\d{4}-\d{2}-\d{2}/.test(raw) ? raw.slice(0, 10) : null;
+    if (dateOnly) pageMetaProps.push('  updated="' + dateOnly + '"');
   }
 
   return [
@@ -235,7 +238,6 @@ function buildComponent(slug, entry, guideline, defaults, registry, opts) {
     confidenceChips:       function () { return renderMdx.renderConfidenceChips(defaults, contentDomain); },
     mediaPreview:          function () { return renderMdx.renderMediaPreview(guideline); },
     overview:              function () { return renderMdx.renderOverview(entry); },
-    variantsSummary:       function () { return renderMdx.renderVariantsTable(entry, defaults); },
     categoryUsageBaseline: function () { return renderCategoryUsageBaseline(defaults); },
     contentDomain:         function () { return hasContent ? renderMdx.renderContentDomain(contentDomain, WARNINGS) : ""; },
     anatomy:               function () { return renderMdx.renderAnatomy(defaults); },
