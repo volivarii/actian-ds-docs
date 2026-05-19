@@ -10,12 +10,11 @@ var REG = JSON.parse(fs.readFileSync(
 var BTN_GUIDE = JSON.parse(fs.readFileSync(
   path.join(__dirname, "..", "fixtures", "guidelines", "button.json"), "utf8"));
 
-test("generator emits six sibling files per component (one per tab)", function () {
+test("generator emits four sibling files per component (one per tab)", function () {
   var out = gen.buildComponent("button", REG.components.button, BTN_GUIDE, null, REG);
   var rels = Object.keys(out.files).sort();
   assert.deepEqual(rels, [
-    "accessibility.mdx", "code.mdx", "content.mdx",
-    "design.mdx", "index.mdx", "usage.mdx",
+    "accessibility.mdx", "code.mdx", "content.mdx", "index.mdx",
   ]);
 });
 
@@ -23,17 +22,16 @@ test("non-index pages set sidebar: { hidden: true }", function () {
   var out = gen.buildComponent("button", REG.components.button, BTN_GUIDE, null, REG);
   assert.ok(out.files["index.mdx"].indexOf("sidebar:") === -1,
     "index.mdx must not hide itself from sidebar");
-  ["usage.mdx", "content.mdx", "design.mdx", "accessibility.mdx", "code.mdx"]
-    .forEach(function (f) {
-      assert.match(out.files[f], /sidebar:\s*\{\s*hidden:\s*true\s*\}/,
-        f + " must hide itself from sidebar");
-    });
+  ["content.mdx", "accessibility.mdx", "code.mdx"].forEach(function (f) {
+    assert.match(out.files[f], /sidebar:\s*\{\s*hidden:\s*true\s*\}/,
+      f + " must hide itself from sidebar");
+  });
 });
 
-test("stub component renders all six tabs with <StubFooter> on under-documented bodies", function () {
+test("stub component renders all four tabs with <StubFooter> on under-documented bodies", function () {
   var out = gen.buildComponent(
     "sticky-footer", REG.components["sticky-footer"], null, null, REG);
-  assert.equal(Object.keys(out.files).length, 6);
+  assert.equal(Object.keys(out.files).length, 4);
   // content domain absent → content.mdx must show stub footer
   assert.match(out.files["content.mdx"], /<StubFooter/);
 });
@@ -77,7 +75,7 @@ test("synthesized content domain (knowledge v0.15.0+ pattern fan-out) renders co
 
 test("every emitted page sets template: doc and a valid tab: frontmatter", function () {
   var out = gen.buildComponent("button", REG.components.button, BTN_GUIDE, null, REG);
-  var validTabs = /tab:\s*"(overview|usage|content|design|accessibility|code)"/;
+  var validTabs = /tab:\s*"(overview|content|accessibility|code)"/;
   Object.keys(out.files).forEach(function (f) {
     assert.match(out.files[f], /template:\s*doc/,
       f + " must set template: doc");

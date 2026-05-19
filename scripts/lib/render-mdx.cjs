@@ -420,6 +420,11 @@ function buildSlugToPathMap(registry, groupCounts, sectionDirs, defaultSectionDi
   _slugToPath = map;
 }
 
+// Stub — replaced with real implementation in Task 17 (MediaAsset wiring).
+// Returning "" keeps the generator boot validator happy until the media
+// pipeline + MediaAsset import block are in place.
+function renderMediaPreview() { return ""; }
+
 module.exports = {
   escapeMdxPlaceholders: escapeMdxPlaceholders,
   renderMarkdownTable: renderMarkdownTable,
@@ -430,6 +435,7 @@ module.exports = {
   renderContentDomain: renderContentDomain,
   renderA11yRefs: renderA11yRefs,
   renderConfidenceChips: renderConfidenceChips,
+  renderMediaPreview: renderMediaPreview,
   renderResources: renderResources,
   renderStubFooter: renderStubFooter,
   buildSlugToPathMap: buildSlugToPathMap,

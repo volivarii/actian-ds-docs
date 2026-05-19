@@ -43,6 +43,7 @@ var WARNINGS = { unknownContentShapes: 0, unparseableGuidelines: 0 };
 // root of a debugging session worth ~half a day.
 var VALID_RENDERER_KEYS = new Set([
   "confidenceChips",
+  "mediaPreview",
   "overview",
   "variantsSummary",
   "categoryUsageBaseline",
@@ -223,6 +224,7 @@ function buildComponent(slug, entry, guideline, defaults, registry, opts) {
 
   var RENDERERS = {
     confidenceChips:       function () { return renderMdx.renderConfidenceChips(defaults, contentDomain); },
+    mediaPreview:          function () { return renderMdx.renderMediaPreview(guideline); },
     overview:              function () { return renderMdx.renderOverview(entry); },
     variantsSummary:       function () { return renderMdx.renderVariantsTable(entry, defaults); },
     categoryUsageBaseline: function () { return renderCategoryUsageBaseline(defaults); },

@@ -4,20 +4,17 @@
       "slug": "overview",
       "label": "Overview",
       "isIndex": true,
-      "domains": [],
-      "renderers": ["confidenceChips", "overview", "resources"]
-    },
-    {
-      "slug": "design",
-      "label": "Design",
-      "domains": ["design", "behavior"],
-      "renderers": ["anatomy", "variantsTable", "motion"]
-    },
-    {
-      "slug": "usage",
-      "label": "Usage",
-      "domains": ["usage"],
-      "renderers": ["categoryUsageBaseline"]
+      "domains": ["design", "behavior", "usage"],
+      "renderers": [
+        "confidenceChips",
+        "mediaPreview",
+        "overview",
+        "anatomy",
+        "variantsTable",
+        "motion",
+        "categoryUsageBaseline",
+        "resources"
+      ]
     },
     {
       "slug": "content",
