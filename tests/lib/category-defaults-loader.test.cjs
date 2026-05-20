@@ -111,9 +111,13 @@ test("resolveMotionRef — null input returns null", function () {
 // --- resolveAccessibilityRef ---
 
 test("resolveAccessibilityRef — known slug returns section object", function () {
-  var section = loader.resolveAccessibilityRef("aria-guidance");
+  // `color-contrast` is a structurally stable a11y section id — it survives
+  // across guideline restructures (unlike topic sections that get renamed),
+  // so this test stays valid regardless of which knowledge snapshot is
+  // vendored. Avoid hardcoding rename-prone slugs here.
+  var section = loader.resolveAccessibilityRef("color-contrast");
   assert.ok(section);
-  assert.equal(section.slug, "aria-guidance");
+  assert.equal(section.slug, "color-contrast");
   assert.ok(section.title);
 });
 
