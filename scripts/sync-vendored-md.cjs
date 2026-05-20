@@ -31,7 +31,7 @@ var PAGES = [
     source: "vendor/accessibility/accessibility.md",
     sourceKey: "accessibility/accessibility.md",
     title: "Accessibility",
-    description: "WCAG 2.2 AA guidance for the Actian DS.",
+    description: "WCAG 2.1 AA guidance for the Actian DS.",
   },
   {
     // Phase 4b: the /content page now renders global / cross-cutting
