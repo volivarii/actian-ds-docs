@@ -85,4 +85,11 @@ jobs:
           # attributes to the App, matching the PR author identity.
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
-          gh pr merge "${{ steps.cpr.outputs.pull-request-number }}" --auto --squash --repo "${{ github.repository }}"
+          PR="${{ steps.cpr.outputs.pull-request-number }}"
+          REPO="${{ github.repository }}"
+          # `gh pr merge --auto` exits non-zero when the PR is already in a
+          # clean, mergeable state (no pending required checks to wait on) —
+          # "Pull request is in clean status". Fall back to an immediate
+          # squash merge so the vendor refresh still lands.
+          gh pr merge "$PR" --auto --squash --repo "$REPO" \
+            || gh pr merge "$PR" --squash --repo "$REPO"
