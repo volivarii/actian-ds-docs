@@ -97,15 +97,19 @@
   "card_accessibility": {
     "requirementRefs": [
       {
-        "ref": "focus-keyboard",
-        "note": "focus moves into the overlay on open, trapped while modal-blocking, returns to trigger on close; Escape closes dismissible overlays, outside-click closes popovers but not modals"
+        "ref": "keyboard-focus",
+        "note": "focus moves into the overlay on open; trapped while modal-blocking; returns to trigger on close"
       },
       {
-        "ref": "aria-labels",
+        "ref": "aria-guidance",
         "note": "dialogs use role=dialog + aria-modal=true + labelled by header; tooltips use role=tooltip + aria-describedby"
       },
       {
-        "ref": "motion",
+        "ref": "interactions",
+        "note": "Escape closes dismissible overlays; outside-click closes popovers but not modals"
+      },
+      {
+        "ref": "motion-media",
         "note": "respect prefers-reduced-motion — disable scale + slide, keep fade"
       },
       {
