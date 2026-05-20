@@ -87,23 +87,23 @@
   "card_accessibility": {
     "requirementRefs": [
       {
-        "ref": "forms",
+        "ref": "forms-data-entry",
         "note": "every control needs a programmatically-associated label + accessible error message"
       },
       {
-        "ref": "states"
+        "ref": "required-states"
       },
       {
-        "ref": "alerts-toasts-banners"
+        "ref": "feedback-errors"
       },
       {
-        "ref": "focus-keyboard"
+        "ref": "keyboard-focus"
       },
       {
         "ref": "color-contrast"
       },
       {
-        "ref": "aria-labels"
+        "ref": "aria-guidance"
       }
     ]
   },

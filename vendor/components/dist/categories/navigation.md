@@ -29,10 +29,11 @@ motion_refs:
   - { ref: anchor-motion, note: dropdown triggers (account-dropdown, notification-dropdown, etc.) anchor to their button }
 
 accessibility:
-  - { ref: focus-keyboard, note: arrow-key traversal between items; Tab moves to/from the navigation region }
-  - { ref: aria-labels, note: use aria-current=page on the active item; nav landmark on the container }
+  - { ref: keyboard-focus, note: arrow-key traversal between items; Tab moves to/from the navigation region }
+  - { ref: interactions }
+  - { ref: aria-guidance, note: use aria-current=page on the active item; nav landmark on the container }
   - { ref: color-contrast }
-  - { ref: alerts-toasts-banners }
+  - { ref: feedback-errors }
 ---
 
 # Navigation — design rationale

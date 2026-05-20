@@ -91,18 +91,21 @@
       "card_accessibility": {
         "requirementRefs": [
           {
-            "ref": "focus-keyboard",
+            "ref": "keyboard-focus",
             "note": "must be operable with Enter and Space (button) or Enter (link)"
           },
           {
             "ref": "color-contrast"
           },
           {
-            "ref": "alerts-toasts-banners",
+            "ref": "interactions"
+          },
+          {
+            "ref": "feedback-errors",
             "note": "loading + disabled states must be announced; do not rely on color alone"
           },
           {
-            "ref": "aria-labels"
+            "ref": "aria-guidance"
           }
         ]
       },
@@ -208,18 +211,18 @@
             "note": "status colors must have a non-color cue (icon, label, pattern)"
           },
           {
-            "ref": "typography"
+            "ref": "typography-readability"
           },
           {
-            "ref": "data-tables",
+            "ref": "layout-responsiveness",
             "note": "tables and graphs must reflow or scroll horizontally; never clip"
           },
           {
-            "ref": "aria-labels",
+            "ref": "aria-guidance",
             "note": "tables use thead/tbody/scope; charts expose data tables for screen readers"
           },
           {
-            "ref": "focus-keyboard"
+            "ref": "keyboard-focus"
           }
         ]
       },
@@ -318,22 +321,22 @@
       "card_accessibility": {
         "requirementRefs": [
           {
-            "ref": "alerts-toasts-banners",
+            "ref": "feedback-errors",
             "note": "error severity must be conveyed by text + icon, not color alone"
           },
           {
-            "ref": "aria-labels",
+            "ref": "aria-guidance",
             "note": "transient messages use role=status (polite) or role=alert (assertive) per severity"
           },
           {
             "ref": "color-contrast"
           },
           {
-            "ref": "motion",
+            "ref": "motion-media",
             "note": "respect prefers-reduced-motion — disable entrance pulse + slide"
           },
           {
-            "ref": "focus-keyboard",
+            "ref": "keyboard-focus",
             "note": "focus must not be stolen by toasts; persistent alerts may receive focus when actionable"
           }
         ]
@@ -429,23 +432,23 @@
       "card_accessibility": {
         "requirementRefs": [
           {
-            "ref": "forms",
+            "ref": "forms-data-entry",
             "note": "every control needs a programmatically-associated label + accessible error message"
           },
           {
-            "ref": "states"
+            "ref": "required-states"
           },
           {
-            "ref": "alerts-toasts-banners"
+            "ref": "feedback-errors"
           },
           {
-            "ref": "focus-keyboard"
+            "ref": "keyboard-focus"
           },
           {
             "ref": "color-contrast"
           },
           {
-            "ref": "aria-labels"
+            "ref": "aria-guidance"
           }
         ]
       },
@@ -539,18 +542,21 @@
       "card_accessibility": {
         "requirementRefs": [
           {
-            "ref": "focus-keyboard",
+            "ref": "keyboard-focus",
             "note": "arrow-key traversal between items; Tab moves to/from the navigation region"
           },
           {
-            "ref": "aria-labels",
+            "ref": "interactions"
+          },
+          {
+            "ref": "aria-guidance",
             "note": "use aria-current=page on the active item; nav landmark on the container"
           },
           {
             "ref": "color-contrast"
           },
           {
-            "ref": "alerts-toasts-banners"
+            "ref": "feedback-errors"
           }
         ]
       },
@@ -655,15 +661,19 @@
       "card_accessibility": {
         "requirementRefs": [
           {
-            "ref": "focus-keyboard",
-            "note": "focus moves into the overlay on open, trapped while modal-blocking, returns to trigger on close; Escape closes dismissible overlays, outside-click closes popovers but not modals"
+            "ref": "keyboard-focus",
+            "note": "focus moves into the overlay on open; trapped while modal-blocking; returns to trigger on close"
           },
           {
-            "ref": "aria-labels",
+            "ref": "aria-guidance",
             "note": "dialogs use role=dialog + aria-modal=true + labelled by header; tooltips use role=tooltip + aria-describedby"
           },
           {
-            "ref": "motion",
+            "ref": "interactions",
+            "note": "Escape closes dismissible overlays; outside-click closes popovers but not modals"
+          },
+          {
+            "ref": "motion-media",
             "note": "respect prefers-reduced-motion — disable scale + slide, keep fade"
           },
           {
