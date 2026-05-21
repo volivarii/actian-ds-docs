@@ -115,10 +115,6 @@ function renderMarkdownTable(headers, rows) {
   return lines.join("\n");
 }
 
-// The canonical set of roles that the design domain uses. Used by
-// renderDesignDomain to decide which roles to auto-append.
-var DESIGN_DOMAIN_ROLES = ["parts", "variations", "spacing", "behavior", "layout"];
-
 // content[] items come from the knowledge repo's guideline-md-parser in
 // these shapes (current schema; see actian-ds-knowledge/schemas/guideline-
 // component.json $defs.contentItem):
@@ -151,7 +147,7 @@ var DESIGN_DOMAIN_ROLES = ["parts", "variations", "spacing", "behavior", "layout
 //                      { media } items in items[] are treated as unknown shapes.
 // opts.seenMediaRoles — a Set<string> that this function MUTATES to record
 //                       which roles were rendered via authored { media } items.
-//                       Used by renderDesignDomain for the auto-append pass.
+//                       Used by renderDesignSections for the auto-append pass.
 function renderContentItems(items, headingForDiag, WARNINGS, opts) {
   if (!items || !items.length) return "";
   opts = opts || {};
@@ -278,7 +274,7 @@ function renderContentItems(items, headingForDiag, WARNINGS, opts) {
       }
       if (it.media && typeof it.media === "object" && typeof it.media.role === "string") {
         // Bucket C: design-domain media directive.
-        // Requires a mediaRoleMap injected by renderDesignDomain. If none is
+        // Requires a mediaRoleMap injected by renderDesignSections. If none is
         // available (item appears outside a design-domain render path), fall
         // through to the unknown bucket so the warning fires.
         if (mediaRoleMap) {
@@ -327,6 +323,104 @@ function renderContentSection(s, WARNINGS, opts) {
   return parts.join("\n\n");
 }
 
+// Like renderContentSection but WITHOUT emitting the section's own heading.
+// The canonical ## heading is owned by renderDesignSections; subsections
+// render at ### level (not #### as in the full content domain).
+function renderContentSectionBody(s, WARNINGS, opts) {
+  var parts = [];
+  var body = renderContentItems(s.content, s.heading, WARNINGS, opts);
+  if (body) parts.push(body);
+  (s.subsections || []).forEach(function (sub) {
+    if (sub.subheading) parts.push("### " + sub.subheading);
+    var subBody = renderContentItems(sub.content, sub.subheading, WARNINGS, opts);
+    if (subBody) parts.push(subBody);
+  });
+  return parts.join("\n\n");
+}
+
+// ---------------------------------------------------------------------------
+// Canonical design-section table — one entry per design topic.
+// Each entry owns its heading, its media role, the aliases that authored
+// design.md sections may use for this topic, and an optional structured
+// component factory.
+// ---------------------------------------------------------------------------
+
+var DESIGN_SECTIONS = [
+  { key: "anatomy",  heading: "Anatomy",        mediaRole: "parts",
+    aliases: ["anatomy", "parts"],
+    structured: function (entry, defaults) { return renderAnatomy(defaults); } },
+  { key: "variants", heading: "Variants",        mediaRole: "variations",
+    aliases: ["variants", "variations"],
+    structured: function (entry, defaults) { return renderVariantsMatrix(entry, defaults); } },
+  { key: "spacing",  heading: "Spacing & size",  mediaRole: "spacing",
+    aliases: ["spacing & size", "spacing", "spacing and size", "sizing"],
+    structured: null },
+  { key: "behavior", heading: "Behavior",         mediaRole: "behavior",
+    aliases: ["behavior", "motion"],
+    structured: function (entry, defaults) { return renderMotion(defaults); } },
+  { key: "layout",   heading: "Layout",           mediaRole: "layout",
+    aliases: ["layout"],
+    structured: null },
+];
+
+function normHeading(h) { return String(h || "").trim().toLowerCase(); }
+
+/**
+ * Render ALL design-domain sections into a single cohesive output string.
+ * For each canonical section: structured component first, then authored
+ * prose, then auto-appended media for roles not already covered.
+ * Unknown authored headings are appended after the five canonical sections.
+ */
+function renderDesignSections(entry, defaults, guideline, slug, WARNINGS) {
+  var designDomain = guideline && guideline.domains && guideline.domains.design;
+  var statusOk = designDomain && ["approved", "draft", "synthesized"].indexOf(designDomain.status) !== -1;
+  var authoredSections = (statusOk && Array.isArray(designDomain.sections)) ? designDomain.sections : [];
+
+  var byHeading = {};
+  authoredSections.forEach(function (s) {
+    if (s.heading) byHeading[normHeading(s.heading)] = s;
+  });
+
+  var mediaRoleMap = (_mediaIndex && _mediaIndex.media && _mediaIndex.media[slug]) || null;
+  var usedHeadings = new Set();
+  var out = [];
+
+  DESIGN_SECTIONS.forEach(function (sec) {
+    var structured = sec.structured ? sec.structured(entry, defaults) : "";
+
+    var matched = null;
+    for (var i = 0; i < sec.aliases.length; i++) {
+      var hit = byHeading[sec.aliases[i]];
+      if (hit) { matched = hit; usedHeadings.add(normHeading(hit.heading)); break; }
+    }
+
+    var seenMediaRoles = new Set();
+    var body = matched
+      ? renderContentSectionBody(matched, WARNINGS, { mediaRoleMap: mediaRoleMap, seenMediaRoles: seenMediaRoles })
+      : "";
+
+    var media = "";
+    if (mediaRoleMap && (sec.mediaRole in mediaRoleMap) && !seenMediaRoles.has(sec.mediaRole)) {
+      media = "<Media role=" + JSON.stringify(sec.mediaRole) +
+        ' layout="stack" media={' + jsLit(mediaRoleMap) + "} />";
+    }
+
+    var blocks = [structured, body, media].filter(Boolean);
+    if (blocks.length === 0) return;
+    out.push("## " + sec.heading + "\n\n" + blocks.join("\n\n"));
+  });
+
+  authoredSections.forEach(function (s) {
+    if (!s.heading || usedHeadings.has(normHeading(s.heading))) return;
+    WARNINGS.unknownContentShapes = (WARNINGS.unknownContentShapes || 0) + 1;
+    process.stderr.write('render-mdx: design.md section "' + s.heading + '" matched no canonical section\n');
+    var body = renderContentSectionBody(s, WARNINGS, { mediaRoleMap: mediaRoleMap });
+    out.push("## " + s.heading + (body ? "\n\n" + body : ""));
+  });
+
+  return out.join("\n\n");
+}
+
 // ---------------------------------------------------------------------------
 // Named render helpers — extracted from the original buildPage body so that
 // buildComponent can dispatch them individually by tab config.
@@ -345,9 +439,7 @@ function renderOverview(entry) {
 
 function renderAnatomy(defaults) {
   if (!(defaults && defaults.card_anatomy && Array.isArray(defaults.card_anatomy.parts) && defaults.card_anatomy.parts.length)) return "";
-  // Markdown heading (not raw <h2>): only markdown headings are collected
-  // into Starlight's "On this page" ToC. The id auto-slugs to "anatomy".
-  return '## Anatomy\n\n<Anatomy parts={' + jsLit(defaults.card_anatomy.parts) + '} />';
+  return '<Anatomy parts={' + jsLit(defaults.card_anatomy.parts) + '} />';
 }
 
 function renderVariantsMatrix(entry, defaults) {
@@ -355,17 +447,12 @@ function renderVariantsMatrix(entry, defaults) {
     var axes = Object.entries(entry.variants).map(function (pair) {
       return { axis: pair[0], values: pair[1] };
     });
-    return '## Variants\n\n<VariantMatrix variantAxes={' + jsLit(axes) + '} />';
+    return '<VariantMatrix variantAxes={' + jsLit(axes) + '} />';
   }
   if (defaults && defaults.card_component && Array.isArray(defaults.card_component.variantAxes) && defaults.card_component.variantAxes.length) {
-    return '## Variants\n\n<VariantMatrix variantAxes={' + jsLit(defaults.card_component.variantAxes) + '} />';
+    return '<VariantMatrix variantAxes={' + jsLit(defaults.card_component.variantAxes) + '} />';
   }
   return "";
-}
-
-// Alias — used by the "code" tab's variantsTable renderer key.
-function renderVariantsTable(entry, defaults) {
-  return renderVariantsMatrix(entry, defaults);
 }
 
 function renderMotion(defaults) {
@@ -375,7 +462,7 @@ function renderMotion(defaults) {
   var resolved = defaults.card_motion.patternRefs.map(function (r) {
     return { ref: r, pattern: loader.resolveMotionRef(r.ref) };
   });
-  return '## Motion\n\n<MotionPattern resolvedPatterns={' + jsLit(resolved) + '} />';
+  return '<MotionPattern resolvedPatterns={' + jsLit(resolved) + '} />';
 }
 
 function renderContentDomain(contentDomain, WARNINGS) {
@@ -383,49 +470,6 @@ function renderContentDomain(contentDomain, WARNINGS) {
   return "## Content guidelines\n\n" + contentDomain.sections.map(function (s) {
     return renderContentSection(s, WARNINGS);
   }).join("\n\n");
-}
-
-// Render the design domain's sections[], wiring { media } items to <Media>
-// components and auto-appending <Media> for roles present in the component's
-// media index but not referenced by any authored { media } item.
-//
-// slug         — component slug; used to look up the role map in _mediaIndex.
-// WARNINGS     — shared warning counters (unknownContentShapes etc.).
-function renderDesignDomain(designDomain, slug, WARNINGS) {
-  if (!designDomain) return "";
-
-  // Resolve the component's role map from the module-level media index.
-  // mediaRoleMap is the full role→path(s) map for this component (or null
-  // when the index is absent / the component has no entry).
-  var mediaRoleMap = null;
-  if (_mediaIndex && _mediaIndex.media && _mediaIndex.media[slug]) {
-    mediaRoleMap = _mediaIndex.media[slug];
-  }
-
-  // Track which roles were covered by authored { media } items so we can
-  // auto-append the uncovered ones afterward.
-  var seenMediaRoles = new Set();
-  var opts = { mediaRoleMap: mediaRoleMap, seenMediaRoles: seenMediaRoles };
-
-  var parts = (designDomain.sections || []).map(function (s) {
-    return renderContentSection(s, WARNINGS, opts);
-  });
-
-  // Auto-append <Media> for design-domain roles that are present in the
-  // component's media index but were NOT covered by an authored { media } item.
-  if (mediaRoleMap) {
-    DESIGN_DOMAIN_ROLES.forEach(function (role) {
-      if (seenMediaRoles.has(role)) return;            // already rendered
-      if (!(role in mediaRoleMap)) return;             // not in index
-      parts.push(
-        "<Media role=" + JSON.stringify(role) +
-        ' layout="stack"' +
-        " media={" + jsLit(mediaRoleMap) + "} />"
-      );
-    });
-  }
-
-  return parts.filter(Boolean).join("\n\n");
 }
 
 function renderA11yRefs(defaults) {
@@ -540,11 +584,8 @@ module.exports = {
   escapeMdxPlaceholders: escapeMdxPlaceholders,
   renderMarkdownTable: renderMarkdownTable,
   renderOverview: renderOverview,
-  renderAnatomy: renderAnatomy,
-  renderVariantsTable: renderVariantsTable,
-  renderMotion: renderMotion,
+  renderDesignSections: renderDesignSections,
   renderContentDomain: renderContentDomain,
-  renderDesignDomain: renderDesignDomain,
   renderA11yRefs: renderA11yRefs,
   renderConfidenceChips: renderConfidenceChips,
   renderMediaPreview: renderMediaPreview,

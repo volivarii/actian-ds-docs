@@ -54,12 +54,9 @@ var VALID_RENDERER_KEYS = new Set([
   "overview",
   "categoryUsageBaseline",
   "contentDomain",
-  "designDomain",
-  "anatomy",
-  "motion",
+  "designSections",
   "a11yRefs",
   "globalA11yLink",
-  "variantsTable",
   "tokensPlaceholder",
   "apiPlaceholder",
   "resources",
@@ -266,24 +263,14 @@ function buildComponent(slug, entry, guideline, defaults, registry, opts) {
   // "" when the component carries no confidence data.
   var confidenceHtml = renderMdx.renderConfidenceChips(defaults, contentDomain);
 
-  var designDomain = guideline && guideline.domains && guideline.domains.design;
-  var hasDesign = !!(designDomain
-    && Array.isArray(designDomain.sections)
-    && (designDomain.status === "approved"
-        || designDomain.status === "draft"
-        || designDomain.status === "synthesized"));
-
   var RENDERERS = {
     mediaPreview:          function () { return renderMdx.renderMediaPreview(slug); },
     overview:              function () { return renderMdx.renderOverview(entry); },
     categoryUsageBaseline: function () { return renderCategoryUsageBaseline(defaults); },
     contentDomain:         function () { return hasContent ? renderMdx.renderContentDomain(contentDomain, WARNINGS) : ""; },
-    designDomain:          function () { return hasDesign ? renderMdx.renderDesignDomain(designDomain, slug, WARNINGS) : ""; },
-    anatomy:               function () { return renderMdx.renderAnatomy(defaults); },
-    motion:                function () { return renderMdx.renderMotion(defaults); },
+    designSections:        function () { return renderMdx.renderDesignSections(entry, defaults, guideline, slug, WARNINGS); },
     a11yRefs:              function () { return renderMdx.renderA11yRefs(defaults); },
     globalA11yLink:        function () { return renderGlobalA11yLink(); },
-    variantsTable:         function () { return renderMdx.renderVariantsTable(entry, defaults); },
     tokensPlaceholder:     function () { return renderTokensPlaceholder(); },
     apiPlaceholder:        function () { return renderApiPlaceholder(entry); },
     resources:             function () { return renderMdx.renderResources(slug, entry, registry, guideline); },
