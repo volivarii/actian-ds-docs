@@ -56,7 +56,8 @@
   --sl-color-search-icon: var(--zen-color-text-secondary);
 
   /* Layout — wide pane for token tables; sidebar gets a touch more room. */
-  --sl-content-width: 64rem;
+  --sl-content-width: 72rem;
+  --sl-innercontent-width: 64rem;
   --sl-sidebar-width: 16rem;
   --sl-nav-height: 3.75rem;
 
@@ -120,7 +121,48 @@ site-search button {
   font-size: 0.8125rem !important;
 }
 
+/* Content Panels (main sections) override */
+.content-panel:first-child {
+  padding-bottom: 0;
+}
+.content-panel+.content-panel {
+    border-top: none;
+    padding-top: 0;
+}
+
+/* Main container margins */
+.main-pane .sl-container {
+  margin-inline: auto;
+  max-width: var(--sl-innercontent-width);
+}
+
+/* Prev/Next overrides */
+.pagination-links {
+  border-top: 1px solid var(--zen-color-neutral-100);
+}
+.pagination-links a {
+  border: none;
+  border-radius: 0.5rem;
+  padding: 1rem 0;
+  text-decoration: none;
+  color: var(--zen-color-primary-700);
+  box-shadow: none;
+}
+.pagination-links a .link-title{
+  color: var(--zen-color-primary-700);
+  font-size: var(--sl-text-xl);
+}
+
+
+/* Toc "top" removal */
+starlight-toc nav ul > li:first-child {
+  display: none !important;
+}
+
 /* Sidebar — tighter, editorial. */
+.sidebar-pane {
+  border-inline-end: 1px solid var(--zen-color-neutral-100);
+}
 .sidebar-content {
   font-size: 0.8125rem;
 }
@@ -132,6 +174,9 @@ site-search button {
   text-transform: uppercase !important;
   letter-spacing: 0.08em !important;
   opacity: 1 !important;
+}
+.sidebar-content details ul > li {
+  border-inline-start: 1px solid var(--zen-color-neutral-100);
 }
 
 /* Nested sidebar items — comfortable, readable. */

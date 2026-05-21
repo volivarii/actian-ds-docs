@@ -26,12 +26,13 @@ test("4 tabs in expected order", () => {
   assert.deepEqual(slugs, ["overview", "content", "accessibility", "code"]);
 });
 
-test("overview tab carries the merged renderers + new mediaPreview slot", () => {
+test("overview tab renderer order (confidence is page metadata, not a body renderer)", () => {
   const overview = config.tabs.find((t) => t.slug === "overview");
+  // confidenceChips is no longer a body renderer — confidence chips render
+  // into the PageMetadata header meta row. See generate-component-pages.cjs.
   assert.deepEqual(overview.renderers, [
-    "confidenceChips",
-    "mediaPreview",
     "overview",
+    "mediaPreview",
     "anatomy",
     "variantsTable",
     "motion",

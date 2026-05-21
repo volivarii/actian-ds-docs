@@ -26,7 +26,7 @@ test("every entry maps /design/ or /usage/ to an anchor on the parent page", fun
   Object.entries(m).forEach(function (pair) {
     var from = pair[0]; var to = pair[1];
     assert.match(from, /\/(design|usage)\/$/);
-    assert.match(to, /#(anatomy|usage)$/);
+    assert.match(to, /#(anatomy|when-to-use)$/);
     // From and To should share the same base path (everything up to and
     // including the slug).
     var base = from.replace(/\/(design|usage)\/$/, "/");

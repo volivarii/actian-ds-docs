@@ -35,6 +35,12 @@ export default defineConfig({
         "./src/styles/docs-chrome.css",
       ],
       pagefind: true,
+      // Renders Starlight's native footer "Last updated" line. Tracked pages
+      // (foundations, category indexes) get the date from git; generated
+      // component tab pages are untracked, so generate-component-pages.cjs
+      // writes an explicit `lastUpdated` frontmatter date from the knowledge
+      // guideline's updated_at — Starlight uses that instead of git.
+      lastUpdated: true,
       components: {
         ThemeSelect: "./src/components/empty.astro",
       },

@@ -6,9 +6,8 @@
       "isIndex": true,
       "domains": ["design", "behavior", "usage"],
       "renderers": [
-        "confidenceChips",
-        "mediaPreview",
         "overview",
+        "mediaPreview",
         "anatomy",
         "variantsTable",
         "motion",
