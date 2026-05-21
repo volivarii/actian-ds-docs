@@ -196,18 +196,20 @@ test("buildSidebarManifest: emoji-less labels are unchanged", function () {
   assert.equal(manifest[0].label, "Button");
 });
 
-test("overview tab body uses markdown H2s for anatomy/variants/motion/usage", function () {
+test("overview tab body uses markdown H2s for anatomy/variants/behavior/usage", function () {
   var out = gen.buildComponent("button", REG.components.button, BTN_GUIDE, null, REG);
   var body = out.files["index.mdx"];
   // Section headings MUST be markdown `##`, never raw <h2 id="..."> elements:
   // Starlight's "On this page" ToC only collects markdown headings. Raw <h2>
   // JSX in MDX is invisible to it — that left the Overview ToC showing just
   // "Resources". Markdown headings auto-slug to the same ids (Anatomy→anatomy,
-  // Variants→variants, Motion→motion); "When to use"→"when-to-use" — the
-  // /usage/ redirect in writeRedirectsManifest targets that fragment.
+  // Variants→variants); "When to use"→"when-to-use" — the /usage/ redirect in
+  // writeRedirectsManifest targets that fragment. The canonical section model
+  // folds motion into the Behavior section, so <MotionPattern> renders under
+  // `## Behavior` (Behavior→behavior) rather than a standalone `## Motion`.
   if (/<Anatomy /.test(body))       assert.match(body, /^## Anatomy$/m);
   if (/<VariantMatrix /.test(body)) assert.match(body, /^## Variants$/m);
-  if (/<MotionPattern /.test(body)) assert.match(body, /^## Motion$/m);
+  if (/<MotionPattern /.test(body)) assert.match(body, /^## Behavior$/m);
   if (/When to use/.test(body))     assert.match(body, /^## When to use$/m);
   // Regression guard: no raw <h2> heading markup anywhere in the page.
   assert.doesNotMatch(body, /<h2[ >]/);
