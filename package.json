@@ -1,7 +1,7 @@
 {
   "name": "actian-ds-docs",
   "type": "module",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "engines": {
     "node": ">=22.12.0"
   },
@@ -14,7 +14,7 @@
     "build:check": "CHECK_LINKS=1 SITE_BASE=/ npm run build",
     "preview": "astro preview",
     "astro": "astro",
-    "test": "node --test tests/lib/paths.test.cjs tests/lib/category-defaults-loader.test.cjs tests/validation/validate-build.test.cjs tests/vendor/version-range-resolution.test.cjs tests/generator/category-pages.test.cjs tests/generator/redirects-manifest.test.cjs tests/generator/component-pages-tabs.test.cjs tests/lib/mdx-escape.test.cjs tests/components/component-tab-href.test.mjs tests/components/slugify-category.test.mjs tests/components/token-table-cell.test.mjs tests/components/token-scale-flatten.test.mjs tests/lib/import-prefix.test.cjs tests/components/base-url.test.mjs tests/components/media-asset.test.mjs tests/components/render-media-preview.test.cjs tests/components/media-role.test.mjs tests/components/render-design-domain.test.cjs",
+    "test": "node --test tests/lib/paths.test.cjs tests/lib/category-defaults-loader.test.cjs tests/validation/validate-build.test.cjs tests/vendor/version-range-resolution.test.cjs tests/generator/category-pages.test.cjs tests/generator/redirects-manifest.test.cjs tests/generator/component-pages-tabs.test.cjs tests/lib/mdx-escape.test.cjs tests/components/component-tab-href.test.mjs tests/components/slugify-category.test.mjs tests/components/token-table-cell.test.mjs tests/components/token-scale-flatten.test.mjs tests/lib/import-prefix.test.cjs tests/components/base-url.test.mjs tests/components/media-asset.test.mjs tests/components/render-media-preview.test.cjs tests/components/media-role.test.mjs tests/components/render-design-sections.test.cjs",
     "validate": "node scripts/validation/validate-build.cjs"
   },
   "dependencies": {

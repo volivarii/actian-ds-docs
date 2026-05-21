@@ -8,10 +8,7 @@
       "renderers": [
         "overview",
         "mediaPreview",
-        "anatomy",
-        "variantsTable",
-        "motion",
-        "designDomain",
+        "designSections",
         "categoryUsageBaseline",
         "resources"
       ]
