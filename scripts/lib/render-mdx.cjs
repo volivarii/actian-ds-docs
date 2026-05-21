@@ -115,6 +115,10 @@ function renderMarkdownTable(headers, rows) {
   return lines.join("\n");
 }
 
+// The canonical set of roles that the design domain uses. Used by
+// renderDesignDomain to decide which roles to auto-append.
+var DESIGN_DOMAIN_ROLES = ["parts", "variations", "spacing", "behavior", "layout"];
+
 // content[] items come from the knowledge repo's guideline-md-parser in
 // these shapes (current schema; see actian-ds-knowledge/schemas/guideline-
 // component.json $defs.contentItem):
@@ -126,6 +130,7 @@ function renderMarkdownTable(headers, rows) {
 //   - { term, rule|definition }               ← terminology table rows
 //   - { table: { headers, rows } }            ← generic table
 //   - { example } | { examples: [strings] }   ← code/example blocks
+//   - { media: { role, layout } }             ← Bucket C design-domain media
 //   - string                                  ← LEGACY bullet (pre-prose
 //                                               parser); kept for backwards
 //                                               compatibility with old JSON
@@ -140,8 +145,18 @@ function renderMarkdownTable(headers, rows) {
 // Different types adjacent to each other emit as separate blocks, preserving
 // authored order. This matches universal precedent (Primer, Polaris, Carbon,
 // Starlight, Markdoc): the renderer never reorders blocks within a section.
-function renderContentItems(items, headingForDiag, WARNINGS) {
+//
+// opts.mediaRoleMap  — the component's role→path map from the media index;
+//                      required to render { media } items. When absent, any
+//                      { media } items in items[] are treated as unknown shapes.
+// opts.seenMediaRoles — a Set<string> that this function MUTATES to record
+//                       which roles were rendered via authored { media } items.
+//                       Used by renderDesignDomain for the auto-append pass.
+function renderContentItems(items, headingForDiag, WARNINGS, opts) {
   if (!items || !items.length) return "";
+  opts = opts || {};
+  var mediaRoleMap = opts.mediaRoleMap || null;
+  var seenMediaRoles = opts.seenMediaRoles || null;
 
   function isPair(it) { return it && typeof it === "object" && it.do && it.dont; }
   function isSoloDo(it) {
@@ -261,6 +276,26 @@ function renderContentItems(items, headingForDiag, WARNINGS) {
         parts.push(escapeMdxPlaceholders(it.rule));
         i++; continue;
       }
+      if (it.media && typeof it.media === "object" && typeof it.media.role === "string") {
+        // Bucket C: design-domain media directive.
+        // Requires a mediaRoleMap injected by renderDesignDomain. If none is
+        // available (item appears outside a design-domain render path), fall
+        // through to the unknown bucket so the warning fires.
+        if (mediaRoleMap) {
+          var mRole = it.media.role;
+          var mLayout = it.media.layout || "stack";
+          parts.push(
+            "<Media role=" + JSON.stringify(mRole) +
+            " layout=" + JSON.stringify(mLayout) +
+            " media={" + jsLit(mediaRoleMap) + "} />"
+          );
+          if (seenMediaRoles) seenMediaRoles.add(mRole);
+          i++; continue;
+        }
+        // mediaRoleMap absent — record as unknown so the warning fires.
+        unknown.push(it);
+        i++; continue;
+      }
       unknown.push(it);
     }
     i++;
@@ -278,14 +313,15 @@ function renderContentItems(items, headingForDiag, WARNINGS) {
 // Render one domains.content section: an H3 heading (skipped when empty —
 // the parser emits an untitled lead section before the first heading) plus
 // its content[], plus one reserved level of `subsections` (H4).
-function renderContentSection(s, WARNINGS) {
+// opts — forwarded to renderContentItems (e.g. { mediaRoleMap, seenMediaRoles }).
+function renderContentSection(s, WARNINGS, opts) {
   var parts = [];
   if (s.heading) parts.push("### " + s.heading);
-  var body = renderContentItems(s.content, s.heading, WARNINGS);
+  var body = renderContentItems(s.content, s.heading, WARNINGS, opts);
   if (body) parts.push(body);
   (s.subsections || []).forEach(function (sub) {
     if (sub.subheading) parts.push("#### " + sub.subheading);
-    var subBody = renderContentItems(sub.content, sub.subheading, WARNINGS);
+    var subBody = renderContentItems(sub.content, sub.subheading, WARNINGS, opts);
     if (subBody) parts.push(subBody);
   });
   return parts.join("\n\n");
@@ -347,6 +383,49 @@ function renderContentDomain(contentDomain, WARNINGS) {
   return "## Content guidelines\n\n" + contentDomain.sections.map(function (s) {
     return renderContentSection(s, WARNINGS);
   }).join("\n\n");
+}
+
+// Render the design domain's sections[], wiring { media } items to <Media>
+// components and auto-appending <Media> for roles present in the component's
+// media index but not referenced by any authored { media } item.
+//
+// slug         — component slug; used to look up the role map in _mediaIndex.
+// WARNINGS     — shared warning counters (unknownContentShapes etc.).
+function renderDesignDomain(designDomain, slug, WARNINGS) {
+  if (!designDomain) return "";
+
+  // Resolve the component's role map from the module-level media index.
+  // mediaRoleMap is the full role→path(s) map for this component (or null
+  // when the index is absent / the component has no entry).
+  var mediaRoleMap = null;
+  if (_mediaIndex && _mediaIndex.media && _mediaIndex.media[slug]) {
+    mediaRoleMap = _mediaIndex.media[slug];
+  }
+
+  // Track which roles were covered by authored { media } items so we can
+  // auto-append the uncovered ones afterward.
+  var seenMediaRoles = new Set();
+  var opts = { mediaRoleMap: mediaRoleMap, seenMediaRoles: seenMediaRoles };
+
+  var parts = (designDomain.sections || []).map(function (s) {
+    return renderContentSection(s, WARNINGS, opts);
+  });
+
+  // Auto-append <Media> for design-domain roles that are present in the
+  // component's media index but were NOT covered by an authored { media } item.
+  if (mediaRoleMap) {
+    DESIGN_DOMAIN_ROLES.forEach(function (role) {
+      if (seenMediaRoles.has(role)) return;            // already rendered
+      if (!(role in mediaRoleMap)) return;             // not in index
+      parts.push(
+        "<Media role=" + JSON.stringify(role) +
+        ' layout="stack"' +
+        " media={" + jsLit(mediaRoleMap) + "} />"
+      );
+    });
+  }
+
+  return parts.filter(Boolean).join("\n\n");
 }
 
 function renderA11yRefs(defaults) {
@@ -465,6 +544,7 @@ module.exports = {
   renderVariantsTable: renderVariantsTable,
   renderMotion: renderMotion,
   renderContentDomain: renderContentDomain,
+  renderDesignDomain: renderDesignDomain,
   renderA11yRefs: renderA11yRefs,
   renderConfidenceChips: renderConfidenceChips,
   renderMediaPreview: renderMediaPreview,
