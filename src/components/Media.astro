@@ -1,0 +1,45 @@
+---
+// Renders one or more captured Figma images for a component role.
+// `media` is the component's role→path map from vendor/components/dist/media/_index.json.
+// resolveMediaPaths returns public-rooted "/media/<slug>/…" paths;
+// BASE-prefixing is delegated to MediaAsset.
+
+import { resolveMediaPaths } from "../lib/resolve-media-paths.mjs";
+import MediaAsset from "./MediaAsset.astro";
+
+interface Props {
+  role: string;
+  layout?: "stack" | "grid" | "inline";
+  media: Record<string, string | string[]>;
+}
+
+const { role, layout, media } = Astro.props;
+
+const publicPaths = resolveMediaPaths(media, role);
+---
+
+{publicPaths.length > 0 && (
+  <div class:list={["actian-media-group", layout || "stack"]}>
+    {publicPaths.map((path) => (
+      <MediaAsset src={path} />
+    ))}
+  </div>
+)}
+
+<style>
+  .actian-media-group.stack {
+    display: block;
+  }
+
+  .actian-media-group.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+  }
+
+  .actian-media-group.inline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+</style>
