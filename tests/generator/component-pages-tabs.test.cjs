@@ -196,17 +196,21 @@ test("buildSidebarManifest: emoji-less labels are unchanged", function () {
   assert.equal(manifest[0].label, "Button");
 });
 
-test("overview tab body carries anchor IDs on anatomy/variants/motion/usage H2s", function () {
+test("overview tab body uses markdown H2s for anatomy/variants/motion/usage", function () {
   var out = gen.buildComponent("button", REG.components.button, BTN_GUIDE, null, REG);
   var body = out.files["index.mdx"];
-  // MDX-native syntax: explicit <h2 id="..."> elements (NOT `## Title {#id}`,
-  // which acorn interprets as a JSX expression and breaks the build).
-  // Starlight's TOC picks up HTML h2 elements with id attributes the same
-  // way it does markdown headings.
-  if (/<Anatomy /.test(body))      assert.match(body, /<h2 id="anatomy">Anatomy<\/h2>/);
-  if (/<VariantMatrix /.test(body)) assert.match(body, /<h2 id="variants">Variants<\/h2>/);
-  if (/<MotionPattern /.test(body)) assert.match(body, /<h2 id="motion">Motion<\/h2>/);
-  if (/When to use/.test(body))    assert.match(body, /<h2 id="usage">When to use<\/h2>/);
+  // Section headings MUST be markdown `##`, never raw <h2 id="..."> elements:
+  // Starlight's "On this page" ToC only collects markdown headings. Raw <h2>
+  // JSX in MDX is invisible to it — that left the Overview ToC showing just
+  // "Resources". Markdown headings auto-slug to the same ids (Anatomy→anatomy,
+  // Variants→variants, Motion→motion); "When to use"→"when-to-use" — the
+  // /usage/ redirect in writeRedirectsManifest targets that fragment.
+  if (/<Anatomy /.test(body))       assert.match(body, /^## Anatomy$/m);
+  if (/<VariantMatrix /.test(body)) assert.match(body, /^## Variants$/m);
+  if (/<MotionPattern /.test(body)) assert.match(body, /^## Motion$/m);
+  if (/When to use/.test(body))     assert.match(body, /^## When to use$/m);
+  // Regression guard: no raw <h2> heading markup anywhere in the page.
+  assert.doesNotMatch(body, /<h2[ >]/);
 });
 
 test("PageMetadata receives updated prop from guideline.updated_at when present", function () {

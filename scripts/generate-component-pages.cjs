@@ -36,13 +36,20 @@ var { buildSidebarManifest } = require("./lib/sidebar-manifest.cjs");
 // per-occurrence detail during build.
 var WARNINGS = { unknownContentShapes: 0, unparseableGuidelines: 0 };
 
+// Fallback "last updated" date for the Starlight footer: components without a
+// guideline updated_at (stubs) fall back to the knowledge vendor-snapshot date
+// — the same fallback PageMetadata.astro uses for the actian-ds-updated meta.
+var VENDORED = require(path.resolve(__dirname, "..", "vendored.json"));
+var VENDORED_DATE = /^\d{4}-\d{2}-\d{2}/.test(String(VENDORED.vendored_at || ""))
+  ? String(VENDORED.vendored_at).slice(0, 10)
+  : null;
+
 // Canonical list of valid renderer keys. Must match the keys of the
 // RENDERERS object built in buildComponent() below. Boot assertion (see
 // validateRendererConfig()) ensures component-tabs.config.json never
 // references a key absent from this list — silent-stub fallback was the
 // root of a debugging session worth ~half a day.
 var VALID_RENDERER_KEYS = new Set([
-  "confidenceChips",
   "mediaPreview",
   "overview",
   "categoryUsageBaseline",
@@ -125,7 +132,10 @@ function slugifyCategory(label) {
 
 function renderCategoryUsageBaseline(defaults) {
   if (!defaults || !defaults.card_usage || !Array.isArray(defaults.card_usage.points)) return "";
-  return '<h2 id="usage">When to use</h2>\n\n' + defaults.card_usage.points
+  // Markdown heading (not raw <h2>) so it lands in Starlight's ToC.
+  // "When to use" auto-slugs to id="when-to-use" — the /usage/ redirect
+  // below targets that fragment.
+  return "## When to use\n\n" + defaults.card_usage.points
     .map(function (p) { return "- " + renderMdx.escapeMdxPlaceholders(p); }).join("\n");
 }
 
@@ -148,6 +158,13 @@ function renderApiPlaceholder(entry) {
 // ---------------------------------------------------------------------------
 
 function renderTabMdx(ctx) {
+  // Date-only (YYYY-MM-DD) form of the guideline's updated_at. Guard: only
+  // trust the value when it has an ISO-8601 prefix — a malformed value sliced
+  // blind would become garbage. null when absent/malformed.
+  var dateOnly = ctx.updated && /^\d{4}-\d{2}-\d{2}/.test(String(ctx.updated))
+    ? String(ctx.updated).slice(0, 10)
+    : null;
+
   var fm = [
     "---",
     "title: " + JSON.stringify(ctx.title),
@@ -157,6 +174,13 @@ function renderTabMdx(ctx) {
     "component: " + JSON.stringify(ctx.slug),
     "status: " + JSON.stringify(ctx.status),
   ];
+  // Starlight's footer "Last updated" reads this frontmatter date (these
+  // generated pages are untracked, so git-based detection would be wrong).
+  // Stubs with no guideline date fall back to the vendor-snapshot date.
+  var lastUpdated = dateOnly || VENDORED_DATE;
+  if (lastUpdated) {
+    fm.push("lastUpdated: " + lastUpdated);
+  }
   if (!ctx.isIndex) {
     fm.push("sidebar: { hidden: true }");
   }
@@ -175,14 +199,18 @@ function renderTabMdx(ctx) {
     '  source="components/dist/registries/dskit.json#' + ctx.slug + '"',
     "  schema={1}",
   ];
-  if (ctx.updated) {
-    // Render date-only (YYYY-MM-DD), not full ISO.
-    var raw = String(ctx.updated);
-    // Guard: only emit `updated="..."` if the value looks ISO-8601 (YYYY-MM-DD prefix).
-    // A malformed value silently becomes garbage if sliced blind, so we drop the prop
-    // entirely when the prefix doesn't match.
-    var dateOnly = /^\d{4}-\d{2}-\d{2}/.test(raw) ? raw.slice(0, 10) : null;
-    if (dateOnly) pageMetaProps.push('  updated="' + dateOnly + '"');
+  // Mirrors the frontmatter date into the actian-ds-updated <meta> tag.
+  if (dateOnly) pageMetaProps.push('  updated="' + dateOnly + '"');
+
+  // Confidence chips ride in the PageMetadata slot — the page header meta
+  // row pairs them (left) with "Last updated" (right). See PageMetadata.astro.
+  // When absent (no confidence data, or a non-index tab) PageMetadata is
+  // emitted self-closing and the row carries just the updated line.
+  var pageMetadataLines = ["<PageMetadata"].concat(pageMetaProps);
+  if (ctx.confidenceHtml && ctx.confidenceHtml.trim() !== "") {
+    pageMetadataLines = pageMetadataLines.concat([">", ctx.confidenceHtml, "</PageMetadata>"]);
+  } else {
+    pageMetadataLines = pageMetadataLines.concat(["/>"]);
   }
 
   return [
@@ -190,9 +218,7 @@ function renderTabMdx(ctx) {
     "",
     imports,
     "",
-    "<PageMetadata",
-  ].concat(pageMetaProps).concat([
-    "/>",
+  ].concat(pageMetadataLines).concat([
     "",
     "<ComponentTabs component={" + JSON.stringify(ctx.slug) + "} activeTab={" + JSON.stringify(ctx.tabSlug) + "} />",
     "",
@@ -234,8 +260,12 @@ function buildComponent(slug, entry, guideline, defaults, registry, opts) {
         || contentDomain.status === "synthesized"));
   var categorySlug = slugifyCategory(entry.category);
 
+  // Confidence chips are component-level metadata, not a tab-body section:
+  // they render into the page header meta row via the PageMetadata slot.
+  // "" when the component carries no confidence data.
+  var confidenceHtml = renderMdx.renderConfidenceChips(defaults, contentDomain);
+
   var RENDERERS = {
-    confidenceChips:       function () { return renderMdx.renderConfidenceChips(defaults, contentDomain); },
     mediaPreview:          function () { return renderMdx.renderMediaPreview(slug); },
     overview:              function () { return renderMdx.renderOverview(entry); },
     categoryUsageBaseline: function () { return renderCategoryUsageBaseline(defaults); },
@@ -299,6 +329,10 @@ function buildComponent(slug, entry, guideline, defaults, registry, opts) {
       status: tabStatus,
       body: body,
       updated: guideline && guideline.updated_at,
+      // Confidence is component-level metadata — show the chips on every tab
+      // so the header meta row stays consistent as the user moves between
+      // Overview / Content / Accessibility / Code.
+      confidenceHtml: confidenceHtml,
     });
   });
   return { files: files };
@@ -584,7 +618,7 @@ function main() {
   // entries from this JSON. Astro picks the manifest up via an import at the
   // top of astro.config.mjs (added in this task).
   //   /<base>/design/ → /<base>/#anatomy   (Anatomy is the upstream design-domain heading)
-  //   /<base>/usage/  → /<base>/#usage     (When to use heading on Overview)
+  //   /<base>/usage/  → /<base>/#when-to-use  (When to use heading on Overview)
   var redirects = {};
   Object.entries(registry.components).forEach(function (pair) {
     var slug = pair[0];
@@ -603,7 +637,7 @@ function main() {
     parts.push(slug);
     var base = "/" + parts.join("/") + "/";
     redirects[base + "design/"] = base + "#anatomy";
-    redirects[base + "usage/"]  = base + "#usage";
+    redirects[base + "usage/"]  = base + "#when-to-use";
   });
   var redirectsPath = path.join(__dirname, "..", "src", "data", "redirects-manifest.json");
   fs.writeFileSync(redirectsPath, JSON.stringify(redirects, null, 2) + "\n");

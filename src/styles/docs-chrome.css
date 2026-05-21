@@ -217,8 +217,6 @@ footer .meta {
   margin: 8px 0 28px;
   align-items: center;
   padding-bottom: 16px;
-  border-bottom: 1px solid
-    var(--zen-color-neutral-100, var(--zen-border-default));
 }
 .confidence-row__label {
   font-size: 0.625rem;
@@ -228,6 +226,7 @@ footer .meta {
   letter-spacing: 0.1em;
   margin-right: 6px;
 }
+
 .confidence-chip {
   display: inline-flex;
   align-items: center;
@@ -567,10 +566,11 @@ button[data-open-modal] {
   display: inline-block;
   padding: 8px 12px;
   border-bottom: 2px solid transparent;
-  font-size: 0.8125rem;
+  font-size: 1rem;
   font-weight: 500;
   color: var(--zen-color-text-secondary);
   text-decoration: none !important;
+  text
   transition:
     color var(--transition-base) var(--motion-easing-standard),
     border-color var(--transition-base) var(--motion-easing-standard);

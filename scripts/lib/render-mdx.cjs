@@ -300,12 +300,18 @@ function renderContentSection(s, WARNINGS) {
 function renderOverview(entry) {
   var overviewText = (entry.description && entry.description.trim()) || "";
   if (!overviewText) return "";
-  return "## Overview\n\n" + escapeMdxPlaceholders(overviewText);
+  // Collapse internal whitespace/newlines: the description renders inside a
+  // single <p>, and an embedded blank line ends the MDX paragraph before the
+  // closing </p> is seen ("Expected a closing tag for <p>" parse error).
+  overviewText = overviewText.replace(/\s+/g, " ");
+  return '<p class="component-description">' + escapeMdxPlaceholders(overviewText) + "</p>";
 }
 
 function renderAnatomy(defaults) {
   if (!(defaults && defaults.card_anatomy && Array.isArray(defaults.card_anatomy.parts) && defaults.card_anatomy.parts.length)) return "";
-  return '<h2 id="anatomy">Anatomy</h2>\n\n<Anatomy parts={' + jsLit(defaults.card_anatomy.parts) + '} />';
+  // Markdown heading (not raw <h2>): only markdown headings are collected
+  // into Starlight's "On this page" ToC. The id auto-slugs to "anatomy".
+  return '## Anatomy\n\n<Anatomy parts={' + jsLit(defaults.card_anatomy.parts) + '} />';
 }
 
 function renderVariantsMatrix(entry, defaults) {
@@ -313,10 +319,10 @@ function renderVariantsMatrix(entry, defaults) {
     var axes = Object.entries(entry.variants).map(function (pair) {
       return { axis: pair[0], values: pair[1] };
     });
-    return '<h2 id="variants">Variants</h2>\n\n<VariantMatrix variantAxes={' + jsLit(axes) + '} />';
+    return '## Variants\n\n<VariantMatrix variantAxes={' + jsLit(axes) + '} />';
   }
   if (defaults && defaults.card_component && Array.isArray(defaults.card_component.variantAxes) && defaults.card_component.variantAxes.length) {
-    return '<h2 id="variants">Variants</h2>\n\n<VariantMatrix variantAxes={' + jsLit(defaults.card_component.variantAxes) + '} />';
+    return '## Variants\n\n<VariantMatrix variantAxes={' + jsLit(defaults.card_component.variantAxes) + '} />';
   }
   return "";
 }
@@ -333,7 +339,7 @@ function renderMotion(defaults) {
   var resolved = defaults.card_motion.patternRefs.map(function (r) {
     return { ref: r, pattern: loader.resolveMotionRef(r.ref) };
   });
-  return '<h2 id="motion">Motion</h2>\n\n<MotionPattern resolvedPatterns={' + jsLit(resolved) + '} />';
+  return '## Motion\n\n<MotionPattern resolvedPatterns={' + jsLit(resolved) + '} />';
 }
 
 function renderContentDomain(contentDomain, WARNINGS) {
