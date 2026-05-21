@@ -36,6 +36,7 @@ test("overview tab renderer order (confidence is page metadata, not a body rende
     "anatomy",
     "variantsTable",
     "motion",
+    "designDomain",
     "categoryUsageBaseline",
     "resources",
   ]);

@@ -54,6 +54,7 @@ var VALID_RENDERER_KEYS = new Set([
   "overview",
   "categoryUsageBaseline",
   "contentDomain",
+  "designDomain",
   "anatomy",
   "motion",
   "a11yRefs",
@@ -189,7 +190,7 @@ function renderTabMdx(ctx) {
   var imports = [
     "Anatomy", "VariantMatrix", "MotionPattern", "AccessibilityRefs",
     "PageMetadata", "StubFooter", "DoDont", "Callout", "TermList",
-    "ComponentTabs", "ConfidenceChip", "MediaAsset",
+    "ComponentTabs", "ConfidenceChip", "MediaAsset", "Media",
   ].map(function (name) {
     return 'import ' + name + ' from "' + ctx.importPrefix + "/" + name + '.astro";';
   }).join("\n");
@@ -265,11 +266,19 @@ function buildComponent(slug, entry, guideline, defaults, registry, opts) {
   // "" when the component carries no confidence data.
   var confidenceHtml = renderMdx.renderConfidenceChips(defaults, contentDomain);
 
+  var designDomain = guideline && guideline.domains && guideline.domains.design;
+  var hasDesign = !!(designDomain
+    && Array.isArray(designDomain.sections)
+    && (designDomain.status === "approved"
+        || designDomain.status === "draft"
+        || designDomain.status === "synthesized"));
+
   var RENDERERS = {
     mediaPreview:          function () { return renderMdx.renderMediaPreview(slug); },
     overview:              function () { return renderMdx.renderOverview(entry); },
     categoryUsageBaseline: function () { return renderCategoryUsageBaseline(defaults); },
     contentDomain:         function () { return hasContent ? renderMdx.renderContentDomain(contentDomain, WARNINGS) : ""; },
+    designDomain:          function () { return hasDesign ? renderMdx.renderDesignDomain(designDomain, slug, WARNINGS) : ""; },
     anatomy:               function () { return renderMdx.renderAnatomy(defaults); },
     motion:                function () { return renderMdx.renderMotion(defaults); },
     a11yRefs:              function () { return renderMdx.renderA11yRefs(defaults); },
