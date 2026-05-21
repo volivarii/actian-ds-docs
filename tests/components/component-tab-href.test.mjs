@@ -26,17 +26,16 @@ test("4 tabs in expected order", () => {
   assert.deepEqual(slugs, ["overview", "content", "accessibility", "code"]);
 });
 
-test("overview tab renderer order (confidence is page metadata, not a body renderer)", () => {
+test("overview tab renderer order (canonical section model — four topic renderers merged into designSections)", () => {
   const overview = config.tabs.find((t) => t.slug === "overview");
-  // confidenceChips is no longer a body renderer — confidence chips render
-  // into the PageMetadata header meta row. See generate-component-pages.cjs.
+  // anatomy + variantsTable + motion + designDomain collapsed into a single
+  // designSections renderer (Task B1). confidenceChips is no longer a body
+  // renderer — confidence chips render into the PageMetadata header meta row.
+  // See generate-component-pages.cjs.
   assert.deepEqual(overview.renderers, [
     "overview",
     "mediaPreview",
-    "anatomy",
-    "variantsTable",
-    "motion",
-    "designDomain",
+    "designSections",
     "categoryUsageBaseline",
     "resources",
   ]);
