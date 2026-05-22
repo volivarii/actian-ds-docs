@@ -315,7 +315,10 @@ function buildComponent(slug, entry, guideline, defaults, registry, opts) {
     var filename = tab.isIndex ? "index.mdx" : (tab.slug + ".mdx");
     files[filename] = renderTabMdx({
       title: entry.name || slug,
-      description: (entry.description && entry.description.trim())
+      // Collapsed to one line: this feeds the YAML frontmatter / <meta>
+      // description, which must stay flat. The Overview body keeps the
+      // original line structure via renderOverview.
+      description: (entry.description && entry.description.trim().replace(/\s+/g, " "))
         || ("Component documentation for " + (entry.name || slug) + " — " + tab.label + "."),
       isIndex: !!tab.isIndex,
       importPrefix: importPrefix,

@@ -439,13 +439,28 @@ function renderDesignSections(entry, defaults, guideline, slug, WARNINGS) {
 // ---------------------------------------------------------------------------
 
 function renderOverview(entry) {
-  var overviewText = (entry.description && entry.description.trim()) || "";
-  if (!overviewText) return "";
-  // Collapse internal whitespace/newlines: the description renders inside a
-  // single <p>, and an embedded blank line ends the MDX paragraph before the
-  // closing </p> is seen ("Expected a closing tag for <p>" parse error).
-  overviewText = overviewText.replace(/\s+/g, " ");
-  return '<p class="component-description">' + escapeMdxPlaceholders(overviewText) + "</p>";
+  var raw = (entry.description && entry.description.trim()) || "";
+  if (!raw) return "";
+  // Figma descriptions carry paragraph breaks (blank lines) and single line
+  // breaks; the REST sync preserves them as \n. Emit one <p> per paragraph
+  // and a single \n as <br/>. Each <p> is a self-contained inline JSX element
+  // on its own line — that parses in MDX; a blank line *inside* one <p> does
+  // not, which is why intra-line runs are the only whitespace collapsed.
+  return raw
+    .split(/\n{2,}/)
+    .map(function (para) {
+      var lines = para
+        .split(/\n/)
+        .map(function (l) {
+          return escapeMdxPlaceholders(l.replace(/[ \t]+/g, " ").trim());
+        })
+        .filter(Boolean);
+      return lines.length
+        ? '<p class="component-description">' + lines.join("<br />") + "</p>"
+        : "";
+    })
+    .filter(Boolean)
+    .join("\n\n");
 }
 
 function renderAnatomy(defaults) {
