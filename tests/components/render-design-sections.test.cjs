@@ -104,19 +104,30 @@ test("renderDesignSections: canonical section order is Anatomy → Variants → 
 });
 
 // ---------------------------------------------------------------------------
-// 3. Within a section, structured component markup precedes authored prose
+// 3. <Anatomy> / <VariantMatrix> are conditional placeholders — emitted only
+//    when the section has neither Figma media nor authored design.md prose.
 // ---------------------------------------------------------------------------
 
-test("renderDesignSections: structured component markup precedes authored prose within a section", function () {
+test("renderDesignSections: <Anatomy>/<VariantMatrix> suppressed when media is present", function () {
+  renderMdx.setMediaIndex({ media: { button: BUTTON_MEDIA } });
+  var WARNINGS = { unknownContentShapes: 0 };
+  var out = renderMdx.renderDesignSections(BUTTON_ENTRY, makeDefaults(), null, "button", WARNINGS);
+
+  assert.doesNotMatch(out, /<Anatomy /, "<Anatomy> must be suppressed when parts media exists");
+  assert.doesNotMatch(out, /<VariantMatrix /, "<VariantMatrix> must be suppressed when variations media exists");
+  assert.match(out, /role="parts"/, "the parts media must still render");
+  assert.match(out, /role="variations"/, "the variations media must still render");
+  resetIndex();
+});
+
+test("renderDesignSections: <Anatomy>/<VariantMatrix> suppressed when design.md prose is present (no media)", function () {
   var guideline = {
     domains: {
       design: {
         status: "draft",
         sections: [
-          {
-            heading: "Anatomy",
-            content: [{ prose: "A button has a label." }],
-          },
+          { heading: "Anatomy",  content: [{ prose: "A button has a label." }] },
+          { heading: "Variants", content: [{ prose: "Primary and Secondary." }] },
         ],
       },
     },
@@ -125,14 +136,40 @@ test("renderDesignSections: structured component markup precedes authored prose 
   var WARNINGS = { unknownContentShapes: 0 };
   var out = renderMdx.renderDesignSections(BUTTON_ENTRY, makeDefaults(), guideline, "button", WARNINGS);
 
-  var anatomyHeadingIdx = out.indexOf("## Anatomy");
-  var anatomyComponentIdx = out.indexOf("<Anatomy ", anatomyHeadingIdx);
-  var anatomyProseIdx = out.indexOf("A button has a label.", anatomyHeadingIdx);
+  assert.doesNotMatch(out, /<Anatomy /, "<Anatomy> must be suppressed when authored Anatomy prose exists");
+  assert.doesNotMatch(out, /<VariantMatrix /, "<VariantMatrix> must be suppressed when authored Variants prose exists");
+  assert.match(out, /A button has a label\./, "authored Anatomy prose must still render");
+  assert.match(out, /Primary and Secondary\./, "authored Variants prose must still render");
+  resetIndex();
+});
 
-  assert.ok(anatomyComponentIdx !== -1, "<Anatomy> component must be present");
-  assert.ok(anatomyProseIdx !== -1, "authored prose must be present");
-  assert.ok(anatomyComponentIdx < anatomyProseIdx,
-    "<Anatomy> component must appear before authored prose in the section");
+test("renderDesignSections: <Anatomy>/<VariantMatrix> emitted as placeholders when neither media nor prose exists", function () {
+  renderMdx.setMediaIndex(null);
+  var WARNINGS = { unknownContentShapes: 0 };
+  var out = renderMdx.renderDesignSections(BUTTON_ENTRY, makeDefaults(), null, "button", WARNINGS);
+
+  assert.match(out, /<Anatomy /, "<Anatomy> placeholder must render when there is no media and no prose");
+  assert.match(out, /<VariantMatrix /, "<VariantMatrix> placeholder must render when there is no media and no prose");
+  resetIndex();
+});
+
+test("renderDesignSections: <MotionPattern> is NOT conditional — renders even with Behavior media + prose", function () {
+  var guideline = {
+    domains: {
+      design: {
+        status: "draft",
+        sections: [
+          { heading: "Behavior", content: [{ prose: "Hover changes color." }] },
+        ],
+      },
+    },
+  };
+  var defaultsWithMotion = makeDefaults({ card_motion: { patternRefs: [{ ref: "fade-in" }] } });
+  renderMdx.setMediaIndex({ media: { button: BUTTON_MEDIA } });
+  var WARNINGS = { unknownContentShapes: 0 };
+  var out = renderMdx.renderDesignSections(BUTTON_ENTRY, defaultsWithMotion, guideline, "button", WARNINGS);
+
+  assert.match(out, /<MotionPattern /, "<MotionPattern> must render regardless of Behavior media or prose");
   resetIndex();
 });
 
