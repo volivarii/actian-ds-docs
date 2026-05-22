@@ -1,7 +1,10 @@
 import { config, collection, fields } from "@keystatic/core";
 
 export default config({
-  storage: { kind: "local" },
+  storage: {
+    kind: "github",
+    repo: { owner: "volivarii", name: "actian-ds-docs" },
+  },
   collections: {
     docsPage: collection({
       label: "Docs pages",
@@ -12,12 +15,14 @@ export default config({
         title: fields.slug({ name: { label: "Title" } }),
         description: fields.text({
           label: "Description",
-          description: "One-line summary — used as the page <meta> description.",
+          description:
+            "One-line summary — used as the page <meta> description.",
           multiline: false,
         }),
         navGroup: fields.text({
           label: "Nav group",
-          description: "Sidebar group this page appears under (e.g. Reference).",
+          description:
+            "Sidebar group this page appears under (e.g. Reference).",
           defaultValue: "Reference",
         }),
         body: fields.markdoc({
