@@ -1,0 +1,26 @@
+---
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import PageMetadata from "../components/PageMetadata.astro";
+import { createReader } from "@keystatic/core/reader";
+import keystaticConfig from "../../keystatic.config.tsx";
+import Markdoc from "@markdoc/markdoc";
+
+// Phase 0 spike: this page's editable prose lives in the Keystatic
+// `docsPage` collection (src/content/docs-pages/migrations.mdoc), edited
+// through the /keystatic admin. This route is a thin wrapper — it reads the
+// collection entry at build time via Keystatic's reader and renders its
+// Markdoc body inside the existing Starlight layout, so the URL and styling
+// stay unchanged.
+const reader = createReader(process.cwd(), keystaticConfig);
+const entry = await reader.collections.docsPage.read("migrations");
+if (!entry) throw new Error("docsPage entry 'migrations' not found");
+const { node } = await entry.body();
+const bodyHtml = Markdoc.renderers.html(Markdoc.transform(node));
+---
+
+<StarlightPage
+  frontmatter={{ title: entry.title, description: entry.description }}
+>
+  <PageMetadata slug="migrations" source="(hand-authored)" schema={1} />
+  <Fragment set:html={bodyHtml} />
+</StarlightPage>

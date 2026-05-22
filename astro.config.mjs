@@ -1,14 +1,44 @@
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
+import react from "@astrojs/react";
+import keystatic from "@keystatic/astro";
 import remarkCustomHeaderId from "remark-custom-header-id";
 import starlightLinksValidator from "starlight-links-validator";
 import componentsSidebar from "./src/data/components-sidebar.json";
 import brandSidebar from "./src/data/brand-sidebar.json";
 import redirectsManifest from "./src/data/redirects-manifest.json";
+import { createReader } from "@keystatic/core/reader";
+import keystaticConfig from "./keystatic.config.tsx";
+import { buildDocsPageSidebar } from "./scripts/lib/docs-page-sidebar.mjs";
 import { createRequire } from "node:module";
 
 const { SITE_URL: SITE } = createRequire(import.meta.url)("./scripts/lib/site-url.cjs");
-const BASE = process.env.SITE_BASE || "/actian-ds-docs";
+
+// Keystatic's admin route is server-rendered. The production site is a static
+// GitHub Pages build, so the admin (and the React integration it needs) is
+// gated to `astro dev` only — KEYSTATIC_ADMIN=true is set by the `dev` npm
+// script — and excluded from `astro build`, keeping the production build
+// adapter-free and fully static. The docs-page collection CONTENT still
+// renders in the static build: `createReader` reads it at build time,
+// independent of this integration.
+const KEYSTATIC_ADMIN = process.env.KEYSTATIC_ADMIN === "true";
+
+// @keystatic/astro is incompatible with Astro's `base` option: its API
+// handler strips a hard-coded root-anchored `^/api/keystatic/` prefix, which
+// never matches when the site is served under `/actian-ds-docs`. The admin
+// dev session therefore runs at base `/` — it exists only to EDIT content,
+// not to browse the site, so the base does not matter there. The production
+// build keeps `/actian-ds-docs`.
+const BASE = KEYSTATIC_ADMIN ? "/" : process.env.SITE_BASE || "/actian-ds-docs";
+
+// Auto-discover docs-page collection entries into the sidebar. Read at build
+// time via Keystatic's reader — no integration or adapter needed — so any
+// page authored through the /keystatic admin self-registers in the nav.
+const reader = createReader(process.cwd(), keystaticConfig);
+const docsPages = await reader.collections.docsPage.all();
+const docsPageGroups = buildDocsPageSidebar(
+  docsPages.map((p) => ({ slug: p.slug, data: p.entry })),
+);
 
 export default defineConfig({
   site: SITE,
@@ -74,13 +104,20 @@ export default defineConfig({
         {
           label: "Reference",
           collapsed: true,
+          // Manual entries (custom Astro pages) + docs-page collection entries
+          // with navGroup "Reference". Migrations was migrated into the
+          // collection (src/content/docs-pages/migrations.mdoc), so it is no
+          // longer hardcoded here — it auto-appends via docsPageGroups.
           items: [
             { label: "Inventory", link: "/inventory" },
             { label: "State", link: "/state" },
-            { label: "Migrations", link: "/migrations" },
             { label: "Confidence scores", link: "/confidence" },
+            ...(docsPageGroups.find((g) => g.label === "Reference")?.items ?? []),
           ],
         },
+        // docs-page collection groups other than "Reference" append as their
+        // own sidebar groups (none in Phase 0 — all entries are Reference).
+        ...docsPageGroups.filter((g) => g.label !== "Reference"),
       ],
       // Links validation is opt-in via env var so the production build (run
       // with SITE_BASE=/actian-ds-docs) stays green. The validator's strict
@@ -133,5 +170,6 @@ export default defineConfig({
           ]
         : [],
     }),
+    ...(KEYSTATIC_ADMIN ? [react(), keystatic()] : []),
   ],
 });
