@@ -348,9 +348,11 @@ function renderContentSectionBody(s, WARNINGS, opts) {
 var DESIGN_SECTIONS = [
   { key: "anatomy",  heading: "Anatomy",        mediaRole: "parts",
     aliases: ["anatomy", "parts"],
+    placeholderStructured: true,
     structured: function (entry, defaults) { return renderAnatomy(defaults); } },
   { key: "variants", heading: "Variants",        mediaRole: "variations",
     aliases: ["variants", "variations"],
+    placeholderStructured: true,
     structured: function (entry, defaults) { return renderVariantsMatrix(entry, defaults); } },
   { key: "spacing",  heading: "Spacing & size",  mediaRole: "spacing",
     aliases: ["spacing & size", "spacing", "spacing and size", "sizing"],
@@ -386,8 +388,6 @@ function renderDesignSections(entry, defaults, guideline, slug, WARNINGS) {
   var out = [];
 
   DESIGN_SECTIONS.forEach(function (sec) {
-    var structured = sec.structured ? sec.structured(entry, defaults) : "";
-
     var matched = null;
     for (var i = 0; i < sec.aliases.length; i++) {
       var hit = byHeading[sec.aliases[i]];
@@ -403,6 +403,17 @@ function renderDesignSections(entry, defaults, guideline, slug, WARNINGS) {
     if (mediaRoleMap && (sec.mediaRole in mediaRoleMap) && !seenMediaRoles.has(sec.mediaRole)) {
       media = "<Media role=" + JSON.stringify(sec.mediaRole) +
         ' layout="stack" media={' + jsLit(mediaRoleMap) + "} />";
+    }
+
+    // Structured components (<Anatomy>, <VariantMatrix>) are placeholders:
+    // emit only when the section has neither authored prose nor Figma media.
+    // Once real content exists they are redundant and suppressed.
+    var structured = "";
+    if (sec.structured) {
+      var isPlaceholder = sec.placeholderStructured === true;
+      if (!isPlaceholder || (!body && !media)) {
+        structured = sec.structured(entry, defaults);
+      }
     }
 
     var blocks = [structured, body, media].filter(Boolean);
