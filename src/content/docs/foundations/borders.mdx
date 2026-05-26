@@ -5,6 +5,7 @@ description: Border tokens from the Actian foundations.
 
 import TokenTable from "../../../components/TokenTable.astro";
 import PageMetadata from "../../../components/PageMetadata.astro";
+import DerivationBanner from "../../../components/DerivationBanner.astro";
 import radius from "../../../../vendor/foundations/dist/tokens/borders/radius.json";
 import width from "../../../../vendor/foundations/dist/tokens/borders/width.json";
 import styleComposite from "../../../../vendor/foundations/dist/tokens/borders/style-composite.json";
@@ -14,6 +15,8 @@ import styleComposite from "../../../../vendor/foundations/dist/tokens/borders/s
   source="foundations/dist/tokens/borders/"
   schema={1}
 />
+
+<DerivationBanner mode="hand-authored" note="Token shapes derive from the substrate; page structure is docs-owned." />
 
 Border tokens for the Actian DS — radius, width, and composite border styles.
 

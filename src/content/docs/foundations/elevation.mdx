@@ -5,6 +5,7 @@ description: Elevation tokens from the Actian foundations.
 
 import TokenTable from "../../../components/TokenTable.astro";
 import PageMetadata from "../../../components/PageMetadata.astro";
+import DerivationBanner from "../../../components/DerivationBanner.astro";
 import elevation from "../../../../vendor/foundations/dist/tokens/elevation.json";
 
 <PageMetadata
@@ -12,6 +13,8 @@ import elevation from "../../../../vendor/foundations/dist/tokens/elevation.json
   source="foundations/dist/tokens/elevation.json"
   schema={1}
 />
+
+<DerivationBanner mode="hand-authored" note="Token shapes derive from the substrate; page structure is docs-owned." />
 
 {elevation.description && <p>{elevation.description}</p>}
 
