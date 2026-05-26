@@ -42,7 +42,7 @@ function validateMotionRefs() {
   var unresolved = [];
   KNOWN_CATEGORY_SLUGS.forEach(function (slug) {
     var d = loader.loadDefaultsForCategory(slug);
-    var refs = (d && d.card_motion && d.card_motion.patternRefs) || [];
+    var refs = (d && d.motion && d.motion.patternRefs) || [];
     refs.forEach(function (r) {
       if (!loader.resolveMotionRef(r.ref)) {
         unresolved.push({ category: slug, ref: r.ref });
@@ -58,7 +58,7 @@ function validateAccessibilityRefs() {
   KNOWN_CATEGORY_SLUGS.forEach(function (slug) {
     var d = loader.loadDefaultsForCategory(slug);
     var refs =
-      (d && d.card_accessibility && d.card_accessibility.requirementRefs) || [];
+      (d && d.accessibility && d.accessibility.requirementRefs) || [];
     refs.forEach(function (r) {
       if (!loader.resolveAccessibilityRef(r.ref)) {
         unresolved.push({ category: slug, ref: r.ref });
