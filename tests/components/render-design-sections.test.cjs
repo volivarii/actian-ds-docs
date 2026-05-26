@@ -17,7 +17,7 @@ var BUTTON_MEDIA = {
   behavior: "components/dist/media/button/behavior.png",
 };
 
-// Minimal entry with both entry.variants and card_anatomy so both structured
+// Minimal entry with both entry.variants and anatomy so both structured
 // renderers fire.
 var BUTTON_ENTRY = {
   name: "Button",
@@ -27,9 +27,9 @@ var BUTTON_ENTRY = {
 
 function makeDefaults(overrides) {
   return Object.assign({
-    card_anatomy: { parts: [{ label: "Label" }, { label: "Icon" }] },
-    card_component: null,
-    card_motion: null,
+    anatomy: { parts: [{ label: "Label" }, { label: "Icon" }] },
+    variants: null,
+    motion: null,
   }, overrides || {});
 }
 
@@ -164,7 +164,7 @@ test("renderDesignSections: <MotionPattern> is NOT conditional — renders even 
       },
     },
   };
-  var defaultsWithMotion = makeDefaults({ card_motion: { patternRefs: [{ ref: "fade-in" }] } });
+  var defaultsWithMotion = makeDefaults({ motion: { patternRefs: [{ ref: "fade-in" }] } });
   renderMdx.setMediaIndex({ media: { button: BUTTON_MEDIA } });
   var WARNINGS = { unknownContentShapes: 0 };
   var out = renderMdx.renderDesignSections(BUTTON_ENTRY, defaultsWithMotion, guideline, "button", WARNINGS);
@@ -261,12 +261,12 @@ test("renderDesignSections: authored Anatomy body WITHOUT <Media role='parts'> g
 });
 
 // ---------------------------------------------------------------------------
-// 7. Motion (card_motion) renders inside ## Behavior — no separate ## Motion
+// 7. Motion (motion) renders inside ## Behavior — no separate ## Motion
 // ---------------------------------------------------------------------------
 
-test("renderDesignSections: card_motion renders inside ## Behavior, no separate ## Motion heading", function () {
+test("renderDesignSections: motion renders inside ## Behavior, no separate ## Motion heading", function () {
   var defaultsWithMotion = makeDefaults({
-    card_motion: {
+    motion: {
       patternRefs: [{ ref: "fade-in" }],
     },
   });
