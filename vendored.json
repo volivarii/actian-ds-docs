@@ -3,7 +3,7 @@
   "knowledge_repo_version_range": "<1.0.0",
   "knowledge_repo_resolved_version": "v0.21.2",
   "knowledge_repo_resolved_sha": "c119cfe2513129d137f2428101551bc6564a7d23",
-  "vendored_at": "2026-05-25T13:54:53.839Z",
+  "vendored_at": "2026-05-26T13:46:38.627Z",
   "vendored_entries": [
     "AUTHORING.md",
     "GOVERNANCE.md",
