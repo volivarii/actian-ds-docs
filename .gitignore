@@ -39,7 +39,7 @@ src/content/docs/accessibility.md
 src/content/docs/content.md
 
 # Generated at prebuild by scripts/generate-foundations-pages.cjs
-src/content/docs/foundations/design-guidelines.mdx
+src/content/docs/foundations/overview.mdx
 src/content/docs/categories/
 src/data/components-sidebar.json
 src/data/brand-sidebar.json

@@ -1,0 +1,23 @@
+---
+title: Background
+description: Background surface tokens — default, subtle, muted, emphasis, and feedback-state backgrounds for the Actian DS.
+---
+
+import TokenTable from "../../../components/TokenTable.astro";
+import PageMetadata from "../../../components/PageMetadata.astro";
+import DerivationBanner from "../../../components/DerivationBanner.astro";
+import backgrounds from "../../../../vendor/foundations/dist/tokens/backgrounds.json";
+
+<PageMetadata
+  slug="foundations.background"
+  source="foundations/dist/tokens/backgrounds.json"
+  schema={1}
+/>
+
+<DerivationBanner mode="hand-authored" note="Token shapes derive from the substrate; page structure is docs-owned." />
+
+Background surface tokens for the Actian DS. Each row carries its CSS variable name (the primitive token identifier) alongside the resolved value and a visual swatch.
+
+{(backgrounds.blocks || []).filter((b) => b.type === "table").map((b) => (
+  <TokenTable headers={b.headers} rows={b.rows} showSwatch={true} />
+))}

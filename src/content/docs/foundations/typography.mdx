@@ -1,16 +1,18 @@
 ---
 title: Typography
-description: Typography tokens from the Actian foundations.
+description: Typography tokens from the Actian foundations — family, weight, size, line-height, letter-spacing, composite text styles, and text color.
 ---
 
 import TokenScale from "../../../components/TokenScale.astro";
 import TokenTable from "../../../components/TokenTable.astro";
 import PageMetadata from "../../../components/PageMetadata.astro";
+import DerivationBanner from "../../../components/DerivationBanner.astro";
 import fontFamily from "../../../../vendor/foundations/dist/tokens/typography/font-family.json";
 import fontSize from "../../../../vendor/foundations/dist/tokens/typography/font-size.json";
 import lineHeight from "../../../../vendor/foundations/dist/tokens/typography/line-height.json";
 import letterSpacing from "../../../../vendor/foundations/dist/tokens/typography/letter-spacing.json";
 import textStyleComposite from "../../../../vendor/foundations/dist/tokens/typography/text-style-tokens-composite.json";
+import textColors from "../../../../vendor/foundations/dist/tokens/typography/text-color-tokens.json";
 import dtcg from "../../../../vendor/tokens/tokens.json";
 
 <PageMetadata
@@ -19,7 +21,9 @@ import dtcg from "../../../../vendor/tokens/tokens.json";
   schema={1}
 />
 
-Typography tokens for the Actian DS — family, weight, size, line-height, letter-spacing, plus composite text styles.
+<DerivationBanner mode="hand-authored" note="Token shapes derive from the substrate; page structure is docs-owned." />
+
+Typography tokens for the Actian DS — family, weight, size, line-height, letter-spacing, composite text styles, and text color.
 
 ## Font family
 
@@ -55,4 +59,12 @@ Composite text-style tokens combine family / weight / size / line-height into na
 
 {(textStyleComposite.blocks || []).filter((b) => b.type === "table").map((b) => (
   <TokenTable headers={b.headers} rows={b.rows} />
+))}
+
+## Text color
+
+Per-role text color tokens — primary, secondary, tertiary, placeholder, link, reverse, and feedback (error / success / warning).
+
+{(textColors.blocks || []).filter((b) => b.type === "table").map((b) => (
+  <TokenTable headers={b.headers} rows={b.rows} showSwatch={true} />
 ))}

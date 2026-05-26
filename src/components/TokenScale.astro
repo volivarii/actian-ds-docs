@@ -37,9 +37,25 @@ interface Props {
    * Whether to show the visual column. Default: true if visualKind !== "none".
    */
   showVisual?: boolean;
+
+  /**
+   * Whether to show the resolved Value column (hex / px / number).
+   * Default: true. Pass `false` when the token name alone carries the
+   * meaning — e.g. brand scales whose hex varies per theme and the
+   * stable identifier is the CSS variable name (the primitive token
+   * name in DTCG terms).
+   */
+  showValue?: boolean;
 }
 
-const { data, prefix, scale, visualKind = "auto", showVisual } = Astro.props;
+const {
+  data,
+  prefix,
+  scale,
+  visualKind = "auto",
+  showVisual,
+  showValue = true,
+} = Astro.props;
 const { effectiveData, effectivePrefix } = resolveScale(data, scale, prefix);
 
 const kind: "color" | "spacing" | "radius" | "border-width" | "none" =
@@ -53,7 +69,7 @@ const rows = flatten(effectiveData, effectivePrefix);
     <tr>
       {willShowVisual && <th class="token-scale__visual-th" aria-label="visual"></th>}
       <th>Token</th>
-      <th>Value</th>
+      {showValue && <th>Value</th>}
     </tr>
   </thead>
   <tbody>
@@ -76,7 +92,7 @@ const rows = flatten(effectiveData, effectivePrefix);
           </td>
         )}
         <td><code>{row.Token}</code></td>
-        <td><code>{row.Value}</code></td>
+        {showValue && <td><code>{row.Value}</code></td>}
       </tr>
     ))}
   </tbody>

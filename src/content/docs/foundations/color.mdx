@@ -1,70 +1,47 @@
 ---
-title: Color
-description: Color tokens from the Actian foundations.
+title: Brand & feedback colors
+description: Brand scales (primary / neutral) and feedback scales (error / success / warning) for the Actian DS.
 ---
 
 import TokenScale from "../../../components/TokenScale.astro";
-import TokenTable from "../../../components/TokenTable.astro";
 import PageMetadata from "../../../components/PageMetadata.astro";
-import backgrounds from "../../../../vendor/foundations/dist/tokens/backgrounds.json";
-import textColors from "../../../../vendor/foundations/dist/tokens/typography/text-color-tokens.json";
-import iconColors from "../../../../vendor/foundations/dist/tokens/icons/icon-colors.json";
+import DerivationBanner from "../../../components/DerivationBanner.astro";
 import dtcg from "../../../../vendor/tokens/tokens.json";
 
 <PageMetadata
-  slug="foundations.color"
+  slug="foundations.brand-feedback-colors"
   source="foundations/dist/tokens/global-color.json"
   schema={1}
 />
 
-The Actian DS color tokens — three theme rails (Actian, FM, DS Kit).
+<DerivationBanner mode="hand-authored" note="Token shapes derive from the substrate; page structure is docs-owned." />
+
+The Actian DS brand & feedback color scales — three theme rails (Actian, FM, DS Kit). Concrete hex values vary per theme; the token name is the stable identifier.
 
 ## Brand & status scales
 
-Full primary / neutral / error / success / warning color ramps. Each row is a CSS variable consumable directly.
+Full primary / neutral / error / success / warning color ramps. Each row carries its CSS variable name (the primitive token identifier).
 
 ### Primary
 
-<TokenScale data={dtcg.color.primary} prefix="color-primary" />
+<TokenScale data={dtcg.color.primary} prefix="color-primary" showValue={false} />
 
 ### Neutral
 
-<TokenScale data={dtcg.color.neutral} prefix="color-neutral" />
+<TokenScale data={dtcg.color.neutral} prefix="color-neutral" showValue={false} />
 
 ### Error
 
-<TokenScale data={dtcg.color.error} prefix="color-error" />
+<TokenScale data={dtcg.color.error} prefix="color-error" showValue={false} />
 
 ### Success
 
-<TokenScale data={dtcg.color.success} prefix="color-success" />
+<TokenScale data={dtcg.color.success} prefix="color-success" showValue={false} />
 
 ### Warning
 
-<TokenScale data={dtcg.color.warning} prefix="color-warning" />
-
-## Semantic surfaces
-
-Per-surface tokens for backgrounds, text, icons, and annotation.
-
-### Backgrounds
-
-{(backgrounds.blocks || []).filter((b) => b.type === "table").map((b) => (
-  <TokenTable headers={b.headers} rows={b.rows} showSwatch={true} />
-))}
-
-### Text
-
-{(textColors.blocks || []).filter((b) => b.type === "table").map((b) => (
-  <TokenTable headers={b.headers} rows={b.rows} showSwatch={true} />
-))}
-
-### Icons
-
-{(iconColors.blocks || []).filter((b) => b.type === "table").map((b) => (
-  <TokenTable headers={b.headers} rows={b.rows} showSwatch={true} />
-))}
+<TokenScale data={dtcg.color.warning} prefix="color-warning" showValue={false} />
 
 ### Annotation
 
-<TokenScale data={dtcg.color.annotation} prefix="color-annotation" />
+<TokenScale data={dtcg.color.annotation} prefix="color-annotation" showValue={false} />

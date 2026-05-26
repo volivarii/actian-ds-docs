@@ -1,7 +1,10 @@
 "use strict";
 
 // Generates foundation pages that need richer-than-single-table rendering.
-// Today: just src/content/docs/foundations/design-guidelines.mdx.
+// Today: just src/content/docs/foundations/overview.mdx (derived from the
+// design-guidelines tree in the knowledge substrate; renamed from
+// "Design guidelines" to "Overview" and placed at the top of the
+// Foundations sidebar via `sidebar: { order: 0 }` frontmatter).
 //
 // Why a generator (vs. hand-authored MDX or runtime <DesignGuidelinesSection>):
 // Starlight's right-rail TOC is built from the static MDX AST at compile
@@ -33,7 +36,7 @@ const OUT_FILE = path.join(
   "content",
   "docs",
   "foundations",
-  "design-guidelines.mdx",
+  "overview.mdx",
 );
 
 function readJson(p) {
@@ -161,19 +164,24 @@ function generate() {
 
   const frontmatter = [
     "---",
-    "title: Design Guidelines",
-    "description: How to apply foundations — usage rules, contrast pairings, spacing rhythm, elevation, and grid behavior. Section 3 of the Foundations master spec.",
+    "title: Overview",
+    "description: Overview of the Actian DS foundations — usage rules, contrast pairings, spacing rhythm, elevation, and grid behavior. Section 3 of the Foundations master spec.",
+    "sidebar:",
+    "  order: 0",
     "---",
     "",
     'import PageMetadata from "../../../components/PageMetadata.astro";',
+    'import DerivationBanner from "../../../components/DerivationBanner.astro";',
     "",
     "<PageMetadata",
-    '  slug="foundations.design-guidelines"',
+    '  slug="foundations.overview"',
     '  source="foundations/dist/design-guidelines/"',
     "  schema={1}",
     "/>",
     "",
-    "Section 3 of the Foundations master spec — applied rules for color, typography, spacing, elevation, interactive states, breakpoints, focus rings, borders, and placeholder text. Generated from `foundations/src/foundations.md` § Design Guidelines.",
+    '<DerivationBanner source="foundations/src/foundations.md" note="Generated from § Design Guidelines on every build." />',
+    "",
+    "Overview of the Actian DS foundations — applied rules for color, typography, spacing, elevation, interactive states, breakpoints, focus rings, borders, and placeholder text. Generated from `foundations/src/foundations.md` § Design Guidelines.",
     "",
   ].join("\n");
 
