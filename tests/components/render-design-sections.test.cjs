@@ -29,7 +29,7 @@ function makeDefaults(overrides) {
   return Object.assign({
     anatomy: { parts: [{ label: "Label" }, { label: "Icon" }] },
     variants: null,
-    motion: null,
+    motion_refs: null,
   }, overrides || {});
 }
 
@@ -164,7 +164,7 @@ test("renderDesignSections: <MotionPattern> is NOT conditional — renders even 
       },
     },
   };
-  var defaultsWithMotion = makeDefaults({ motion: { patternRefs: [{ ref: "fade-in" }] } });
+  var defaultsWithMotion = makeDefaults({ motion_refs: { patternRefs: [{ ref: "fade-in" }] } });
   renderMdx.setMediaIndex({ media: { button: BUTTON_MEDIA } });
   var WARNINGS = { unknownContentShapes: 0 };
   var out = renderMdx.renderDesignSections(BUTTON_ENTRY, defaultsWithMotion, guideline, "button", WARNINGS);
@@ -266,7 +266,7 @@ test("renderDesignSections: authored Anatomy body WITHOUT <Media role='parts'> g
 
 test("renderDesignSections: motion renders inside ## Behavior, no separate ## Motion heading", function () {
   var defaultsWithMotion = makeDefaults({
-    motion: {
+    motion_refs: {
       patternRefs: [{ ref: "fade-in" }],
     },
   });

@@ -482,10 +482,10 @@ function renderVariantsMatrix(entry, defaults) {
 }
 
 function renderMotion(defaults) {
-  if (!(defaults && defaults.motion && Array.isArray(defaults.motion.patternRefs))) return "";
+  if (!(defaults && defaults.motion_refs && Array.isArray(defaults.motion_refs.patternRefs))) return "";
   // Pre-resolve at build time — Astro component no longer needs to
   // load the loader at SSR (Phase 4b: ~360 redundant requires removed).
-  var resolved = defaults.motion.patternRefs.map(function (r) {
+  var resolved = defaults.motion_refs.patternRefs.map(function (r) {
     return { ref: r, pattern: loader.resolveMotionRef(r.ref) };
   });
   return '<MotionPattern resolvedPatterns={' + jsLit(resolved) + '} />';
@@ -499,8 +499,8 @@ function renderContentDomain(contentDomain, WARNINGS) {
 }
 
 function renderA11yRefs(defaults) {
-  if (!(defaults && defaults.accessibility && Array.isArray(defaults.accessibility.requirementRefs))) return "";
-  var resolved = defaults.accessibility.requirementRefs.map(function (r) {
+  if (!(defaults && defaults.a11y_refs && Array.isArray(defaults.a11y_refs.requirementRefs))) return "";
+  var resolved = defaults.a11y_refs.requirementRefs.map(function (r) {
     return { ref: r, section: loader.resolveAccessibilityRef(r.ref) };
   });
   return "## Accessibility\n\n<AccessibilityRefs resolvedRefs={" + jsLit(resolved) + "} />";

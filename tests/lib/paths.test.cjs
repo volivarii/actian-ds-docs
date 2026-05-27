@@ -9,10 +9,19 @@ test("paths.cjs — manifest loads without error", function () {
   assert.ok(PATHS);
 });
 
-test("paths.cjs — accessibility.guide leaf resolves to the .md file", function () {
-  assert.equal(typeof PATHS.accessibility.guide, "string");
-  assert.ok(PATHS.accessibility.guide.endsWith("accessibility.md"));
-  assert.ok(fs.existsSync(PATHS.accessibility.guide));
+test("paths.cjs — accessibility.guide migrated to per-section collection (knowledge v0.23.0)", function () {
+  // Pre-v0.23.0 accessibility.guide was a leaf path to a single
+  // accessibility.md file. The per-section split retired the single-file
+  // SoT in favor of accessibility/src/NN-<slug>.md per-section files, so
+  // accessibility.guide is now a collection-style function (parallel to
+  // components.categoryDefaults.byKey).
+  //
+  // Upstream limitation: the resolver leaves `{order}` as a literal in the
+  // returned path because the byKey API doesn't scan to fill the NN- prefix.
+  // No docs consumer uses this entry post-split, so this test just verifies
+  // the surface shape; if a consumer needs a real path, use readdirSync on
+  // the collection dir or open a knowledge-side enhancement to resolve {order}.
+  assert.equal(typeof PATHS.accessibility.guide, "function");
 });
 
 test("paths.cjs — accessibility.index leaf resolves to the JSON file", function () {
