@@ -5,7 +5,6 @@ description: Motion tokens and named patterns from the Actian foundations.
 
 import TokenTable from "../../../components/TokenTable.astro";
 import PageMetadata from "../../../components/PageMetadata.astro";
-import DerivationBanner from "../../../components/DerivationBanner.astro";
 import motion from "../../../../vendor/foundations/dist/tokens/motion.json";
 
 <PageMetadata
@@ -13,8 +12,6 @@ import motion from "../../../../vendor/foundations/dist/tokens/motion.json";
   source="foundations/dist/tokens/motion.json"
   schema={1}
 />
-
-<DerivationBanner mode="hand-authored" note="Token shapes derive from the substrate; page structure is docs-owned." />
 
 {motion.description && <p>{motion.description}</p>}
 
