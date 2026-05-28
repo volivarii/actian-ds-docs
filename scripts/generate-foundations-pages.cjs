@@ -13,7 +13,7 @@
 // Starlight see them.
 //
 // Source: vendor/foundations/dist/design-guidelines/**/*.json (auto-derived
-// from foundations/src/04-design-guidelines.md § Design Guidelines, knowledge v0.24+; was foundations.md pre-split).
+// from foundations/src/design-guidelines.md § Design Guidelines, knowledge v0.24+; was foundations.md pre-split, NN- prefix dropped in the _order.json migration).
 //
 // Run: node scripts/generate-foundations-pages.cjs (already wired into
 // prebuild + predev).
@@ -178,7 +178,7 @@ function generate() {
     "  schema={1}",
     "/>",
     "",
-    "Overview of the Actian DS foundations — applied rules for color, typography, spacing, elevation, interactive states, breakpoints, focus rings, borders, and placeholder text. Generated from `foundations/src/04-design-guidelines.md`.",
+    "Overview of the Actian DS foundations — applied rules for color, typography, spacing, elevation, interactive states, breakpoints, focus rings, borders, and placeholder text. Generated from `foundations/src/design-guidelines.md`.",
     "",
   ].join("\n");
 
