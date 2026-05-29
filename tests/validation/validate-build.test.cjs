@@ -38,7 +38,7 @@ test("validateSchemaVersion — manifest schema version is 1", function () {
   assert.equal(result.pass, true);
 });
 
-test("validateAll — runs all four guards; reports pass when clean", function () {
+test("validateAll — runs all five guards; reports pass when clean", function () {
   var result = validate.validateAll();
   assert.equal(result.pass, true, "expected pass: " + JSON.stringify(result.failures));
 });

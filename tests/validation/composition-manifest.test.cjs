@@ -51,3 +51,9 @@ test("rejects a page with NEITHER sections nor custom", function () {
   var ok = validate(base([{ slug: "x", title: "X" }]));
   assert.ok(!ok);
 });
+
+var validateBuild = require("../../scripts/validation/validate-build.cjs");
+test("validateCompositionManifest passes for the committed manifest", function () {
+  var r = validateBuild.validateCompositionManifest();
+  assert.equal(r.pass, true, JSON.stringify(r.failures));
+});

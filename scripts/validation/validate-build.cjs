@@ -3,7 +3,7 @@
 /**
  * validate-build.cjs — Drift guards run at build time.
  *
- * Four checks adapted from the plugin's scripts/validation/validate-schema.js
+ * Five checks adapted from the plugin's scripts/validation/validate-schema.js
  * for the docs-site context:
  *
  *   1. motion-ref resolution — every motion_refs[].ref in category
@@ -13,14 +13,19 @@
  *   3. ASCII operator check — vendored MDs use ASCII only
  *      (=> not ⇒, -> not →, etc.)
  *   4. Schema-version match — paths-manifest._schema_version === 1
+ *   5. composition-manifest — every src/data/composition/*.json validates
+ *      against composition.schema.json AND every section ref/fragment
+ *      resolves against the foundations dist bundle
  *
  * Each function returns a result object; validateAll runs them all.
  */
 
 var fs = require("fs");
 var path = require("path");
+var Ajv = require("ajv/dist/2020");
 var PATHS = require("../lib/paths.cjs");
 var loader = require("../lib/category-defaults-loader.cjs");
+var composition = require("../lib/composition-resolve.cjs");
 
 var KNOWN_CATEGORY_SLUGS = [
   "action",
@@ -129,22 +134,66 @@ function validateSchemaVersion() {
   };
 }
 
+// Composition manifests (src/data/composition/*.json) drive generated docs
+// pages. This guard validates every manifest against composition.schema.json
+// AND that every section ref/fragment resolves against the foundations dist
+// bundle — catching drift between a manifest and the substrate it composes.
+function validateCompositionManifest() {
+  var dir = path.join(PATHS.repoRoot, "src", "data", "composition");
+  var schemaPath = path.join(dir, "composition.schema.json");
+  if (!fs.existsSync(dir)) {
+    return { pass: false, failures: ["composition: directory missing at " + dir] };
+  }
+  if (!fs.existsSync(schemaPath)) {
+    return { pass: false, failures: ["composition: composition.schema.json missing at " + dir] };
+  }
+  var schema = JSON.parse(fs.readFileSync(schemaPath, "utf8"));
+  var validate = new Ajv({ allErrors: true }).compile(schema);
+  var failures = [];
+  var bundle = composition.loadBundle(PATHS.foundations.distDir);
+  fs.readdirSync(dir)
+    .filter(function (f) {
+      return f.endsWith(".json") && f !== "composition.schema.json";
+    })
+    .forEach(function (f) {
+      var manifest = JSON.parse(fs.readFileSync(path.join(dir, f), "utf8"));
+      if (!validate(manifest)) {
+        failures.push(f + " schema: " + JSON.stringify(validate.errors));
+        return;
+      }
+      manifest.pages.forEach(function (page) {
+        (page.sections || []).forEach(function (s) {
+          try {
+            composition.resolveSection(s, bundle);
+          } catch (e) {
+            failures.push(f + " " + page.slug + ": " + e.message);
+          }
+        });
+      });
+    });
+  return { pass: failures.length === 0, failures: failures };
+}
+
 function validateAll() {
   var motion = validateMotionRefs();
   var a11y = validateAccessibilityRefs();
   var ascii = validateAsciiOperators();
   var schema = validateSchemaVersion();
+  var comp = validateCompositionManifest();
   var failures = [];
   if (!motion.pass) failures.push({ guard: "motion-ref", result: motion });
   if (!a11y.pass) failures.push({ guard: "a11y-ref", result: a11y });
   if (!ascii.pass) failures.push({ guard: "ascii", result: ascii });
   if (!schema.pass) failures.push({ guard: "schema-version", result: schema });
+  if (!comp.pass)
+    failures.push({ guard: "composition-manifest", result: comp });
   return {
     pass: failures.length === 0,
     motion: motion,
     a11y: a11y,
     ascii: ascii,
     schema: schema,
+    composition: comp,
     failures: failures,
   };
 }
@@ -152,7 +201,7 @@ function validateAll() {
 if (require.main === module) {
   var result = validateAll();
   if (result.pass) {
-    console.log("validate-build: all 4 drift guards pass");
+    console.log("validate-build: all 5 drift guards pass");
     process.exit(0);
   } else {
     console.error(
@@ -167,5 +216,6 @@ module.exports = {
   validateAccessibilityRefs: validateAccessibilityRefs,
   validateAsciiOperators: validateAsciiOperators,
   validateSchemaVersion: validateSchemaVersion,
+  validateCompositionManifest: validateCompositionManifest,
   validateAll: validateAll,
 };
