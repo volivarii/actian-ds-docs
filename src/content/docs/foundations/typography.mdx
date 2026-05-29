@@ -5,16 +5,15 @@ sidebar:
   order: 9
 ---
 
-import TokenScale from "../../../components/TokenScale.astro";
 import TokenTable from "../../../components/TokenTable.astro";
 import PageMetadata from "../../../components/PageMetadata.astro";
 import fontFamily from "../../../../vendor/foundations/dist/tokens/typography/font-family.json";
+import fontWeight from "../../../../vendor/foundations/dist/tokens/typography/font-weight.json";
 import fontSize from "../../../../vendor/foundations/dist/tokens/typography/font-size.json";
 import lineHeight from "../../../../vendor/foundations/dist/tokens/typography/line-height.json";
 import letterSpacing from "../../../../vendor/foundations/dist/tokens/typography/letter-spacing.json";
 import textStyleComposite from "../../../../vendor/foundations/dist/tokens/typography/text-style-tokens-composite.json";
 import textColors from "../../../../vendor/foundations/dist/tokens/typography/text-color-tokens.json";
-import dtcg from "../../../../vendor/tokens/tokens.json";
 
 <PageMetadata
   slug="foundations.typography"
@@ -32,7 +31,9 @@ Typography tokens for the Actian DS — family, weight, size, line-height, lette
 
 ## Font weight
 
-<TokenScale data={dtcg.font.weight} prefix="font-weight" visualKind="none" />
+{(fontWeight.blocks || []).filter((b) => b.type === "table").map((b) => (
+  <TokenTable headers={b.headers} rows={b.rows} />
+))}
 
 ## Font size
 
