@@ -58,13 +58,74 @@ function renderPageMdx(page) {
   return fm.join("\n") + body + "\n";
 }
 
+// Pure: stamp `sidebar.order` into an MDX frontmatter block. Operates ONLY
+// within the region between the first `---` and the next `---`, preserving
+// everything else byte-for-byte. Idempotent for the same order value.
+function setSidebarOrder(mdxText, order) {
+  var lines = mdxText.split("\n");
+  if (lines[0] !== "---") return mdxText; // no frontmatter; leave untouched
+  // Find the closing `---` of the frontmatter.
+  var close = -1;
+  for (var i = 1; i < lines.length; i++) {
+    if (lines[i] === "---") { close = i; break; }
+  }
+  if (close === -1) return mdxText; // unterminated frontmatter; leave untouched
+
+  var fm = lines.slice(1, close);          // frontmatter body lines
+  var body = lines.slice(close);           // closing `---` + everything after
+  var orderLine = "  order: " + order;
+
+  // Locate a top-level `sidebar:` key (no leading whitespace).
+  var sidebarIdx = -1;
+  for (var j = 0; j < fm.length; j++) {
+    if (/^sidebar:\s*$/.test(fm[j])) { sidebarIdx = j; break; }
+  }
+
+  if (sidebarIdx === -1) {
+    // No sidebar block → append one at the end of the frontmatter.
+    fm.push("sidebar:");
+    fm.push(orderLine);
+  } else {
+    // Find the extent of the sidebar block's children (indented lines).
+    var orderChildIdx = -1;
+    for (var k = sidebarIdx + 1; k < fm.length; k++) {
+      if (fm[k].trim() === "") continue;            // skip blank lines within the block
+      if (!/^\s+/.test(fm[k])) break;               // dedented non-blank → end of sidebar block
+      if (/^\s+order:\s/.test(fm[k])) { orderChildIdx = k; break; }
+    }
+    if (orderChildIdx !== -1) {
+      fm[orderChildIdx] = orderLine; // replace existing order value
+    } else {
+      // Insert as the first child under `sidebar:`, keeping other children.
+      fm.splice(sidebarIdx + 1, 0, orderLine);
+    }
+  }
+
+  return [lines[0]].concat(fm).concat(body).join("\n");
+}
+
 function generate() {
   var manifest = R.loadManifest(MANIFEST);
   var bundle = R.loadBundle(FOUNDATIONS_DIST);
   fs.mkdirSync(OUT_DIR, { recursive: true });
   var written = [];
+  var ordered = [];
   manifest.pages.forEach(function (page, idx) {
-    if (page.custom) return;                        // hand-authored; manifest only orders it
+    if (page.custom) {
+      // Hand-authored page: the manifest only ORDERS it. Stamp sidebar.order
+      // into the existing file's frontmatter without touching anything else.
+      var customPath = path.join(OUT_DIR, page.custom);
+      if (!fs.existsSync(customPath)) {
+        throw new Error("composition: custom page file not found: " + customPath);
+      }
+      var text = fs.readFileSync(customPath, "utf8");
+      var stamped = setSidebarOrder(text, idx);
+      if (stamped !== text) {
+        fs.writeFileSync(customPath, stamped, "utf8");
+      }
+      ordered.push(page.custom);
+      return;
+    }
     var resolved = (page.sections || []).map(function (s) { return R.resolveSection(s, bundle); });
     var mdx = renderPageMdx({ slug: page.slug, title: page.title,
       description: page.description, sidebarOrder: idx, resolved: resolved });
@@ -72,7 +133,8 @@ function generate() {
     fs.writeFileSync(out, mdx, "utf8");
     written.push(page.slug);
   });
-  console.log("generate-composition-pages: wrote " + written.length + " pages: " + written.join(", "));
+  console.log("generate-composition-pages: wrote " + written.length + " pages, ordered " +
+    ordered.length + " custom pages: " + written.concat(ordered).join(", "));
 }
 
 if (require.main === module) {
@@ -80,4 +142,4 @@ if (require.main === module) {
   catch (err) { console.error("generate-composition-pages FAILED:", err.message); process.exit(1); }
 }
 
-module.exports = { generate: generate, renderPageMdx: renderPageMdx, renderSection: renderSection };
+module.exports = { generate: generate, renderPageMdx: renderPageMdx, renderSection: renderSection, setSidebarOrder: setSidebarOrder };
