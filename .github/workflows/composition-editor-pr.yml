@@ -7,7 +7,8 @@ name: Composition editor PR + sync
 #  - sync:     when main advances, merge main into docs-edits so the editor always
 #              starts from the latest content. Merge (not force-reset) preserves any
 #              in-flight unmerged edit; a conflict fails loudly (shouldn't happen —
-#              the editor only touches foundations.json, which main's other commits don't).
+#              the editor only touches foundations.json, which main's other commits
+#              don't). Self-heals: recreates docs-edits from main if it's missing.
 on:
   push:
     branches: [docs-edits, main]
@@ -16,12 +17,18 @@ permissions:
   contents: write
   pull-requests: write
 
+# Serialise per-branch so rapid editor saves (open-pr) or close main pushes (sync)
+# can't race into duplicate PRs / non-fast-forward push failures.
+concurrency:
+  group: composition-editor-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   open-pr:
     if: github.ref == 'refs/heads/docs-edits'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - name: Open PR if there is a diff and none open
@@ -43,17 +50,23 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
-          ref: docs-edits
           fetch-depth: 0
-      - name: Merge main into docs-edits
+      - name: Sync docs-edits with main (create if missing)
         run: |
           git config user.name "actian-ds-bot"
           git config user.email "actian-ds-bot@users.noreply.github.com"
           git fetch origin main
-          if git merge --no-edit origin/main; then
-            git push origin docs-edits
+          if git ls-remote --exit-code --heads origin docs-edits >/dev/null 2>&1; then
+            git fetch origin docs-edits
+            git checkout -B docs-edits origin/docs-edits
+            if git merge --no-edit origin/main; then
+              git push origin docs-edits
+            else
+              echo "::error::merge conflict syncing main → docs-edits (unexpected — the editor only touches foundations.json)"; exit 1
+            fi
           else
-            echo "::error::merge conflict syncing main → docs-edits (unexpected — editor should only touch foundations.json)"; exit 1
+            git push origin origin/main:refs/heads/docs-edits
+            echo "docs-edits did not exist — created from main."
           fi

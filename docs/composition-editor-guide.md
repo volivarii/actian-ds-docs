@@ -25,8 +25,9 @@ Open **Composition → Foundations chapter**. You can:
 
 ## Publish
 Click **Save**. Your edit is committed to the `docs-edits` branch and a pull
-request to `main` is opened automatically. CI validates it (schema + that every
-`ref`/`fragment` resolves). A maintainer reviews and merges; the site rebuilds.
+request `docs-edits → main` is opened automatically. CI runs **on that PR** (not
+on the `docs-edits` push itself): it validates the schema and that every
+`ref`/`fragment` resolves. A maintainer reviews and merges; the site rebuilds.
 
 ## Notes
 - A bad `ref` (typo) won't break the site — CI rejects the PR with the offending id.

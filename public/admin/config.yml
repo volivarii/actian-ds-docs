@@ -24,7 +24,7 @@ collections:
         file: src/data/composition/foundations.json
         format: json
         fields:
-          - { name: _schema_version, label: Schema version, widget: number, default: 1 }
+          - { name: _schema_version, widget: hidden, default: 1 }
           - { name: _owner, label: Owner, widget: hidden, default: actian-ds-docs }
           - name: chapter
             label: Chapter
@@ -47,7 +47,7 @@ collections:
                 required: false
                 summary: "{{fields.label}} {{fields.ref}}"
                 fields:
-                  - { name: ref, label: Section ref, widget: string }
+                  - { name: ref, label: Section ref, widget: string, required: false }
                   - { name: fragment, label: Fragment, widget: string, required: false, hint: "e.g. #background" }
                   - { name: label, label: Heading override, widget: string, required: false }
                   - { name: intro, label: Intro prose, widget: text, required: false }
