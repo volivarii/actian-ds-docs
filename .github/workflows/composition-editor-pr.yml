@@ -42,9 +42,17 @@ jobs:
           if [ -n "$existing" ]; then
             echo "PR #$existing already open; it auto-updates."; exit 0
           fi
-          gh pr create --base main --head docs-edits \
+          # Degrade gracefully: if the repo hasn't enabled "Allow GitHub Actions to
+          # create and approve pull requests", PR creation is denied — that's an
+          # opt-in setting, not an error in the edit. Warn (don't fail) so an
+          # editor's commit never shows a scary red check; the PR can be opened by hand.
+          if gh pr create --base main --head docs-edits \
             --title "docs: composition manifest edit (via editor)" \
-            --body "Edited in the composition editor and committed to \`docs-edits\`. The composition CI guard runs on this PR. Review + merge to publish."
+            --body "Edited in the composition editor and committed to \`docs-edits\`. The composition CI guard runs on this PR. Review + merge to publish."; then
+            echo "Opened PR docs-edits → main."
+          else
+            echo "::warning title=Auto-PR skipped::Could not auto-create the PR. Enable Settings → Actions → General → 'Allow GitHub Actions to create and approve pull requests', or open it manually: gh pr create --base main --head docs-edits"
+          fi
 
   sync:
     if: github.ref == 'refs/heads/main'
