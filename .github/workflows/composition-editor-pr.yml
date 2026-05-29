@@ -1,0 +1,72 @@
+name: Composition editor PR + sync
+
+# Two jobs:
+#  - open-pr:  when the editor commits to docs-edits, ensure a PR docs-edits → main
+#              exists (only if there is a real diff). The PR triggers build.yml's
+#              pull_request build, which runs the composition CI guard.
+#  - sync:     when main advances, merge main into docs-edits so the editor always
+#              starts from the latest content. Merge (not force-reset) preserves any
+#              in-flight unmerged edit; a conflict fails loudly (shouldn't happen —
+#              the editor only touches foundations.json, which main's other commits
+#              don't). Self-heals: recreates docs-edits from main if it's missing.
+on:
+  push:
+    branches: [docs-edits, main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+# Serialise per-branch so rapid editor saves (open-pr) or close main pushes (sync)
+# can't race into duplicate PRs / non-fast-forward push failures.
+concurrency:
+  group: composition-editor-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  open-pr:
+    if: github.ref == 'refs/heads/docs-edits'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Open PR if there is a diff and none open
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if git diff --quiet origin/main origin/docs-edits; then
+            echo "docs-edits == main; nothing to PR."; exit 0
+          fi
+          existing=$(gh pr list --head docs-edits --base main --state open --json number --jq '.[].number')
+          if [ -n "$existing" ]; then
+            echo "PR #$existing already open; it auto-updates."; exit 0
+          fi
+          gh pr create --base main --head docs-edits \
+            --title "docs: composition manifest edit (via editor)" \
+            --body "Edited in the composition editor and committed to \`docs-edits\`. The composition CI guard runs on this PR. Review + merge to publish."
+
+  sync:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Sync docs-edits with main (create if missing)
+        run: |
+          git config user.name "actian-ds-bot"
+          git config user.email "actian-ds-bot@users.noreply.github.com"
+          git fetch origin main
+          if git ls-remote --exit-code --heads origin docs-edits >/dev/null 2>&1; then
+            git fetch origin docs-edits
+            git checkout -B docs-edits origin/docs-edits
+            if git merge --no-edit origin/main; then
+              git push origin docs-edits
+            else
+              echo "::error::merge conflict syncing main → docs-edits (unexpected — the editor only touches foundations.json)"; exit 1
+            fi
+          else
+            git push origin origin/main:refs/heads/docs-edits
+            echo "docs-edits did not exist — created from main."
+          fi

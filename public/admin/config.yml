@@ -1,0 +1,60 @@
+# Actian DS Docs — composition editor (Sveltia CMS).
+# Edits src/data/composition/<chapter>.json; reuses the existing Sveltia auth
+# worker; commits to the docs-edits branch (a GH Action raises the PR to main).
+backend:
+  name: github
+  repo: volivarii/actian-ds-docs
+  branch: docs-edits          # editor commits here, NEVER main; Action PRs it to main
+  base_url: https://actian-ds-knowledge-auth.volivari.workers.dev
+
+# Mandatory for our strict schema: omit empty optionals instead of writing ""/[]
+# (custom page → {slug,title,custom}; sections page → {slug,title,sections}).
+output:
+  omit_empty_optional_fields: true
+
+media_folder: src/assets
+public_folder: /actian-ds-docs/src/assets
+
+collections:
+  - name: composition
+    label: Composition
+    files:
+      - name: foundations
+        label: Foundations chapter
+        file: src/data/composition/foundations.json
+        format: json
+        fields:
+          - { name: _schema_version, widget: hidden, default: 1 }
+          - { name: _owner, label: Owner, widget: hidden, default: actian-ds-docs }
+          - name: chapter
+            label: Chapter
+            widget: object
+            fields:
+              - { name: slug, label: Slug, widget: string }
+              - { name: title, label: Title, widget: string }
+              - { name: description, label: Description, widget: string, required: false }
+          - name: pages
+            label: Pages
+            widget: list
+            summary: "{{fields.title}} ({{fields.slug}})"
+            fields:
+              - { name: slug, label: Slug, widget: string }
+              - { name: title, label: Title, widget: string }
+              - { name: description, label: Description, widget: string, required: false }
+              - name: sections
+                label: "Composed sections (leave empty for a custom page)"
+                widget: list
+                required: false
+                summary: "{{fields.label}} {{fields.ref}}"
+                fields:
+                  - { name: ref, label: Section ref, widget: string, required: false }
+                  - { name: fragment, label: Fragment, widget: string, required: false, hint: "e.g. #background" }
+                  - { name: label, label: Heading override, widget: string, required: false }
+                  - { name: intro, label: Intro prose, widget: text, required: false }
+                  - name: render
+                    label: Render directives
+                    widget: object
+                    required: false
+                    fields:
+                      - { name: tokenLabels, label: Token labels, widget: select, options: [names, values, both], required: false }
+              - { name: custom, label: "Custom page .mdx (leave sections empty if set)", widget: string, required: false }
