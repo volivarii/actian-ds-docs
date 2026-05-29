@@ -39,6 +39,7 @@ jobs:
           node --test tests/lib/category-defaults-loader.test.cjs
           node --test tests/validation/validate-build.test.cjs
           node --test tests/vendor/version-range-resolution.test.cjs
+          node --test tests/validation/composition-manifest.test.cjs
 
       - name: Build site
         env:

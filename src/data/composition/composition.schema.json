@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://actian.com/schemas/docs-composition.json",
+  "title": "Docs Editorial Composition Manifest",
+  "type": "object",
+  "required": ["_schema_version", "_owner", "chapter", "pages"],
+  "additionalProperties": false,
+  "properties": {
+    "_schema_version": { "const": 1 },
+    "_owner": { "const": "actian-ds-docs" },
+    "chapter": {
+      "type": "object",
+      "required": ["slug", "title"],
+      "additionalProperties": false,
+      "properties": {
+        "slug": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+        "title": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" }
+      }
+    },
+    "pages": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["slug", "title"],
+        "additionalProperties": false,
+        "oneOf": [{ "required": ["sections"] }, { "required": ["custom"] }],
+        "properties": {
+          "slug": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+          "title": { "type": "string", "minLength": 1 },
+          "description": { "type": "string" },
+          "custom": { "type": "string", "pattern": "\\.mdx?$" },
+          "sections": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "anyOf": [{ "required": ["ref"] }, { "required": ["intro"] }],
+              "properties": {
+                "ref": {
+                  "type": "string",
+                  "description": "Foundations dist section id, e.g. tokens/spacing. Resolution against the foundations dist bundle is enforced by the CI guard (validateCompositionManifest), not by a schema pattern."
+                },
+                "fragment": {
+                  "type": "string",
+                  "pattern": "^#[a-z][a-z0-9-]*$"
+                },
+                "label": { "type": "string", "minLength": 1 },
+                "intro": { "type": "string" },
+                "render": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "tokenLabels": { "enum": ["names", "values", "both"] }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,22 +1,24 @@
 ---
-title: Spacing
-description: Spacing scale tokens from the Actian foundations.
+title: "Spacing"
+description: "Spacing scale and rhythm tokens."
+sidebar:
+  order: 8
 ---
 
 import TokenTable from "../../../components/TokenTable.astro";
 import PageMetadata from "../../../components/PageMetadata.astro";
-import source from "../../../../vendor/foundations/dist/tokens/spacing.json";
 
 <PageMetadata
   slug="foundations.spacing"
-  source="foundations/dist/tokens/spacing.json"
+  source="composition/foundations.json"
   schema={1}
 />
-
-{source.description && <p>{source.description}</p>}
-
 ## Scale
 
-{(source.blocks || []).filter((b) => b.type === "table").map((b) => (
-  <TokenTable headers={b.headers} rows={b.rows} showSwatch={true} />
-))}
+The spacing scale is token-driven.
+
+<TokenTable
+  headers={["Token","Value","Usage","Status"]}
+  rows={[{"Token":"--zen-spacing-3xs","Value":"`0.125rem` (2px)","Usage":"Tightest spacing, hairline gaps","status_note":"Proposed","status":"proposed"},{"Token":"--zen-spacing-2xs","Value":"`0.25rem` (4px)","Usage":"Between elements within a small component","status_note":"Shipped","status":"shipped"},{"Token":"--zen-spacing-xs","Value":"`0.5rem` (8px)","Usage":"Default spacing between components","status_note":"Shipped","status":"shipped"},{"Token":"--zen-spacing-sm","Value":"`0.75rem` (12px)","Usage":"Padding in a large component","status_note":"Shipped","status":"shipped"},{"Token":"--zen-spacing-md","Value":"`1rem` (16px)","Usage":"Padding in a large component; spacing between components","status_note":"Shipped","status":"shipped"},{"Token":"--zen-spacing-lg","Value":"`1.5rem` (24px)","Usage":"Spacing between sections","status_note":"Shipped","status":"shipped"},{"Token":"--zen-spacing-xl","Value":"`2rem` (32px)","Usage":"Use when a clear separation is needed","status_note":"Shipped","status":"shipped"},{"Token":"--zen-spacing-2xl","Value":"`3rem` (48px)","Usage":"Major section breaks, page padding","status_note":"Proposed","status":"proposed"},{"Token":"--zen-spacing-3xl","Value":"`4rem` (64px)","Usage":"Hero sections, full-page layout","status_note":"Proposed","status":"proposed"}]}
+  showSwatch={true}
+/>
