@@ -1,0 +1,59 @@
+name: Composition editor PR + sync
+
+# Two jobs:
+#  - open-pr:  when the editor commits to docs-edits, ensure a PR docs-edits → main
+#              exists (only if there is a real diff). The PR triggers build.yml's
+#              pull_request build, which runs the composition CI guard.
+#  - sync:     when main advances, merge main into docs-edits so the editor always
+#              starts from the latest content. Merge (not force-reset) preserves any
+#              in-flight unmerged edit; a conflict fails loudly (shouldn't happen —
+#              the editor only touches foundations.json, which main's other commits don't).
+on:
+  push:
+    branches: [docs-edits, main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  open-pr:
+    if: github.ref == 'refs/heads/docs-edits'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Open PR if there is a diff and none open
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if git diff --quiet origin/main origin/docs-edits; then
+            echo "docs-edits == main; nothing to PR."; exit 0
+          fi
+          existing=$(gh pr list --head docs-edits --base main --state open --json number --jq '.[].number')
+          if [ -n "$existing" ]; then
+            echo "PR #$existing already open; it auto-updates."; exit 0
+          fi
+          gh pr create --base main --head docs-edits \
+            --title "docs: composition manifest edit (via editor)" \
+            --body "Edited in the composition editor and committed to \`docs-edits\`. The composition CI guard runs on this PR. Review + merge to publish."
+
+  sync:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: docs-edits
+          fetch-depth: 0
+      - name: Merge main into docs-edits
+        run: |
+          git config user.name "actian-ds-bot"
+          git config user.email "actian-ds-bot@users.noreply.github.com"
+          git fetch origin main
+          if git merge --no-edit origin/main; then
+            git push origin docs-edits
+          else
+            echo "::error::merge conflict syncing main → docs-edits (unexpected — editor should only touch foundations.json)"; exit 1
+          fi
