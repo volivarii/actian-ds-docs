@@ -3,6 +3,14 @@
   "_owner": "actian-ds-docs",
   "chapter": { "slug": "foundations", "title": "Foundations" },
   "pages": [
+    { "slug": "overview", "title": "Overview", "custom": "overview.mdx" },
+    { "slug": "background", "title": "Background", "custom": "background.mdx" },
+    { "slug": "borders", "title": "Borders", "custom": "borders.mdx" },
+    { "slug": "breakpoints", "title": "Breakpoints", "custom": "breakpoints.mdx" },
+    { "slug": "color", "title": "Brand & feedback colors", "custom": "color.mdx" },
+    { "slug": "elevation", "title": "Elevation", "custom": "elevation.mdx" },
+    { "slug": "icons", "title": "Icons", "custom": "icons.mdx" },
+    { "slug": "motion", "title": "Motion", "custom": "motion.mdx" },
     {
       "slug": "spacing",
       "title": "Spacing",
@@ -10,6 +18,7 @@
       "sections": [
         { "ref": "tokens/spacing", "label": "Scale", "intro": "The spacing scale is token-driven." }
       ]
-    }
+    },
+    { "slug": "typography", "title": "Typography", "custom": "typography.mdx" }
   ]
 }

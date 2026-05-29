@@ -161,7 +161,23 @@ function validateCompositionManifest() {
         failures.push(f + " schema: " + JSON.stringify(validate.errors));
         return;
       }
+      var chapterDir = path.join(
+        PATHS.repoRoot,
+        "src",
+        "content",
+        "docs",
+        manifest.chapter.slug,
+      );
       manifest.pages.forEach(function (page) {
+        if (page.custom) {
+          var customPath = path.join(chapterDir, page.custom);
+          if (!fs.existsSync(customPath)) {
+            var relPath = path.relative(PATHS.repoRoot, customPath);
+            failures.push(
+              f + " " + page.slug + ": custom page file not found: " + relPath,
+            );
+          }
+        }
         (page.sections || []).forEach(function (s) {
           try {
             composition.resolveSection(s, bundle);
