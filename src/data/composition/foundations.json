@@ -1,0 +1,15 @@
+{
+  "_schema_version": 1,
+  "_owner": "actian-ds-docs",
+  "chapter": { "slug": "foundations", "title": "Foundations" },
+  "pages": [
+    {
+      "slug": "spacing",
+      "title": "Spacing",
+      "description": "Spacing scale and rhythm tokens.",
+      "sections": [
+        { "ref": "tokens/spacing", "label": "Scale", "intro": "The spacing scale is token-driven." }
+      ]
+    }
+  ]
+}
