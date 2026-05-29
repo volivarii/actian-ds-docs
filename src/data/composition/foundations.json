@@ -3,7 +3,8 @@
   "_owner": "actian-ds-docs",
   "chapter": {
     "slug": "foundations",
-    "title": "Foundations"
+    "title": "Foundations",
+    "description": "Test description"
   },
   "pages": [
     {
