@@ -16,8 +16,9 @@ export default defineConfig({
   redirects: redirectsManifest,
   markdown: {
     // Parse `## Title {#slug}` anchor syntax used by vendored MDs
-    // (accessibility.md, content.md). Plugin emits proper id attributes
-    // so Starlight's right-rail TOC and cross-link anchors work.
+    // (content.md). Plugin emits proper id attributes so Starlight's
+    // right-rail TOC and cross-link anchors work.
+    // Note: accessibility is now a composed .mdx page (no {#slug} anchors).
     remarkPlugins: [remarkCustomHeaderId],
   },
   integrations: [
