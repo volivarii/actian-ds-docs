@@ -45,6 +45,29 @@ function loadManifest(manifestPath) {
   }
 }
 
+// Resolve a node's children (branch nodes) into rendered sub-section results,
+// ordered by `order`. Recursive so deep trees render. Each child is looked up
+// by its id in the same bundle.
+function resolveChildren(node, bundle) {
+  if (!Array.isArray(node.children) || node.children.length === 0) return [];
+  return node.children
+    .slice()
+    .sort(function (a, b) { return (a.order || 0) - (b.order || 0); })
+    .map(function (c) {
+      var childNode = bundle.get(c.id);
+      if (!childNode) {
+        throw new Error("composition: child '" + c.id + "' of '" + node.id + "' not found in dist bundle");
+      }
+      return {
+        heading: childNode.title,
+        intro: null,
+        body: childNode.body || null,
+        blocks: childNode.blocks || [],
+        children: resolveChildren(childNode, bundle),
+      };
+    });
+}
+
 // Resolve one manifest section to { heading, intro, body, blocks, children }.
 function resolveSection(section, bundle) {
   if (!section.ref) {
@@ -67,7 +90,7 @@ function resolveSection(section, bundle) {
     intro: section.intro || null,
     body: node.body || null,
     blocks: blocks,
-    children: [],
+    children: resolveChildren(node, bundle),
   };
 }
 

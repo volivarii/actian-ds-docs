@@ -59,3 +59,30 @@ test("resolveSection: body is null when node has none (foundations case)", funct
   var r = R.resolveSection({ ref: "tokens/spacing" }, bundle);
   assert.equal(r.body, null);
 });
+test("resolveSection: branch node resolves children in order", function () {
+  var b = new Map([
+    ["components", { id: "components", title: "Components",
+      children: [{ id: "components/forms", title: "Forms", order: 2 },
+                 { id: "components/buttons", title: "Buttons", order: 1 }] }],
+    ["components/buttons", { id: "components/buttons", title: "Buttons",
+      blocks: [{ type: "list", items: ["Label every button."] }] }],
+    ["components/forms", { id: "components/forms", title: "Forms",
+      blocks: [{ type: "list", items: ["Associate labels with inputs."] }] }],
+  ]);
+  var r = R.resolveSection({ ref: "components" }, b);
+  assert.equal(r.children.length, 2);
+  assert.equal(r.children[0].heading, "Buttons");   // order:1 first
+  assert.equal(r.children[1].heading, "Forms");
+  assert.equal(r.children[0].blocks[0].items[0], "Label every button.");
+});
+test("resolveSection: missing child throws with the child id", function () {
+  var b = new Map([
+    ["components", { id: "components", title: "Components",
+      children: [{ id: "components/ghost", title: "Ghost", order: 1 }] }],
+  ]);
+  assert.throws(function () { R.resolveSection({ ref: "components" }, b); }, /components\/ghost/);
+});
+test("resolveSection: leaf node yields empty children", function () {
+  var r = R.resolveSection({ ref: "tokens/spacing" }, bundle);
+  assert.deepEqual(r.children, []);
+});
