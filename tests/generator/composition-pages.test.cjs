@@ -59,3 +59,33 @@ test("renderSection: recurses children at the next heading level", function () {
   assert.match(out, /^## Components/m);
   assert.match(out, /^### Buttons/m);
 });
+test("renderPageMdx: directory output keeps foundations slug + schema 1 + 3-level import", function () {
+  var page = { slug: "spacing", title: "Spacing", sidebarOrder: 3,
+    resolved: [{ heading: "Spacing", intro: null, body: null, children: [],
+      blocks: [{ type: "table", headers: ["Token", "Value"], rows: [{ Token: "--x", Value: "8px" }] }] }] };
+  var mdx = G.renderPageMdx(page, { chapterSlug: "foundations", manifestFile: "foundations.json",
+    schemaVersion: 1, output: "directory" });
+  assert.match(mdx, /slug="foundations\.spacing"/);
+  assert.match(mdx, /source="composition\/foundations\.json"/);
+  assert.match(mdx, /schema=\{1\}/);
+  assert.match(mdx, /import TokenTable from "\.\.\/\.\.\/\.\.\/components\/TokenTable\.astro"/);
+});
+test("renderPageMdx: page output uses bare slug, 2-level import, omits unused TokenTable import", function () {
+  var page = { slug: "accessibility", title: "Accessibility", sidebarOrder: 0,
+    resolved: [{ heading: "Principles", intro: null, body: "Four principles.", children: [], blocks: [] }] };
+  var mdx = G.renderPageMdx(page, { chapterSlug: "accessibility", manifestFile: "accessibility.json",
+    schemaVersion: 2, output: "page" });
+  assert.match(mdx, /slug="accessibility"/);
+  assert.match(mdx, /source="composition\/accessibility\.json"/);
+  assert.match(mdx, /schema=\{2\}/);
+  assert.match(mdx, /import PageMetadata from "\.\.\/\.\.\/components\/PageMetadata\.astro"/);
+  assert.doesNotMatch(mdx, /import TokenTable/);
+});
+test("renderPageMdx: 1-arg call still works (foundations defaults)", function () {
+  var page = { slug: "spacing", title: "Spacing", sidebarOrder: 3,
+    resolved: [{ heading: "Spacing", intro: null, body: null, children: [],
+      blocks: [{ type: "table", headers: ["Token", "Value"], rows: [{ Token: "--x", Value: "8px" }] }] }] };
+  var mdx = G.renderPageMdx(page);
+  assert.match(mdx, /slug="foundations\.spacing"/);
+  assert.match(mdx, /schema=\{1\}/);
+});

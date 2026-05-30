@@ -5,9 +5,8 @@ var R = require("./lib/composition-resolve.cjs");
 var escapeMdx = require("./lib/mdx-escape.cjs").escapeMarkdown;
 
 var ROOT = path.resolve(__dirname, "..");
-var FOUNDATIONS_DIST = path.join(ROOT, "vendor", "foundations", "dist");
-var MANIFEST = path.join(ROOT, "src", "data", "composition", "foundations.json");
-var OUT_DIR = path.join(ROOT, "src", "content", "docs", "foundations");
+var DOCS_DIR = path.join(ROOT, "src", "content", "docs");
+var COMPOSITION_DIR = path.join(ROOT, "src", "data", "composition");
 
 // Quote a YAML scalar so values with &, :, #, > etc. don't corrupt the frontmatter.
 function yamlScalar(s) {
@@ -78,16 +77,27 @@ function renderSection(sec, depth) {
   return parts.join("\n\n");
 }
 
-function renderPageMdx(page) {
+function renderPageMdx(page, ctx) {
+  ctx = ctx || {};
+  var output = ctx.output || "directory";
+  var chapterSlug = ctx.chapterSlug || "foundations";
+  var manifestFile = ctx.manifestFile || "foundations.json";
+  var schemaVersion = ctx.schemaVersion || 1;
+  var importPrefix = output === "page" ? "../../" : "../../../";
+  var metaSlug = output === "page" ? page.slug : chapterSlug + "." + page.slug;
+
+  var body = (page.resolved || []).map(function (s) { return renderSection(s, 2); })
+    .filter(Boolean).join("\n\n");
+
   var fm = ["---", "title: " + yamlScalar(page.title)];
   if (page.description) fm.push("description: " + yamlScalar(page.description));
   fm.push("sidebar:", "  order: " + page.sidebarOrder, "---", "");
-  fm.push('import TokenTable from "../../../components/TokenTable.astro";');
-  fm.push('import PageMetadata from "../../../components/PageMetadata.astro";', "");
-  fm.push("<PageMetadata", '  slug="foundations.' + page.slug + '"',
-    '  source="composition/foundations.json"', "  schema={1}", "/>", "");
-  var body = (page.resolved || []).map(function (s) { return renderSection(s, 2); })
-    .filter(Boolean).join("\n\n");
+  if (body.indexOf("<TokenTable") !== -1) {
+    fm.push('import TokenTable from "' + importPrefix + 'components/TokenTable.astro";');
+  }
+  fm.push('import PageMetadata from "' + importPrefix + 'components/PageMetadata.astro";', "");
+  fm.push("<PageMetadata", '  slug="' + metaSlug + '"',
+    '  source="composition/' + manifestFile + '"', "  schema={" + schemaVersion + "}", "/>", "");
   return fm.join("\n") + body + "\n";
 }
 
@@ -137,37 +147,46 @@ function setSidebarOrder(mdxText, order) {
   return [lines[0]].concat(fm).concat(body).join("\n");
 }
 
-function generate() {
-  var manifest = R.loadManifest(MANIFEST);
-  var bundle = R.loadBundle(FOUNDATIONS_DIST);
-  fs.mkdirSync(OUT_DIR, { recursive: true });
-  var written = [];
-  var ordered = [];
+function generateChapter(file) {
+  var manifest = R.loadManifest(path.join(COMPOSITION_DIR, file));
+  var chapterSlug = manifest.chapter.slug;
+  var output = manifest.chapter.output || "directory";
+  var schemaVersion = manifest._schema_version;
+  var distRoot = path.join(ROOT, "vendor", chapterSlug, "dist");
+  if (!fs.existsSync(distRoot)) {
+    throw new Error("composition: dist dir not found for chapter '" + chapterSlug + "': " + distRoot);
+  }
+  var bundle = R.loadBundle(distRoot);
+  var outDir = output === "page" ? DOCS_DIR : path.join(DOCS_DIR, chapterSlug);
+  fs.mkdirSync(outDir, { recursive: true });
+  var ctx = { chapterSlug: chapterSlug, manifestFile: file, schemaVersion: schemaVersion, output: output };
+  var written = [], ordered = [];
   manifest.pages.forEach(function (page, idx) {
     if (page.custom) {
-      // Hand-authored page: the manifest only ORDERS it. Stamp sidebar.order
-      // into the existing file's frontmatter without touching anything else.
-      var customPath = path.join(OUT_DIR, page.custom);
+      var customPath = path.join(outDir, page.custom);
       if (!fs.existsSync(customPath)) {
         throw new Error("composition: custom page file not found: " + customPath);
       }
       var text = fs.readFileSync(customPath, "utf8");
       var stamped = setSidebarOrder(text, idx);
-      if (stamped !== text) {
-        fs.writeFileSync(customPath, stamped, "utf8");
-      }
+      if (stamped !== text) fs.writeFileSync(customPath, stamped, "utf8");
       ordered.push(page.custom);
       return;
     }
     var resolved = (page.sections || []).map(function (s) { return R.resolveSection(s, bundle); });
-    var mdx = renderPageMdx({ slug: page.slug, title: page.title,
-      description: page.description, sidebarOrder: idx, resolved: resolved });
-    var out = path.join(OUT_DIR, page.slug + ".mdx");
-    fs.writeFileSync(out, mdx, "utf8");
+    var mdx = renderPageMdx({ slug: page.slug, title: page.title, description: page.description,
+      sidebarOrder: idx, resolved: resolved }, ctx);
+    fs.writeFileSync(path.join(outDir, page.slug + ".mdx"), mdx, "utf8");
     written.push(page.slug);
   });
-  console.log("generate-composition-pages: wrote " + written.length + " pages, ordered " +
-    ordered.length + " custom pages: " + written.concat(ordered).join(", "));
+  console.log("generate-composition-pages [" + chapterSlug + "]: wrote " + written.length +
+    " page(s), ordered " + ordered.length + " custom: " + written.concat(ordered).join(", "));
+}
+
+function generate() {
+  fs.readdirSync(COMPOSITION_DIR)
+    .filter(function (f) { return f.endsWith(".json") && f !== "composition.schema.json"; })
+    .forEach(generateChapter);
 }
 
 if (require.main === module) {
@@ -175,4 +194,5 @@ if (require.main === module) {
   catch (err) { console.error("generate-composition-pages FAILED:", err.message); process.exit(1); }
 }
 
-module.exports = { generate: generate, renderPageMdx: renderPageMdx, renderSection: renderSection, setSidebarOrder: setSidebarOrder };
+module.exports = { generate: generate, generateChapter: generateChapter,
+  renderPageMdx: renderPageMdx, renderSection: renderSection, setSidebarOrder: setSidebarOrder };
