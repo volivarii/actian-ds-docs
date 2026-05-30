@@ -22,3 +22,36 @@ test("renderPageMdx emits intro prose before blocks", function () {
   var mdx = G.renderPageMdx(page);
   assert.match(mdx, /Lead in\./);
 });
+test("renderSection: data table (no swatch headers) renders as markdown table", function () {
+  var sec = { heading: "Principles", intro: null, body: null, children: [],
+    blocks: [{ type: "table", headers: ["Principle", "Requirement"],
+      rows: [{ Principle: "**Perceivable**", Requirement: "See or hear content" }] }] };
+  var out = G.renderSection(sec, 2);
+  assert.match(out, /\| Principle \| Requirement \|/);
+  assert.match(out, /\| --- \| --- \|/);
+  assert.match(out, /\*\*Perceivable\*\*/);            // emphasis preserved
+  assert.doesNotMatch(out, /<TokenTable/);
+});
+test("renderSection: token table (Token/Value headers) still renders TokenTable", function () {
+  var sec = { heading: "Spacing", intro: null, body: null, children: [],
+    blocks: [{ type: "table", headers: ["Token", "Value"], rows: [{ Token: "--x", Value: "8px" }] }] };
+  assert.match(G.renderSection(sec, 2), /<TokenTable\b/);
+});
+test("renderSection: renders body prose after heading", function () {
+  var sec = { heading: "Principles", intro: null, body: "WCAG has four principles.", children: [], blocks: [] };
+  assert.match(G.renderSection(sec, 2), /WCAG has four principles\./);
+});
+test("renderSection: escapes angle brackets in table cells", function () {
+  var sec = { heading: "C", intro: null, body: null, children: [],
+    blocks: [{ type: "table", headers: ["Content type", "Min ratio"],
+      rows: [{ "Content type": "Normal text (< 18px)", "Min ratio": "4.5:1" }] }] };
+  var out = G.renderSection(sec, 2);
+  assert.match(out, /&lt; 18px/);
+});
+test("renderSection: recurses children at the next heading level", function () {
+  var sec = { heading: "Components", intro: null, body: null, blocks: [],
+    children: [{ heading: "Buttons", intro: null, body: null, blocks: [], children: [] }] };
+  var out = G.renderSection(sec, 2);
+  assert.match(out, /^## Components/m);
+  assert.match(out, /^### Buttons/m);
+});

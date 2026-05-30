@@ -23,24 +23,55 @@ function renderListItem(item) {
   return "- " + escapeMdx(JSON.stringify(item));
 }
 
+// A table is a token table (→ <TokenTable> with swatches) iff it carries a
+// swatch/value-bearing column. Foundations token tables do; accessibility data
+// tables do not. Keeps the one composed foundations table byte-identical.
+var SWATCH_HEADERS = { "Token": true, "Hex": true, "Hex (Figma)": true, "Value": true };
+function isTokenTable(block) {
+  return (block.headers || []).some(function (h) { return SWATCH_HEADERS[h]; });
+}
+// GFM cell: escape MDX-dangerous chars, escape the pipe delimiter, collapse newlines.
+function cell(v) {
+  return escapeMdx(v == null ? "" : String(v)).replace(/\|/g, "\\|").replace(/\n+/g, " ");
+}
+function renderMarkdownTable(block) {
+  var headers = block.headers || [];
+  if (headers.length === 0) return "";
+  var head = "| " + headers.map(cell).join(" | ") + " |";
+  var sep = "| " + headers.map(function () { return "---"; }).join(" | ") + " |";
+  var rows = (block.rows || []).map(function (row) {
+    return "| " + headers.map(function (h) { return cell(row[h]); }).join(" | ") + " |";
+  });
+  return [head, sep].concat(rows).join("\n");
+}
+
 function renderBlock(block) {
   if (block.type === "list") return (block.items || []).map(renderListItem).join("\n");
   if (block.type === "table") {
-    // JSX so TokenTable renders swatches + status, matching the hand-authored pages.
-    return "<TokenTable\n  headers={" + JSON.stringify(block.headers || []) +
-      "}\n  rows={" + JSON.stringify(block.rows || []) +
-      "}\n  showSwatch={true}\n/>";
+    if (isTokenTable(block)) {
+      return "<TokenTable\n  headers={" + JSON.stringify(block.headers || []) +
+        "}\n  rows={" + JSON.stringify(block.rows || []) +
+        "}\n  showSwatch={true}\n/>";
+    }
+    return renderMarkdownTable(block);
   }
   console.warn("generate-composition-pages: skipping unknown block type '" + block.type + "'");
   return "";
 }
 
-function renderSection(sec) {
+function renderSection(sec, depth) {
+  var level = Math.min(depth || 2, 5);
+  var hashes = new Array(level + 1).join("#");
   var parts = [];
-  if (sec.heading) parts.push("## " + escapeMdx(sec.heading));   // static heading → TOC
+  if (sec.heading) parts.push(hashes + " " + escapeMdx(sec.heading));   // static heading → TOC
   if (sec.intro) parts.push(escapeMdx(sec.intro));
+  if (sec.body) parts.push(escapeMdx(sec.body));
   (sec.blocks || []).forEach(function (b) {
     var r = renderBlock(b);
+    if (r) parts.push(r);
+  });
+  (sec.children || []).forEach(function (child) {
+    var r = renderSection(child, (depth || 2) + 1);
     if (r) parts.push(r);
   });
   return parts.join("\n\n");
@@ -54,7 +85,8 @@ function renderPageMdx(page) {
   fm.push('import PageMetadata from "../../../components/PageMetadata.astro";', "");
   fm.push("<PageMetadata", '  slug="foundations.' + page.slug + '"',
     '  source="composition/foundations.json"', "  schema={1}", "/>", "");
-  var body = (page.resolved || []).map(renderSection).filter(Boolean).join("\n\n");
+  var body = (page.resolved || []).map(function (s) { return renderSection(s, 2); })
+    .filter(Boolean).join("\n\n");
   return fm.join("\n") + body + "\n";
 }
 
