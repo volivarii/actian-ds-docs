@@ -9,7 +9,6 @@
  * Run by prebuild/predev.
  *
  * Outputs (all gitignored — regenerated each build):
- *   src/content/docs/accessibility.md
  *   src/content/docs/content.md
  */
 
@@ -26,13 +25,6 @@ var UPDATED = vendored.vendored_at || "";
 
 // PAGES — { slug, source path, title, description, .md URL twin }
 var PAGES = [
-  {
-    slug: "accessibility",
-    source: "vendor/accessibility/accessibility.md",
-    sourceKey: "accessibility/accessibility.md",
-    title: "Accessibility",
-    description: "WCAG 2.1 AA guidance for the Actian DS.",
-  },
   {
     // Phase 4b: the /content page now renders global / cross-cutting
     // content guidance only (voice, tone, terminology, UX-pattern topics).

@@ -1,0 +1,30 @@
+{
+  "_schema_version": 2,
+  "_owner": "actian-ds-docs",
+  "chapter": {
+    "slug": "accessibility",
+    "title": "Accessibility",
+    "output": "page"
+  },
+  "pages": [
+    {
+      "slug": "accessibility",
+      "title": "Accessibility",
+      "description": "WCAG 2.1 AA guidance for the Actian DS.",
+      "sections": [
+        { "ref": "principles" },
+        { "ref": "color-contrast" },
+        { "ref": "typography" },
+        { "ref": "motion" },
+        { "ref": "focus-keyboard" },
+        { "ref": "aria-labels" },
+        { "ref": "reading-order-landmarks" },
+        { "ref": "touch-pointer" },
+        { "ref": "error-prevention" },
+        { "ref": "session-timeout-warnings" },
+        { "ref": "components" },
+        { "ref": "designer-handoff-checklist" }
+      ]
+    }
+  ]
+}
