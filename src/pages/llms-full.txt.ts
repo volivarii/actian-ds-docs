@@ -49,15 +49,11 @@ export const GET: APIRoute = async () => {
     );
   }
 
-  // Accessibility + Content — read MD from vendor directly
-  try {
-    const a11y = fs.readFileSync(
-      path.resolve("./vendor/accessibility/accessibility.md"),
-      "utf8",
-    );
-    sections.push("## Accessibility", "", a11y);
-  } catch (e) {
-    /* skip */
+  // Accessibility — now a composed docs page (src/content/docs/accessibility.mdx),
+  // sourced from the docs collection like foundations/components above.
+  const accessibility = docs.find((e) => e.id === "accessibility");
+  if (accessibility) {
+    sections.push("## Accessibility", "", accessibility.body || "");
   }
   try {
     // Phase 4b: global / cross-cutting content guidance only. Component-scoped
