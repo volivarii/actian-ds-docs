@@ -45,16 +45,15 @@ function loadManifest(manifestPath) {
   }
 }
 
-// Resolve one manifest section to { heading, intro, blocks }.
+// Resolve one manifest section to { heading, intro, body, blocks, children }.
 function resolveSection(section, bundle) {
   if (!section.ref) {
-    return { heading: null, intro: section.intro || null, blocks: [] };
+    return { heading: null, intro: section.intro || null, body: null, blocks: [], children: [] };
   }
   var node = bundle.get(section.ref);
-  if (!node) throw new Error("composition: ref '" + section.ref + "' not found in foundations dist bundle");
+  if (!node) throw new Error("composition: ref '" + section.ref + "' not found in dist bundle");
   if (section.fragment) {
     var slug = section.fragment.slice(1);
-    // child whose id ends with /<slug> (or equals slug)
     var childId = section.ref + "/" + slug;
     node = bundle.get(childId);
     if (!node) throw new Error("composition: fragment '" + section.fragment +
@@ -66,7 +65,9 @@ function resolveSection(section, bundle) {
   return {
     heading: section.label || node.title,
     intro: section.intro || null,
+    body: node.body || null,
     blocks: blocks,
+    children: [],
   };
 }
 

@@ -48,3 +48,14 @@ test("resolveSection: unresolved fragment throws with the tried id", function ()
     R.resolveSection({ ref: "color-primitives", fragment: "#nonexistent" }, bundle);
   }, /color-primitives\/nonexistent/);
 });
+test("resolveSection: surfaces node.body when present", function () {
+  var b = new Map([["principles", { id: "principles", title: "Principles",
+    body: "The four WCAG principles define what accessible products do.",
+    blocks: [] }]]);
+  var r = R.resolveSection({ ref: "principles" }, b);
+  assert.equal(r.body, "The four WCAG principles define what accessible products do.");
+});
+test("resolveSection: body is null when node has none (foundations case)", function () {
+  var r = R.resolveSection({ ref: "tokens/spacing" }, bundle);
+  assert.equal(r.body, null);
+});
