@@ -491,11 +491,56 @@ function renderMotion(defaults) {
   return '<MotionPattern resolvedPatterns={' + jsLit(resolved) + '} />';
 }
 
+// A section is fanned-in from a global content pattern iff it carries a
+// `source: "pattern:<slug>"` marker. Authored (component-owned) sections have
+// no `source`. See scripts/content/fanout-patterns.js in the knowledge repo.
+function isPatternSection(s) {
+  return typeof s.source === "string" && s.source.indexOf("pattern:") === 0;
+}
+
+// Render a compact "Related patterns" reference linking to the global /content
+// page anchors, instead of inlining the patterns' full content. Used when a
+// component HAS its own authored content (so the patterns would otherwise
+// duplicate it). Mirrors renderGlobalA11yLink's BASE_URL link style.
+function renderRelatedPatterns(slugs) {
+  var base = "${import.meta.env.BASE_URL.replace(/\\/?$/, '/')}";
+  var humanize = function (slug) {
+    return slug.replace(/-/g, " ").replace(/^./, function (c) { return c.toUpperCase(); });
+  };
+  var links = slugs.map(function (slug) {
+    return "- <a href={`" + base + "content/#" + slug + "`}>" + humanize(slug) + "</a>";
+  }).join("\n");
+  return "### Related patterns\n\nThis component follows shared content patterns. "
+    + "See the full guidance on the Content guidelines page:\n\n" + links;
+}
+
+// Rule (applies the general "authored takes precedence" principle to the
+// content domain): when a component has its OWN authored content, render only
+// that and LINK to the related global patterns — inlining the patterns' full
+// content alongside authored guidance just duplicates it. When there is no
+// authored content (status "synthesized": pattern fan-out only), inline the
+// patterns — they ARE the content. (Other domains already render
+// authored-OR-fallback per section; this brings content in line.)
 function renderContentDomain(contentDomain, WARNINGS) {
   if (!contentDomain) return "";
-  return "## Content guidelines\n\n" + contentDomain.sections.map(function (s) {
-    return renderContentSection(s, WARNINGS);
-  }).join("\n\n");
+  var sections = contentDomain.sections || [];
+  var authored = sections.filter(function (s) { return !isPatternSection(s); });
+  var patternSections = sections.filter(isPatternSection);
+
+  var rendered;
+  if (authored.length && patternSections.length) {
+    rendered = authored.map(function (s) { return renderContentSection(s, WARNINGS); });
+    var seen = {};
+    var slugs = [];
+    patternSections.forEach(function (s) {
+      var slug = s.source.slice("pattern:".length);
+      if (slug && !seen[slug]) { seen[slug] = true; slugs.push(slug); }
+    });
+    if (slugs.length) rendered.push(renderRelatedPatterns(slugs));
+  } else {
+    rendered = sections.map(function (s) { return renderContentSection(s, WARNINGS); });
+  }
+  return "## Content guidelines\n\n" + rendered.join("\n\n");
 }
 
 function renderA11yRefs(defaults) {
