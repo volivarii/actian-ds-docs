@@ -24,9 +24,10 @@ function renderListItem(item) {
 }
 
 // A table is a token table (→ <TokenTable> with swatches) iff it carries a
-// swatch/value-bearing column. Foundations token tables do; accessibility data
-// tables do not. Keeps the one composed foundations table byte-identical.
-var SWATCH_HEADERS = { "Token": true, "Hex": true, "Hex (Figma)": true, "Value": true };
+// Token or Hex column. Foundations token tables do; generic data tables with a
+// "Value" column do not. Keeps the one composed foundations table byte-identical:
+// spacing headers are ["Token","Value","Usage","Status"] — still matches on "Token".
+var SWATCH_HEADERS = { "Token": true, "Hex": true, "Hex (Figma)": true };
 function isTokenTable(block) {
   return (block.headers || []).some(function (h) { return SWATCH_HEADERS[h]; });
 }

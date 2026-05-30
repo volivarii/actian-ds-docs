@@ -37,9 +37,13 @@ test("renderSection: token table (Token/Value headers) still renders TokenTable"
     blocks: [{ type: "table", headers: ["Token", "Value"], rows: [{ Token: "--x", Value: "8px" }] }] };
   assert.match(G.renderSection(sec, 2), /<TokenTable\b/);
 });
-test("renderSection: renders body prose after heading", function () {
-  var sec = { heading: "Principles", intro: null, body: "WCAG has four principles.", children: [], blocks: [] };
-  assert.match(G.renderSection(sec, 2), /WCAG has four principles\./);
+test("renderSection: renders body prose after heading and before blocks", function () {
+  var sec = { heading: "Principles", intro: null, body: "WCAG has four principles.", children: [],
+    blocks: [{ type: "list", items: ["Use semantic markup."] }] };
+  var out = G.renderSection(sec, 2);
+  assert.match(out, /WCAG has four principles\./);
+  assert.ok(out.indexOf("WCAG has four principles.") < out.indexOf("Use semantic markup."),
+    "body should render before blocks");
 });
 test("renderSection: escapes angle brackets in table cells", function () {
   var sec = { heading: "C", intro: null, body: null, children: [],
