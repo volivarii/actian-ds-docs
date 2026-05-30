@@ -34,8 +34,9 @@ src/content/docs/foundations/*/**
 # Generated at prebuild by scripts/fetch-state.cjs
 src/data/state.json
 
+# Generated at prebuild by scripts/generate-composition-pages.cjs
+src/content/docs/accessibility.mdx
 # Generated at prebuild by scripts/sync-vendored-md.cjs
-src/content/docs/accessibility.md
 src/content/docs/content.md
 
 # Generated at prebuild by scripts/generate-foundations-pages.cjs

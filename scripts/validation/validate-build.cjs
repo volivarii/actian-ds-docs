@@ -15,7 +15,7 @@
  *   4. Schema-version match — paths-manifest._schema_version === 1
  *   5. composition-manifest — every src/data/composition/*.json validates
  *      against composition.schema.json AND every section ref/fragment
- *      resolves against the foundations dist bundle
+ *      resolves against its own chapter's dist bundle (vendor/<chapter.slug>/dist)
  *
  * Each function returns a result object; validateAll runs them all.
  */
@@ -136,8 +136,8 @@ function validateSchemaVersion() {
 
 // Composition manifests (src/data/composition/*.json) drive generated docs
 // pages. This guard validates every manifest against composition.schema.json
-// AND that every section ref/fragment resolves against the foundations dist
-// bundle — catching drift between a manifest and the substrate it composes.
+// AND that every section ref/fragment resolves against its own chapter's dist
+// bundle (vendor/<chapter.slug>/dist) — catching drift between a manifest and the substrate it composes.
 function validateCompositionManifest() {
   var dir = path.join(PATHS.repoRoot, "src", "data", "composition");
   var schemaPath = path.join(dir, "composition.schema.json");
@@ -150,7 +150,6 @@ function validateCompositionManifest() {
   var schema = JSON.parse(fs.readFileSync(schemaPath, "utf8"));
   var validate = new Ajv({ allErrors: true }).compile(schema);
   var failures = [];
-  var bundle = composition.loadBundle(PATHS.foundations.distDir);
   fs.readdirSync(dir)
     .filter(function (f) {
       return f.endsWith(".json") && f !== "composition.schema.json";
@@ -161,6 +160,12 @@ function validateCompositionManifest() {
         failures.push(f + " schema: " + JSON.stringify(validate.errors));
         return;
       }
+      var distDir = path.join(PATHS.vendor, manifest.chapter.slug, "dist");
+      if (!fs.existsSync(distDir)) {
+        failures.push(f + ": dist dir missing for chapter '" + manifest.chapter.slug + "' (" + distDir + ")");
+        return;
+      }
+      var bundle = composition.loadBundle(distDir);
       manifest.pages.forEach(function (page) {
         (page.sections || []).forEach(function (s) {
           try {

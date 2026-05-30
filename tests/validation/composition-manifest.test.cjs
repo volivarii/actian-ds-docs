@@ -57,3 +57,49 @@ test("validateCompositionManifest passes for the committed manifest", function (
   var r = validateBuild.validateCompositionManifest();
   assert.equal(r.pass, true, JSON.stringify(r.failures));
 });
+
+test("accepts chapter.output 'page'", function () {
+  var ok = validate({ _schema_version: 2, _owner: "actian-ds-docs",
+    chapter: { slug: "accessibility", title: "Accessibility", output: "page" },
+    pages: [{ slug: "accessibility", title: "Accessibility", sections: [{ ref: "principles" }] }] });
+  assert.ok(ok, JSON.stringify(validate.errors));
+});
+test("accepts chapter.output 'directory'", function () {
+  var ok = validate({ _schema_version: 2, _owner: "actian-ds-docs",
+    chapter: { slug: "foundations", title: "Foundations", output: "directory" },
+    pages: [{ slug: "spacing", title: "Spacing", sections: [{ ref: "tokens/spacing" }] }] });
+  assert.ok(ok, JSON.stringify(validate.errors));
+});
+test("v1 manifest may also carry chapter.output (output is version-agnostic)", function () {
+  var ok = validate({ _schema_version: 1, _owner: "actian-ds-docs",
+    chapter: { slug: "foundations", title: "Foundations", output: "directory" },
+    pages: [{ slug: "spacing", title: "Spacing", sections: [{ ref: "tokens/spacing" }] }] });
+  assert.ok(ok, JSON.stringify(validate.errors));
+});
+test("v1 manifest without output still validates (back-compat)", function () {
+  var ok = validate(base([{ slug: "spacing", title: "Spacing", sections: [{ ref: "tokens/spacing" }] }]));
+  assert.ok(ok, JSON.stringify(validate.errors));
+});
+test("rejects an unknown chapter.output value", function () {
+  var ok = validate({ _schema_version: 2, _owner: "actian-ds-docs",
+    chapter: { slug: "x", title: "X", output: "sidebar" },
+    pages: [{ slug: "x", title: "X", sections: [{ ref: "a" }] }] });
+  assert.ok(!ok);
+});
+test("rejects an unknown _schema_version", function () {
+  var ok = validate({ _schema_version: 3, _owner: "actian-ds-docs",
+    chapter: { slug: "x", title: "X" },
+    pages: [{ slug: "x", title: "X", sections: [{ ref: "a" }] }] });
+  assert.ok(!ok);
+});
+
+test("accessibility manifest: all 12 sections resolve against the accessibility dist", function () {
+  var composition = require("../../scripts/lib/composition-resolve.cjs");
+  var manifest = JSON.parse(fs.readFileSync(
+    path.join(ROOT, "src", "data", "composition", "accessibility.json"), "utf8"));
+  var bundle = composition.loadBundle(path.join(ROOT, "vendor", "accessibility", "dist"));
+  manifest.pages[0].sections.forEach(function (s) {
+    composition.resolveSection(s, bundle);   // throws if any ref is missing
+  });
+  assert.equal(manifest.pages[0].sections.length, 12);
+});
