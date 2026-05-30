@@ -6,7 +6,7 @@
   "required": ["_schema_version", "_owner", "chapter", "pages"],
   "additionalProperties": false,
   "properties": {
-    "_schema_version": { "enum": [1, 2] },
+    "_schema_version": { "type": "integer", "enum": [1, 2] },
     "_owner": { "const": "actian-ds-docs" },
     "chapter": {
       "type": "object",

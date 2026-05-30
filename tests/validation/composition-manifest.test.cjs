@@ -58,7 +58,7 @@ test("validateCompositionManifest passes for the committed manifest", function (
   assert.equal(r.pass, true, JSON.stringify(r.failures));
 });
 
-test("accepts v2 manifest with chapter.output 'page'", function () {
+test("accepts chapter.output 'page'", function () {
   var ok = validate({ _schema_version: 2, _owner: "actian-ds-docs",
     chapter: { slug: "accessibility", title: "Accessibility", output: "page" },
     pages: [{ slug: "accessibility", title: "Accessibility", sections: [{ ref: "principles" }] }] });
@@ -66,6 +66,12 @@ test("accepts v2 manifest with chapter.output 'page'", function () {
 });
 test("accepts chapter.output 'directory'", function () {
   var ok = validate({ _schema_version: 2, _owner: "actian-ds-docs",
+    chapter: { slug: "foundations", title: "Foundations", output: "directory" },
+    pages: [{ slug: "spacing", title: "Spacing", sections: [{ ref: "tokens/spacing" }] }] });
+  assert.ok(ok, JSON.stringify(validate.errors));
+});
+test("v1 manifest may also carry chapter.output (output is version-agnostic)", function () {
+  var ok = validate({ _schema_version: 1, _owner: "actian-ds-docs",
     chapter: { slug: "foundations", title: "Foundations", output: "directory" },
     pages: [{ slug: "spacing", title: "Spacing", sections: [{ ref: "tokens/spacing" }] }] });
   assert.ok(ok, JSON.stringify(validate.errors));
