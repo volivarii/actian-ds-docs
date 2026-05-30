@@ -149,17 +149,20 @@ function setSidebarOrder(mdxText, order) {
 
 function generateChapter(file) {
   var manifest = R.loadManifest(path.join(COMPOSITION_DIR, file));
+  if (!manifest || !manifest.chapter || !manifest.chapter.slug) {
+    throw new Error("composition: not a valid manifest (missing chapter.slug): " + file);
+  }
+  if (!manifest._schema_version) {
+    throw new Error("composition: missing _schema_version in " + file);
+  }
   var chapterSlug = manifest.chapter.slug;
   var output = manifest.chapter.output || "directory";
   var schemaVersion = manifest._schema_version;
   var distRoot = path.join(ROOT, "vendor", chapterSlug, "dist");
-  if (!fs.existsSync(distRoot)) {
-    throw new Error("composition: dist dir not found for chapter '" + chapterSlug + "': " + distRoot);
-  }
-  var bundle = R.loadBundle(distRoot);
   var outDir = output === "page" ? DOCS_DIR : path.join(DOCS_DIR, chapterSlug);
   fs.mkdirSync(outDir, { recursive: true });
   var ctx = { chapterSlug: chapterSlug, manifestFile: file, schemaVersion: schemaVersion, output: output };
+  var bundle = null;  // lazy: only loaded when a page actually composes sections
   var written = [], ordered = [];
   manifest.pages.forEach(function (page, idx) {
     if (page.custom) {
@@ -172,6 +175,12 @@ function generateChapter(file) {
       if (stamped !== text) fs.writeFileSync(customPath, stamped, "utf8");
       ordered.push(page.custom);
       return;
+    }
+    if (!bundle) {
+      if (!fs.existsSync(distRoot)) {
+        throw new Error("composition: dist dir not found for chapter '" + chapterSlug + "': " + distRoot);
+      }
+      bundle = R.loadBundle(distRoot);
     }
     var resolved = (page.sections || []).map(function (s) { return R.resolveSection(s, bundle); });
     var mdx = renderPageMdx({ slug: page.slug, title: page.title, description: page.description,

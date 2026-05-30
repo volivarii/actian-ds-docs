@@ -88,4 +88,5 @@ test("renderPageMdx: 1-arg call still works (foundations defaults)", function ()
   var mdx = G.renderPageMdx(page);
   assert.match(mdx, /slug="foundations\.spacing"/);
   assert.match(mdx, /schema=\{1\}/);
+  assert.match(mdx, /import PageMetadata from "\.\.\/\.\.\/\.\.\/components\//);
 });
