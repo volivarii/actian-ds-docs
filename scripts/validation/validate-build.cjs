@@ -15,7 +15,7 @@
  *   4. Schema-version match — paths-manifest._schema_version === 1
  *   5. composition-manifest — every src/data/composition/*.json validates
  *      against composition.schema.json AND every section ref/fragment
- *      resolves against the foundations dist bundle
+ *      resolves against its own chapter's dist bundle (vendor/<chapter.slug>/dist)
  *
  * Each function returns a result object; validateAll runs them all.
  */
@@ -136,8 +136,8 @@ function validateSchemaVersion() {
 
 // Composition manifests (src/data/composition/*.json) drive generated docs
 // pages. This guard validates every manifest against composition.schema.json
-// AND that every section ref/fragment resolves against the foundations dist
-// bundle — catching drift between a manifest and the substrate it composes.
+// AND that every section ref/fragment resolves against its own chapter's dist
+// bundle (vendor/<chapter.slug>/dist) — catching drift between a manifest and the substrate it composes.
 function validateCompositionManifest() {
   var dir = path.join(PATHS.repoRoot, "src", "data", "composition");
   var schemaPath = path.join(dir, "composition.schema.json");

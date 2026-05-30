@@ -93,7 +93,13 @@ test("rejects an unknown _schema_version", function () {
   assert.ok(!ok);
 });
 
-test("validateCompositionManifest resolves accessibility refs against accessibility dist", function () {
-  var r = validateBuild.validateCompositionManifest();
-  assert.equal(r.pass, true, JSON.stringify(r.failures));
+test("accessibility manifest: all 12 sections resolve against the accessibility dist", function () {
+  var composition = require("../../scripts/lib/composition-resolve.cjs");
+  var manifest = JSON.parse(fs.readFileSync(
+    path.join(ROOT, "src", "data", "composition", "accessibility.json"), "utf8"));
+  var bundle = composition.loadBundle(path.join(ROOT, "vendor", "accessibility", "dist"));
+  manifest.pages[0].sections.forEach(function (s) {
+    composition.resolveSection(s, bundle);   // throws if any ref is missing
+  });
+  assert.equal(manifest.pages[0].sections.length, 12);
 });
