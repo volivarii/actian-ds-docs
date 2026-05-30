@@ -92,3 +92,8 @@ test("rejects an unknown _schema_version", function () {
     pages: [{ slug: "x", title: "X", sections: [{ ref: "a" }] }] });
   assert.ok(!ok);
 });
+
+test("validateCompositionManifest resolves accessibility refs against accessibility dist", function () {
+  var r = validateBuild.validateCompositionManifest();
+  assert.equal(r.pass, true, JSON.stringify(r.failures));
+});

@@ -150,7 +150,6 @@ function validateCompositionManifest() {
   var schema = JSON.parse(fs.readFileSync(schemaPath, "utf8"));
   var validate = new Ajv({ allErrors: true }).compile(schema);
   var failures = [];
-  var bundle = composition.loadBundle(PATHS.foundations.distDir);
   fs.readdirSync(dir)
     .filter(function (f) {
       return f.endsWith(".json") && f !== "composition.schema.json";
@@ -161,6 +160,12 @@ function validateCompositionManifest() {
         failures.push(f + " schema: " + JSON.stringify(validate.errors));
         return;
       }
+      var distDir = path.join(PATHS.vendor, manifest.chapter.slug, "dist");
+      if (!fs.existsSync(distDir)) {
+        failures.push(f + ": dist dir missing for chapter '" + manifest.chapter.slug + "' (" + distDir + ")");
+        return;
+      }
+      var bundle = composition.loadBundle(distDir);
       manifest.pages.forEach(function (page) {
         (page.sections || []).forEach(function (s) {
           try {
