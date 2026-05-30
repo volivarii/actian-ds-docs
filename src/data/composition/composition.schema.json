@@ -6,7 +6,7 @@
   "required": ["_schema_version", "_owner", "chapter", "pages"],
   "additionalProperties": false,
   "properties": {
-    "_schema_version": { "const": 1 },
+    "_schema_version": { "enum": [1, 2] },
     "_owner": { "const": "actian-ds-docs" },
     "chapter": {
       "type": "object",
@@ -15,7 +15,8 @@
       "properties": {
         "slug": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
         "title": { "type": "string", "minLength": 1 },
-        "description": { "type": "string" }
+        "description": { "type": "string" },
+        "output": { "enum": ["page", "directory"] }
       }
     },
     "pages": {
@@ -41,7 +42,7 @@
               "properties": {
                 "ref": {
                   "type": "string",
-                  "description": "Foundations dist section id, e.g. tokens/spacing. Resolution against the foundations dist bundle is enforced by the CI guard (validateCompositionManifest), not by a schema pattern."
+                  "description": "Section id in the chapter's dist (vendor/<chapter.slug>/dist), e.g. tokens/spacing or color-contrast. Resolution against that dist bundle is enforced by the CI guard (validateCompositionManifest), not by a schema pattern."
                 },
                 "fragment": {
                   "type": "string",
