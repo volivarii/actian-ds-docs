@@ -1,9 +1,9 @@
 {
   "knowledge_repo": "volivarii/actian-ds-knowledge",
   "knowledge_repo_version_range": "<1.0.0",
-  "knowledge_repo_resolved_version": "v0.25.15",
-  "knowledge_repo_resolved_sha": "3325847b3e32d07300c1b6b4052100d166b1a42e",
-  "vendored_at": "2026-06-02T14:41:58.935Z",
+  "knowledge_repo_resolved_version": "v0.26.1",
+  "knowledge_repo_resolved_sha": "418dbcb4c5754451ffca95d09a0bcc6a82cc8438",
+  "vendored_at": "2026-06-02T15:41:41.836Z",
   "vendored_entries": [
     "ARCHITECTURE.md",
     "AUTHORING.md",
@@ -12,6 +12,7 @@
     "accessibility",
     "app-context",
     "auth-worker",
+    "clients",
     "components",
     "content",
     "editor",
@@ -44,5 +45,5 @@
     "scripts",
     "tests"
   ],
-  "vendor_url": "https://github.com/volivarii/actian-ds-knowledge/tree/v0.25.15"
+  "vendor_url": "https://github.com/volivarii/actian-ds-knowledge/tree/v0.26.1"
 }
