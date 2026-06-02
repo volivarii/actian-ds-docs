@@ -1,12 +1,16 @@
 "use strict";
 
 /**
- * paths.cjs — Manifest-driven vendor path resolver (docs site).
+ * paths.cjs — Manifest-driven vendor path resolver (docs site, thin wrapper).
  *
- * Reads vendor/paths-manifest.json at module load and builds the PATHS
- * object via dot-notation walker + collection function builders. The
- * docs site consumes the same vendored knowledge snapshot as the
- * plugin, so the manifest contract is shared.
+ * Reads vendor/paths-manifest.json at module load and builds the PATHS object.
+ * The GENERIC manifest→PATHS walker (schema-version check, dot-notation
+ * setNested, collection function builders) is single-sourced from the
+ * substrate's reference reader (vendor/clients/resolve-paths.js, imported
+ * below — vendor/clients/package.json pins it to CommonJS so this `type:module`
+ * repo can require it). This wrapper adds the docs-specific layers: the
+ * vendor-integrity check, the knowledge-version floor, and the convenience
+ * overlays (repoRoot, vendor, foundations.distDir).
  *
  * Note on caching: PATHS is built once per Node process at module load.
  * Build/CLI processes are short-lived, so vendor changes between
@@ -21,7 +25,13 @@ var VENDOR = path.join(REPO_ROOT, "vendor");
 var MANIFEST_PATH = path.join(VENDOR, "paths-manifest.json");
 var VENDORED_JSON_PATH = path.join(REPO_ROOT, "vendored.json");
 
-var SUPPORTED_SCHEMA_VERSION = "v1";
+// Generic manifest→PATHS resolver core — single-sourced from the vendored
+// substrate reference reader (refreshed every vendor pull, zero drift).
+// vendor/clients/package.json pins clients/ to CommonJS so this require works
+// even though the docs repo root is `type: module`.
+var resolverCore = require(path.join(VENDOR, "clients", "resolve-paths.js"));
+var buildPathsFromManifest = resolverCore.buildPathsFromManifest;
+var SUPPORTED_SCHEMA_VERSION = resolverCore.SUPPORTED_SCHEMA_VERSION;
 
 /**
  * Knowledge floor — vendored knowledge must be at or above this version.
@@ -91,93 +101,6 @@ function verifyVendorIntegrity(manifest, vendoredJsonPath) {
         "of band. Re-run scripts/vendor/vendor-snapshot.cjs --range.",
     );
   }
-}
-
-function setNested(obj, parts, value) {
-  var cursor = obj;
-  for (var i = 0; i < parts.length - 1; i++) {
-    var part = parts[i];
-    if (cursor[part] !== undefined && typeof cursor[part] !== "object") {
-      throw new Error(
-        "paths.cjs: dot-notation key conflict — '" +
-          parts.join(".") +
-          "' cannot coexist with a leaf at '" +
-          parts.slice(0, i + 1).join(".") +
-          "'",
-      );
-    }
-    cursor[part] = cursor[part] || {};
-    cursor = cursor[part];
-  }
-  var leaf = parts[parts.length - 1];
-  if (cursor[leaf] !== undefined) {
-    throw new Error(
-      "paths.cjs: dot-notation key conflict — '" +
-        parts.join(".") +
-        "' is already set",
-    );
-  }
-  cursor[leaf] = value;
-}
-
-function buildPathsFromManifest(manifest, vendorRoot) {
-  if (manifest.manifest_schema_version !== SUPPORTED_SCHEMA_VERSION) {
-    throw new Error(
-      "paths.cjs: expected manifest_schema_version '" +
-        SUPPORTED_SCHEMA_VERSION +
-        "', found '" +
-        manifest.manifest_schema_version +
-        "'. Docs site must be upgraded.",
-    );
-  }
-
-  var out = {};
-  var paths = manifest.paths || {};
-  for (var name in paths) {
-    var entry = paths[name];
-    if (!entry.path) {
-      throw new Error("paths.cjs: entry '" + name + "' missing 'path' field");
-    }
-    if (!entry.type) {
-      throw new Error("paths.cjs: entry '" + name + "' missing 'type' field");
-    }
-    if (!entry.origin) {
-      throw new Error("paths.cjs: entry '" + name + "' missing 'origin' field");
-    }
-    if (!entry.description) {
-      throw new Error(
-        "paths.cjs: entry '" + name + "' missing 'description' field",
-      );
-    }
-    setNested(out, name.split("."), path.join(vendorRoot, entry.path));
-  }
-
-  var collections = manifest.collections || {};
-  for (var collName in collections) {
-    var coll = collections[collName];
-    if (!coll.dir) {
-      throw new Error(
-        "paths.cjs: collection '" + collName + "' missing 'dir' field",
-      );
-    }
-    if (!coll.pattern) {
-      throw new Error(
-        "paths.cjs: collection '" + collName + "' missing 'pattern' field",
-      );
-    }
-    var dir = path.join(vendorRoot, coll.dir);
-    setNested(
-      out,
-      collName.split("."),
-      (function (collDir, pattern) {
-        return function (slug) {
-          return path.join(collDir, pattern.replace("{slug}", slug));
-        };
-      })(dir, coll.pattern),
-    );
-  }
-
-  return out;
 }
 
 function loadAndBuildPaths() {
