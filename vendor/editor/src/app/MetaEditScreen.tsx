@@ -29,6 +29,8 @@ import { guidelineMetaUiSchema } from "../uiSchemas/guidelineMeta";
 import { parseYaml, stringifyYaml } from "../form-engine/yamlSerializer";
 import { CategorySelectWidget } from "../form-engine/widgets/CategorySelectWidget";
 import { RelatedMultiSelectWidget } from "../form-engine/widgets/RelatedMultiSelectWidget";
+import { A11yRefsWidget } from "../form-engine/widgets/A11yRefsWidget";
+import { metaFormTemplates } from "../form-engine/templates";
 import { TierBanner } from "./TierBanner";
 
 // Custom RJSF widgets keyed by uiSchema `ui:widget` name. Octokit is
@@ -36,6 +38,7 @@ import { TierBanner } from "./TierBanner";
 const META_WIDGETS = {
   CategorySelect: CategorySelectWidget,
   RelatedMultiSelect: RelatedMultiSelectWidget,
+  A11yRefsPicker: A11yRefsWidget,
 };
 import { submissionCartSingleton } from "../drafts/store-instance";
 import { useCart } from "../drafts/useCart";
@@ -316,15 +319,6 @@ export function MetaEditScreen({
             )}
           </Flex>
         </Flex>
-        <Callout.Root color="gray" size="1">
-          <Callout.Text>
-            <strong>Advanced metadata.</strong> Domain status, owner, and
-            last-updated are managed by the Authoring Workspace and git — not
-            editable here. Use this surface for <code>related</code>,{" "}
-            <code>examples</code>, <code>lastReviewed</code>, and{" "}
-            <code>section</code>.
-          </Callout.Text>
-        </Callout.Root>
         <RJSFForm
           schema={schemaValue}
           uiSchema={guidelineMetaUiSchema}
@@ -332,7 +326,12 @@ export function MetaEditScreen({
           onChange={(next) => setFormData(next)}
           onSubmit={(v) => handleSubmit(v)}
           widgets={META_WIDGETS}
-          formContext={{ octokit: gh }}
+          templates={metaFormTemplates}
+          formContext={{
+            octokit: gh,
+            category:
+              (formData as { category?: string } | undefined)?.category ?? null,
+          }}
         >
           <Flex gap="2" mt="3" align="center" wrap="wrap">
             {inWorkspaceContext ? (

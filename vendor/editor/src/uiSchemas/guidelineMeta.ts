@@ -34,6 +34,7 @@ export const guidelineMetaUiSchema: UiSchema = {
     "section",
     "domains",
     "related",
+    "a11y_refs",
     "examples",
     "lastReviewed",
     "*",
@@ -45,13 +46,12 @@ export const guidelineMetaUiSchema: UiSchema = {
   category: {
     "ui:title": "Category",
     "ui:widget": "CategorySelect",
-    "ui:help":
-      "Pick from the canonical category set in components/src/categories/.",
+  },
+  section: {
+    "ui:title": "Figma section",
+    "ui:placeholder": "e.g. COMPONENTS",
   },
   domains: {
-    "ui:title": "Domain status matrix",
-    "ui:help":
-      "Status, owner, and last-updated are managed by the Authoring Workspace and git — not edited here. Use the workspace to write or mark a domain as inherited.",
     content: domainSubform,
     usage: domainSubform,
     design: domainSubform,
@@ -61,8 +61,13 @@ export const guidelineMetaUiSchema: UiSchema = {
   related: {
     "ui:title": "Related components",
     "ui:widget": "RelatedMultiSelect",
+  },
+  a11y_refs: {
+    "ui:title": "Accessibility topics",
+    "ui:widget": "A11yRefsPicker",
     "ui:help":
-      "Search the DS Kit registry + authored components to cross-reference.",
+      "Component-specific topics. Foundation topics like Color contrast are set on the category.",
+    "ui:options": { helpAsTooltip: true },
   },
   examples: {
     "ui:title": "Examples",
@@ -73,7 +78,7 @@ export const guidelineMetaUiSchema: UiSchema = {
     },
   },
   lastReviewed: {
-    "ui:title": "Last reviewed (YYYY-MM-DD)",
+    "ui:title": "Last reviewed",
     "ui:placeholder": "2026-05-23",
   },
 };
