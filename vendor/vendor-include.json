@@ -8,13 +8,11 @@
     "clients",
     "components",
     "content",
-    "fm-to-ds-map",
     "foundations",
     "graph",
     "llms-full.txt",
     "llms.txt",
     "paths-manifest.json",
-    "presentation",
     "schemas",
     "tokens",
     "vendor-include.json"
