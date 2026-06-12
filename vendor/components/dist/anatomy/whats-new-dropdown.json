@@ -1,0 +1,111 @@
+{
+  "_schema_version": 1,
+  "slug": "whats-new-dropdown",
+  "kit": "dskit",
+  "synced_at": "2026-06-12T10:59:09.125Z",
+  "source": {
+    "fileKey": "l8biHxfarNi1I2RMvVxVOK",
+    "nodeId": "9114:16794",
+    "variant": "Property 1=Empty"
+  },
+  "quality": {
+    "nodesTotal": 6,
+    "nodesNormalized": 5,
+    "ratio": 0.83,
+    "degraded": []
+  },
+  "root": {
+    "name": "Property 1=Empty",
+    "kind": "container",
+    "layout": {
+      "axis": "column",
+      "gap": "0px",
+      "padding": {
+        "top": "4px",
+        "right": "0px",
+        "bottom": "4px",
+        "left": "0px"
+      },
+      "align": {
+        "main": "start",
+        "cross": "start"
+      },
+      "sizing": {
+        "h": "fixed",
+        "v": "hug"
+      }
+    },
+    "children": [
+      {
+        "name": "Header",
+        "kind": "container",
+        "layout": {
+          "axis": "row",
+          "gap": "8px",
+          "padding": {
+            "top": "8px",
+            "right": "8px",
+            "bottom": "8px",
+            "left": "8px"
+          },
+          "align": {
+            "main": "start",
+            "cross": "center"
+          },
+          "sizing": {
+            "h": "fill",
+            "v": "fixed"
+          }
+        },
+        "children": [
+          {
+            "name": "Label text",
+            "kind": "text",
+            "text": "What’s new"
+          }
+        ]
+      },
+      {
+        "name": ".menu item",
+        "kind": "instance",
+        "unresolved": true,
+        "props": {
+          "Show leading icon": true,
+          "Label text": "New items inventoried from PowerBi Online V1 at 7/3/25, 2:02PM.",
+          "Show trailing icon": false,
+          "Type": "Divider",
+          "State": "Default"
+        }
+      },
+      {
+        "name": "Body",
+        "kind": "container",
+        "layout": {
+          "axis": "row",
+          "gap": "8px",
+          "padding": {
+            "top": "8px",
+            "right": "8px",
+            "bottom": "8px",
+            "left": "8px"
+          },
+          "align": {
+            "main": "start",
+            "cross": "start"
+          },
+          "sizing": {
+            "h": "fill",
+            "v": "hug"
+          }
+        },
+        "children": [
+          {
+            "name": "Label text",
+            "kind": "text",
+            "text": "No release updates"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,202 @@
+{
+  "_schema_version": 1,
+  "slug": "search-dropdown-menu",
+  "kit": "dskit",
+  "synced_at": "2026-06-12T10:59:09.125Z",
+  "source": {
+    "fileKey": "l8biHxfarNi1I2RMvVxVOK",
+    "nodeId": "8756:9994",
+    "variant": "Type=After typed"
+  },
+  "quality": {
+    "nodesTotal": 15,
+    "nodesNormalized": 15,
+    "ratio": 1,
+    "degraded": []
+  },
+  "root": {
+    "name": "Type=After typed",
+    "kind": "container",
+    "layout": {
+      "axis": "column",
+      "gap": "0px",
+      "padding": {
+        "top": "4px",
+        "right": "0px",
+        "bottom": "4px",
+        "left": "0px"
+      },
+      "align": {
+        "main": "start",
+        "cross": "start"
+      },
+      "sizing": {
+        "h": "fixed",
+        "v": "hug"
+      }
+    },
+    "children": [
+      {
+        "name": "Menu list",
+        "kind": "container",
+        "layout": {
+          "axis": "row",
+          "gap": "4px",
+          "padding": {
+            "top": "4px",
+            "right": "8px",
+            "bottom": "4px",
+            "left": "8px"
+          },
+          "align": {
+            "main": "start",
+            "cross": "center"
+          },
+          "sizing": {
+            "h": "fill",
+            "v": "fixed"
+          }
+        },
+        "children": [
+          {
+            "name": "Label text",
+            "kind": "text",
+            "text": "Suggestions"
+          }
+        ]
+      },
+      {
+        "name": "Menu list",
+        "kind": "container",
+        "layout": {
+          "axis": "row",
+          "gap": "8px",
+          "padding": {
+            "top": "0px",
+            "right": "8px",
+            "bottom": "0px",
+            "left": "8px"
+          },
+          "align": {
+            "main": "start",
+            "cross": "center"
+          },
+          "sizing": {
+            "h": "fill",
+            "v": "fixed"
+          }
+        },
+        "children": [
+          {
+            "name": "Screenshot 2025-07-09 at 11.13.30 AM 1",
+            "kind": "vector"
+          },
+          {
+            "name": "Label text",
+            "kind": "text",
+            "text": "transmitting"
+          }
+        ]
+      },
+      {
+        "name": "Menu list",
+        "kind": "container",
+        "layout": {
+          "axis": "row",
+          "gap": "8px",
+          "padding": {
+            "top": "0px",
+            "right": "8px",
+            "bottom": "0px",
+            "left": "8px"
+          },
+          "align": {
+            "main": "start",
+            "cross": "center"
+          },
+          "sizing": {
+            "h": "fill",
+            "v": "fixed"
+          }
+        },
+        "children": [
+          {
+            "name": "Screenshot 2025-07-09 at 11.13.30 AM 1",
+            "kind": "vector"
+          },
+          {
+            "name": "Label text",
+            "kind": "text",
+            "text": "transmitter"
+          }
+        ]
+      },
+      {
+        "name": "Menu list",
+        "kind": "container",
+        "layout": {
+          "axis": "row",
+          "gap": "8px",
+          "padding": {
+            "top": "0px",
+            "right": "8px",
+            "bottom": "0px",
+            "left": "8px"
+          },
+          "align": {
+            "main": "start",
+            "cross": "center"
+          },
+          "sizing": {
+            "h": "fill",
+            "v": "fixed"
+          }
+        },
+        "children": [
+          {
+            "name": "Screenshot 2025-07-09 at 11.13.30 AM 1",
+            "kind": "vector"
+          },
+          {
+            "name": "Label text",
+            "kind": "text",
+            "text": "transmit"
+          }
+        ]
+      },
+      {
+        "name": "Menu list",
+        "kind": "container",
+        "layout": {
+          "axis": "row",
+          "gap": "8px",
+          "padding": {
+            "top": "0px",
+            "right": "8px",
+            "bottom": "0px",
+            "left": "8px"
+          },
+          "align": {
+            "main": "start",
+            "cross": "center"
+          },
+          "sizing": {
+            "h": "fill",
+            "v": "fixed"
+          }
+        },
+        "children": [
+          {
+            "name": "Screenshot 2025-07-09 at 11.13.30 AM 1",
+            "kind": "vector"
+          },
+          {
+            "name": "Label text",
+            "kind": "text",
+            "text": "transparent"
+          }
+        ]
+      }
+    ]
+  }
+}

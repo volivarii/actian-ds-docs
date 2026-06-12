@@ -1,0 +1,637 @@
+{
+  "_schema_version": 1,
+  "slug": "calendar",
+  "kit": "dskit",
+  "synced_at": "2026-06-12T10:59:09.125Z",
+  "source": {
+    "fileKey": "l8biHxfarNi1I2RMvVxVOK",
+    "nodeId": "8211:6664",
+    "variant": "Type=Single date select, Selection=Single"
+  },
+  "quality": {
+    "nodesTotal": 63,
+    "nodesNormalized": 15,
+    "ratio": 0.24,
+    "degraded": [
+      {
+        "name": "Frame 1010110409",
+        "reason": "layoutMode:GRID"
+      }
+    ]
+  },
+  "root": {
+    "name": "Type=Single date select, Selection=Single",
+    "kind": "container",
+    "layout": {
+      "axis": "column",
+      "gap": "8px",
+      "padding": {
+        "top": "8px",
+        "right": "8px",
+        "bottom": "8px",
+        "left": "8px"
+      },
+      "align": {
+        "main": "start",
+        "cross": "start"
+      },
+      "sizing": {
+        "h": "fixed",
+        "v": "hug"
+      }
+    },
+    "children": [
+      {
+        "name": "mat-calender-controls",
+        "kind": "container",
+        "layout": {
+          "axis": "row",
+          "gap": "0px",
+          "padding": {
+            "top": "0px",
+            "right": "0px",
+            "bottom": "0px",
+            "left": "0px"
+          },
+          "align": {
+            "main": "space-between",
+            "cross": "center"
+          },
+          "sizing": {
+            "h": "fill",
+            "v": "hug"
+          }
+        },
+        "children": [
+          {
+            "name": "Frame 1010110410",
+            "kind": "container",
+            "layout": {
+              "axis": "row",
+              "gap": "0px",
+              "padding": {
+                "top": "0px",
+                "right": "0px",
+                "bottom": "0px",
+                "left": "0px"
+              },
+              "align": {
+                "main": "start",
+                "cross": "center"
+              },
+              "sizing": {
+                "h": "fixed",
+                "v": "hug"
+              }
+            },
+            "children": [
+              {
+                "name": "Submit",
+                "kind": "text",
+                "text": "Jan 2025"
+              },
+              {
+                "name": "mat-calendar-previous-btn",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "Show icon": true,
+                  "Label": "Button"
+                }
+              }
+            ]
+          },
+          {
+            "name": "buttons",
+            "kind": "container",
+            "layout": {
+              "axis": "row",
+              "gap": "0px",
+              "padding": {
+                "top": "0px",
+                "right": "0px",
+                "bottom": "0px",
+                "left": "0px"
+              },
+              "align": {
+                "main": "end",
+                "cross": "center"
+              },
+              "sizing": {
+                "h": "hug",
+                "v": "hug"
+              }
+            },
+            "children": [
+              {
+                "name": "button",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "Show icon": true,
+                  "Label": "Button"
+                }
+              },
+              {
+                "name": "button",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "Show icon": true,
+                  "Label": "Button"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "mat-calendar-content-wrapper",
+        "kind": "container",
+        "layout": {
+          "axis": "column",
+          "gap": "8px",
+          "padding": {
+            "top": "0px",
+            "right": "0px",
+            "bottom": "0px",
+            "left": "0px"
+          },
+          "align": {
+            "main": "start",
+            "cross": "start"
+          },
+          "sizing": {
+            "h": "fill",
+            "v": "hug"
+          }
+        },
+        "children": [
+          {
+            "name": "day-row",
+            "kind": "container",
+            "layout": {
+              "axis": "row",
+              "gap": "0px",
+              "padding": {
+                "top": "8px",
+                "right": "16px",
+                "bottom": "8px",
+                "left": "16px"
+              },
+              "align": {
+                "main": "space-between",
+                "cross": "start"
+              },
+              "sizing": {
+                "h": "fill",
+                "v": "hug"
+              }
+            },
+            "children": [
+              {
+                "name": "S",
+                "kind": "text",
+                "text": "S"
+              },
+              {
+                "name": "M",
+                "kind": "text",
+                "text": "M"
+              },
+              {
+                "name": "T",
+                "kind": "text",
+                "text": "T"
+              },
+              {
+                "name": "W",
+                "kind": "text",
+                "text": "W"
+              },
+              {
+                "name": "T",
+                "kind": "text",
+                "text": "T"
+              },
+              {
+                "name": "F",
+                "kind": "text",
+                "text": "F"
+              },
+              {
+                "name": "S",
+                "kind": "text",
+                "text": "S"
+              }
+            ]
+          },
+          {
+            "name": "Frame 1010110409",
+            "kind": "container",
+            "normalizable": false,
+            "rawHint": {
+              "layoutMode": "GRID",
+              "x": 7279,
+              "y": 1508,
+              "constraints": {
+                "vertical": "TOP",
+                "horizontal": "LEFT"
+              }
+            },
+            "children": [
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Default"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Default"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Default"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Default"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Default"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Default"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Selected"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Default"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Default"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Default"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Default"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Default"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Default"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Default"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Default"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Default"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Default"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Default"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Default"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Default"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Default"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Default"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Default"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Default"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Default"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Default"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Default"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Default"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Default"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Default"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Default"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Disabled"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Disabled"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Disabled"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Disabled"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Disabled"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Disabled"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Disabled"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Disabled"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Disabled"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Disabled"
+                }
+              },
+              {
+                "name": ".Calendar item",
+                "kind": "instance",
+                "unresolved": true,
+                "props": {
+                  "State": "Disabled"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "mat-datepicker-actions",
+        "kind": "container",
+        "layout": {
+          "axis": "row",
+          "gap": "8px",
+          "padding": {
+            "top": "0px",
+            "right": "8px",
+            "bottom": "8px",
+            "left": "8px"
+          },
+          "align": {
+            "main": "end",
+            "cross": "center"
+          },
+          "sizing": {
+            "h": "fixed",
+            "v": "hug"
+          }
+        },
+        "children": [
+          {
+            "name": "Button",
+            "kind": "instance",
+            "unresolved": true,
+            "props": {
+              "Link button": false,
+              "Show Right Icon": false,
+              "Show Left Icon": false,
+              "Label": "Cancel",
+              "Type": "Basic",
+              "Color": "Default",
+              "State": "Enabled"
+            }
+          },
+          {
+            "name": "Button",
+            "kind": "instance",
+            "unresolved": true,
+            "props": {
+              "Link button": false,
+              "Show Right Icon": false,
+              "Show Left Icon": false,
+              "Label": "Apply",
+              "Type": "Raised",
+              "Color": "Primary",
+              "State": "Enabled"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

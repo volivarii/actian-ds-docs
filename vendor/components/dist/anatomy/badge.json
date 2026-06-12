@@ -1,0 +1,46 @@
+{
+  "_schema_version": 1,
+  "slug": "badge",
+  "kit": "dskit",
+  "synced_at": "2026-06-12T10:59:09.125Z",
+  "source": {
+    "fileKey": "l8biHxfarNi1I2RMvVxVOK",
+    "nodeId": "12159:16447",
+    "variant": "Type=Number"
+  },
+  "quality": {
+    "nodesTotal": 2,
+    "nodesNormalized": 2,
+    "ratio": 1,
+    "degraded": []
+  },
+  "root": {
+    "name": "Type=Number",
+    "kind": "container",
+    "layout": {
+      "axis": "row",
+      "gap": "8px",
+      "padding": {
+        "top": "0px",
+        "right": "4px",
+        "bottom": "0px",
+        "left": "4px"
+      },
+      "align": {
+        "main": "center",
+        "cross": "center"
+      },
+      "sizing": {
+        "h": "hug",
+        "v": "hug"
+      }
+    },
+    "children": [
+      {
+        "name": "3",
+        "kind": "text",
+        "text": "3"
+      }
+    ]
+  }
+}

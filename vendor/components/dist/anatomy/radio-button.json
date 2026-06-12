@@ -1,0 +1,84 @@
+{
+  "_schema_version": 1,
+  "slug": "radio-button",
+  "kit": "dskit",
+  "synced_at": "2026-06-12T10:59:09.125Z",
+  "source": {
+    "fileKey": "l8biHxfarNi1I2RMvVxVOK",
+    "nodeId": "9474:16884",
+    "variant": "Format=Default, Selected=No, State=Default"
+  },
+  "quality": {
+    "nodesTotal": 5,
+    "nodesNormalized": 4,
+    "ratio": 0.8,
+    "degraded": []
+  },
+  "root": {
+    "name": "Format=Default, Selected=No, State=Default",
+    "kind": "container",
+    "layout": {
+      "axis": "row",
+      "gap": "4px",
+      "padding": {
+        "top": "0px",
+        "right": "0px",
+        "bottom": "0px",
+        "left": "0px"
+      },
+      "align": {
+        "main": "start",
+        "cross": "start"
+      },
+      "sizing": {
+        "h": "fixed",
+        "v": "hug"
+      }
+    },
+    "children": [
+      {
+        "name": ".Radio button",
+        "kind": "instance",
+        "unresolved": true,
+        "props": {
+          "Selected": "No",
+          "State": "Default"
+        }
+      },
+      {
+        "name": "Text",
+        "kind": "container",
+        "layout": {
+          "axis": "column",
+          "gap": "4px",
+          "padding": {
+            "top": "2px",
+            "right": "0px",
+            "bottom": "2px",
+            "left": "0px"
+          },
+          "align": {
+            "main": "start",
+            "cross": "start"
+          },
+          "sizing": {
+            "h": "fill",
+            "v": "hug"
+          }
+        },
+        "children": [
+          {
+            "name": "Label",
+            "kind": "text",
+            "text": "Label"
+          },
+          {
+            "name": "Helper text",
+            "kind": "text",
+            "text": "Helper text"
+          }
+        ]
+      }
+    ]
+  }
+}
