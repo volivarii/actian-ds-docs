@@ -1,0 +1,142 @@
+{
+  "_schema_version": 1,
+  "slug": "input-date",
+  "kit": "dskit",
+  "synced_at": "2026-06-12T10:59:09.125Z",
+  "source": {
+    "fileKey": "l8biHxfarNi1I2RMvVxVOK",
+    "nodeId": "8194:7305",
+    "variant": "Type=Single date, States=Enabled"
+  },
+  "quality": {
+    "nodesTotal": 8,
+    "nodesNormalized": 7,
+    "ratio": 0.88,
+    "degraded": []
+  },
+  "root": {
+    "name": "Type=Single date, States=Enabled",
+    "kind": "container",
+    "layout": {
+      "axis": "column",
+      "gap": "4px",
+      "padding": {
+        "top": "0px",
+        "right": "0px",
+        "bottom": "0px",
+        "left": "0px"
+      },
+      "align": {
+        "main": "start",
+        "cross": "start"
+      },
+      "sizing": {
+        "h": "fixed",
+        "v": "hug"
+      }
+    },
+    "children": [
+      {
+        "name": "Label",
+        "kind": "container",
+        "layout": {
+          "axis": "row",
+          "gap": "4px",
+          "padding": {
+            "top": "0px",
+            "right": "0px",
+            "bottom": "0px",
+            "left": "0px"
+          },
+          "align": {
+            "main": "start",
+            "cross": "center"
+          },
+          "sizing": {
+            "h": "fill",
+            "v": "hug"
+          }
+        },
+        "children": [
+          {
+            "name": "Label",
+            "kind": "text",
+            "text": "Date"
+          },
+          {
+            "name": "Label",
+            "kind": "text",
+            "text": "*"
+          }
+        ]
+      },
+      {
+        "name": "Input + icon button",
+        "kind": "container",
+        "layout": {
+          "axis": "row",
+          "gap": "0px",
+          "padding": {
+            "top": "0px",
+            "right": "0px",
+            "bottom": "0px",
+            "left": "0px"
+          },
+          "align": {
+            "main": "start",
+            "cross": "center"
+          },
+          "sizing": {
+            "h": "fill",
+            "v": "hug"
+          }
+        },
+        "children": [
+          {
+            "name": "input field",
+            "kind": "container",
+            "layout": {
+              "axis": "row",
+              "gap": "4px",
+              "padding": {
+                "top": "8px",
+                "right": "8px",
+                "bottom": "8px",
+                "left": "8px"
+              },
+              "align": {
+                "main": "start",
+                "cross": "center"
+              },
+              "sizing": {
+                "h": "fill",
+                "v": "fixed"
+              }
+            },
+            "children": [
+              {
+                "name": "Input text",
+                "kind": "text",
+                "text": "mm/dd/yyyy"
+              }
+            ]
+          },
+          {
+            "name": "Button",
+            "kind": "instance",
+            "unresolved": true,
+            "props": {
+              "Show label": true,
+              "Label": "Button",
+              "Show leading icon": true,
+              "Show trailing icon": true,
+              "Type": "Icon",
+              "Size": "Default",
+              "State": "Default"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,117 @@
+{
+  "_schema_version": 1,
+  "slug": "card-for-perimeter",
+  "kit": "dskit",
+  "synced_at": "2026-06-12T10:59:09.125Z",
+  "source": {
+    "fileKey": "l8biHxfarNi1I2RMvVxVOK",
+    "nodeId": "14783:7565",
+    "variant": "Property 1=Default"
+  },
+  "quality": {
+    "nodesTotal": 7,
+    "nodesNormalized": 5,
+    "ratio": 0.71,
+    "degraded": []
+  },
+  "root": {
+    "name": "Property 1=Default",
+    "kind": "container",
+    "layout": {
+      "axis": "row",
+      "gap": "8px",
+      "padding": {
+        "top": "12px",
+        "right": "12px",
+        "bottom": "12px",
+        "left": "12px"
+      },
+      "align": {
+        "main": "start",
+        "cross": "start"
+      },
+      "sizing": {
+        "h": "fixed",
+        "v": "hug"
+      }
+    },
+    "children": [
+      {
+        "name": "Digram, Item types",
+        "kind": "instance",
+        "unresolved": true,
+        "props": {
+          "Item type": "Dataset",
+          "Size": "Default"
+        }
+      },
+      {
+        "name": "Body",
+        "kind": "container",
+        "layout": {
+          "axis": "column",
+          "gap": "4px",
+          "padding": {
+            "top": "0px",
+            "right": "0px",
+            "bottom": "0px",
+            "left": "0px"
+          },
+          "align": {
+            "main": "start",
+            "cross": "start"
+          },
+          "sizing": {
+            "h": "fill",
+            "v": "hug"
+          }
+        },
+        "children": [
+          {
+            "name": "Name + counter",
+            "kind": "container",
+            "layout": {
+              "axis": "row",
+              "gap": "8px",
+              "padding": {
+                "top": "0px",
+                "right": "0px",
+                "bottom": "0px",
+                "left": "0px"
+              },
+              "align": {
+                "main": "start",
+                "cross": "center"
+              },
+              "sizing": {
+                "h": "hug",
+                "v": "hug"
+              }
+            },
+            "children": [
+              {
+                "name": "Name",
+                "kind": "text",
+                "text": "Dataset"
+              },
+              {
+                "name": "Counter",
+                "kind": "text",
+                "text": "23"
+              }
+            ]
+          },
+          {
+            "name": "Progress bar small",
+            "kind": "instance",
+            "unresolved": true,
+            "props": {
+              "Size": "Default",
+              "Completeness": "50%"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
