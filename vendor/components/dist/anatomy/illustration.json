@@ -1,0 +1,458 @@
+{
+  "_schema_version": 1,
+  "slug": "illustration",
+  "kit": "dskit",
+  "synced_at": "2026-06-12T10:59:09.125Z",
+  "source": {
+    "fileKey": "l8biHxfarNi1I2RMvVxVOK",
+    "nodeId": "8837:9945",
+    "variant": "Type=Empty state large"
+  },
+  "quality": {
+    "nodesTotal": 78,
+    "nodesNormalized": 70,
+    "ratio": 0.9,
+    "degraded": [
+      {
+        "name": "Type=Empty state large",
+        "reason": "layoutMode:NONE"
+      },
+      {
+        "name": "BACKGROUND",
+        "reason": "layoutMode:NONE"
+      },
+      {
+        "name": "OBJECTS",
+        "reason": "layoutMode:NONE"
+      },
+      {
+        "name": "Group",
+        "reason": "layoutMode:NONE"
+      },
+      {
+        "name": "Group 835559155",
+        "reason": "layoutMode:NONE"
+      },
+      {
+        "name": "Group",
+        "reason": "layoutMode:NONE"
+      },
+      {
+        "name": "Group",
+        "reason": "layoutMode:NONE"
+      },
+      {
+        "name": "Group",
+        "reason": "layoutMode:NONE"
+      }
+    ]
+  },
+  "root": {
+    "name": "Type=Empty state large",
+    "kind": "container",
+    "normalizable": false,
+    "rawHint": {
+      "layoutMode": "NONE",
+      "x": -2078,
+      "y": -456,
+      "constraints": {
+        "vertical": "TOP",
+        "horizontal": "LEFT"
+      }
+    },
+    "children": [
+      {
+        "name": "BACKGROUND",
+        "kind": "container",
+        "normalizable": false,
+        "rawHint": {
+          "layoutMode": "NONE",
+          "x": -2003,
+          "y": -432,
+          "constraints": {
+            "vertical": "SCALE",
+            "horizontal": "SCALE"
+          }
+        },
+        "children": [
+          {
+            "name": "Vector",
+            "kind": "vector"
+          }
+        ]
+      },
+      {
+        "name": "OBJECTS",
+        "kind": "container",
+        "normalizable": false,
+        "rawHint": {
+          "layoutMode": "NONE",
+          "x": -2040.17578125,
+          "y": -434.0302734375,
+          "constraints": {
+            "vertical": "SCALE",
+            "horizontal": "SCALE"
+          }
+        },
+        "children": [
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Group",
+            "kind": "container",
+            "normalizable": false,
+            "rawHint": {
+              "layoutMode": "NONE",
+              "x": -1882.3232421875,
+              "y": -412.435546875,
+              "constraints": {
+                "vertical": "SCALE",
+                "horizontal": "SCALE"
+              }
+            },
+            "children": [
+              {
+                "name": "Vector",
+                "kind": "vector"
+              },
+              {
+                "name": "Vector",
+                "kind": "vector"
+              },
+              {
+                "name": "Vector",
+                "kind": "vector"
+              },
+              {
+                "name": "Vector",
+                "kind": "vector"
+              },
+              {
+                "name": "Vector",
+                "kind": "vector"
+              },
+              {
+                "name": "Vector",
+                "kind": "vector"
+              },
+              {
+                "name": "Vector",
+                "kind": "vector"
+              },
+              {
+                "name": "Vector",
+                "kind": "vector"
+              },
+              {
+                "name": "Vector",
+                "kind": "vector"
+              }
+            ]
+          },
+          {
+            "name": "Group 835559155",
+            "kind": "container",
+            "normalizable": false,
+            "rawHint": {
+              "layoutMode": "NONE",
+              "x": -1806.3046875,
+              "y": -314.6591796875,
+              "constraints": {
+                "vertical": "TOP",
+                "horizontal": "LEFT"
+              }
+            },
+            "children": [
+              {
+                "name": "Vector",
+                "kind": "vector"
+              },
+              {
+                "name": "Vector",
+                "kind": "vector"
+              },
+              {
+                "name": "Vector",
+                "kind": "vector"
+              },
+              {
+                "name": "Vector",
+                "kind": "vector"
+              },
+              {
+                "name": "Vector",
+                "kind": "vector"
+              },
+              {
+                "name": "Vector",
+                "kind": "vector"
+              },
+              {
+                "name": "Vector",
+                "kind": "vector"
+              }
+            ]
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Group",
+            "kind": "container",
+            "normalizable": false,
+            "rawHint": {
+              "layoutMode": "NONE",
+              "x": -1973.6942138671875,
+              "y": -363.9493408203125,
+              "constraints": {
+                "vertical": "SCALE",
+                "horizontal": "SCALE"
+              }
+            },
+            "children": [
+              {
+                "name": "Vector",
+                "kind": "vector"
+              },
+              {
+                "name": "Vector",
+                "kind": "vector"
+              },
+              {
+                "name": "Vector",
+                "kind": "vector"
+              }
+            ]
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Group",
+            "kind": "container",
+            "normalizable": false,
+            "rawHint": {
+              "layoutMode": "NONE",
+              "x": -1955.9130859375,
+              "y": -369.0098876953125,
+              "constraints": {
+                "vertical": "SCALE",
+                "horizontal": "SCALE"
+              }
+            },
+            "children": [
+              {
+                "name": "Vector",
+                "kind": "vector"
+              },
+              {
+                "name": "Group",
+                "kind": "container",
+                "normalizable": false,
+                "rawHint": {
+                  "layoutMode": "NONE",
+                  "x": -1950.0888671875,
+                  "y": -363.7969970703125,
+                  "constraints": {
+                    "vertical": "SCALE",
+                    "horizontal": "SCALE"
+                  }
+                },
+                "children": [
+                  {
+                    "name": "Vector",
+                    "kind": "vector"
+                  },
+                  {
+                    "name": "Vector",
+                    "kind": "vector"
+                  },
+                  {
+                    "name": "Vector",
+                    "kind": "vector"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          },
+          {
+            "name": "Vector",
+            "kind": "vector"
+          }
+        ]
+      }
+    ]
+  }
+}
