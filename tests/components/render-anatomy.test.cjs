@@ -61,4 +61,52 @@ test("toCallout: skips unnamed children", function () {
   assert.deepEqual(c.parts, [{ name: "Label", kind: "text" }]);
 });
 
+function reset() { renderMdx.setAnatomyIndex(null); renderMdx.setMediaIndex(null); }
+
+test("renderAnatomy: image-led callout when capture usable + default.webp present", function () {
+  renderMdx.setAnatomyIndex({ components: { button: BUTTON_ANATOMY } });
+  renderMdx.setMediaIndex({ media: { button: { default: "components/dist/media/button/default.webp" } } });
+  var out = renderMdx.renderAnatomy("button", null);
+  assert.match(out, /<Anatomy\s/);
+  assert.match(out, /image="\/media\/button\/default\.webp"/);
+  assert.match(out, /parts=\{/);
+  assert.match(out, /layout=\{/);
+  reset();
+});
+test("renderAnatomy: callout without image when no default.webp in media index", function () {
+  renderMdx.setAnatomyIndex({ components: { button: BUTTON_ANATOMY } });
+  renderMdx.setMediaIndex(null);
+  var out = renderMdx.renderAnatomy("button", null);
+  assert.match(out, /<Anatomy\s/);
+  assert.match(out, /layout=\{/);
+  assert.doesNotMatch(out, /image=/);
+  reset();
+});
+test("renderAnatomy: falls back to category-defaults placeholder when capture not usable", function () {
+  renderMdx.setAnatomyIndex({ components: { button: withDegraded() } });
+  var out = renderMdx.renderAnatomy("button", { anatomy: { parts: [{ name: "Container", description: "wrapper" }] } });
+  assert.match(out, /<Anatomy parts=\{/);
+  assert.doesNotMatch(out, /layout=\{/);
+  reset();
+});
+test("renderAnatomy: empty string when no usable anatomy and no defaults", function () {
+  renderMdx.setAnatomyIndex(null);
+  assert.equal(renderMdx.renderAnatomy("button", null), "");
+  reset();
+});
+test("renderDesignSections: anatomy renders real callout and suppresses the parts media board", function () {
+  renderMdx.setAnatomyIndex({ components: { button: BUTTON_ANATOMY } });
+  renderMdx.setMediaIndex({
+    media: { button: {
+      default: "components/dist/media/button/default.webp",
+      parts: ["components/dist/media/button/parts-0.webp"],
+    } },
+  });
+  var out = renderMdx.renderDesignSections({}, null, null, "button", {});
+  assert.match(out, /## Anatomy/);
+  assert.match(out, /<Anatomy[^>]*image="\/media\/button\/default\.webp"/);
+  assert.doesNotMatch(out, /<Media role="parts"/);
+  renderMdx.setAnatomyIndex(null); renderMdx.setMediaIndex(null);
+});
+
 module.exports = { BUTTON_ANATOMY: BUTTON_ANATOMY, withDegraded: withDegraded };

@@ -349,7 +349,7 @@ var DESIGN_SECTIONS = [
   { key: "anatomy",  heading: "Anatomy",        mediaRole: "parts",
     aliases: ["anatomy", "parts"],
     placeholderStructured: true,
-    structured: function (entry, defaults) { return renderAnatomy(defaults); } },
+    structured: function (entry, defaults, slug) { return renderAnatomy(slug, defaults); } },
   { key: "variants", heading: "Variants",        mediaRole: "variations",
     aliases: ["variants", "variations"],
     placeholderStructured: true,
@@ -395,6 +395,13 @@ function renderDesignSections(entry, defaults, guideline, slug, WARNINGS) {
     }
 
     var seenMediaRoles = new Set();
+    // When the anatomy section renders the real image-led callout (default.webp
+    // + legend), suppress the separate "parts" media board so the section shows
+    // one image, not two.
+    if (sec.key === "anatomy") {
+      var _a = getAnatomy(slug);
+      if (_a && isAnatomyUsable(_a)) seenMediaRoles.add("parts");
+    }
     var body = matched
       ? renderContentSectionBody(matched, WARNINGS, { mediaRoleMap: mediaRoleMap, seenMediaRoles: seenMediaRoles })
       : "";
@@ -412,7 +419,7 @@ function renderDesignSections(entry, defaults, guideline, slug, WARNINGS) {
     if (sec.structured) {
       var isPlaceholder = sec.placeholderStructured === true;
       if (!isPlaceholder || (!body && !media)) {
-        structured = sec.structured(entry, defaults);
+        structured = sec.structured(entry, defaults, slug);
       }
     }
 
@@ -463,9 +470,18 @@ function renderOverview(entry) {
     .join("\n\n");
 }
 
-function renderAnatomy(defaults) {
+function renderAnatomy(slug, defaults) {
+  var anatomy = getAnatomy(slug);
+  if (anatomy && isAnatomyUsable(anatomy)) {
+    var callout = toCallout(anatomy);
+    var props = "parts={" + jsLit(callout.parts) + "} layout={" + jsLit(callout.layout) + "}";
+    var img = anatomyImageSrc(slug);
+    if (img) props += " image=" + JSON.stringify(img);
+    return "<Anatomy " + props + " />";
+  }
+  // Fallback: category-defaults placeholder (unchanged legacy behavior).
   if (!(defaults && defaults.anatomy && Array.isArray(defaults.anatomy.parts) && defaults.anatomy.parts.length)) return "";
-  return '<Anatomy parts={' + jsLit(defaults.anatomy.parts) + '} />';
+  return "<Anatomy parts={" + jsLit(defaults.anatomy.parts) + "} />";
 }
 
 function renderVariantsMatrix(entry, defaults) {
@@ -640,6 +656,26 @@ function setMediaIndex(idx) {
   _mediaIndex = idx;
 }
 
+// Module-level anatomy index — the components roll-up from
+// vendor/components/dist/anatomy.bundle.json, injected by the generator via
+// setAnatomyIndex() (mirrors the media-index pattern above).
+var _anatomyIndex = null;
+function setAnatomyIndex(idx) { _anatomyIndex = idx; }
+function getAnatomy(slug) {
+  if (!_anatomyIndex || !_anatomyIndex.components) return null;
+  return _anatomyIndex.components[slug] || null;
+}
+
+// Resolve the single-component default.webp public URL for a slug, reusing the
+// same vendor->public path rewrite renderMediaPreview uses. Returns null when
+// absent so the callout renders legend-only.
+function anatomyImageSrc(slug) {
+  if (!_mediaIndex || !_mediaIndex.media) return null;
+  var entry = _mediaIndex.media[slug];
+  if (!entry || !entry.default) return null;
+  return "/" + String(entry.default).replace(/^components\/dist\/media\//, "media/");
+}
+
 function renderMediaPreview(slug) {
   if (!_mediaIndex || !_mediaIndex.media) return "";
   var entry = _mediaIndex.media[slug];
@@ -700,4 +736,6 @@ module.exports = {
   buildSlugToPathMap: buildSlugToPathMap,
   isAnatomyUsable: isAnatomyUsable,
   toCallout: toCallout,
+  setAnatomyIndex: setAnatomyIndex,
+  renderAnatomy: renderAnatomy,
 };
