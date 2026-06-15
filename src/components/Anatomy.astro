@@ -1,13 +1,54 @@
 ---
-interface Props {
-  parts: Array<{ name: string; description: string }>;
+interface Part {
+  name: string;
+  description?: string; // placeholder mode (category defaults)
+  kind?: string;        // callout mode
+  text?: string;        // callout mode
 }
-const { parts } = Astro.props;
+interface Layout {
+  axis?: string;
+  gap?: string;
+  padding?: { top?: string; right?: string; bottom?: string; left?: string };
+  align?: { main?: string; cross?: string };
+  sizing?: { h?: string; v?: string };
+}
+interface Props {
+  parts: Part[];
+  image?: string;
+  layout?: Layout;
+  name?: string; // component display name — names the diagram for assistive tech
+}
+const { parts, image, layout, name } = Astro.props;
+const isCallout = !!layout;
+const imgAlt = name ? `Anatomy of the ${name} component` : "Component anatomy diagram";
+
+function layoutSummary(l?: Layout): string {
+  if (!l) return "";
+  const bits: string[] = [];
+  if (l.axis) bits.push(l.axis === "row" ? "horizontal" : l.axis === "column" ? "vertical" : l.axis);
+  if (l.gap) bits.push(`gap ${l.gap}`);
+  if (l.padding) {
+    const p = l.padding;
+    bits.push(`padding ${[p.top, p.right, p.bottom, p.left].map((v) => v || "0").join(" ")}`);
+  }
+  if (l.align && (l.align.main || l.align.cross)) {
+    bits.push(`align ${[l.align.main, l.align.cross].filter(Boolean).join("/")}`);
+  }
+  if (l.sizing && (l.sizing.h || l.sizing.v)) {
+    bits.push(`sizing ${[l.sizing.h, l.sizing.v].filter(Boolean).join("×")}`);
+  }
+  return bits.join(" · ");
+}
+const summary = layoutSummary(layout);
 ---
 
 <div class="anatomy">
-  <div class="anatomy__diagram" aria-hidden="true">
-    <span class="anatomy__diagram-label">Anatomy diagram coming from Figma</span>
+  <div class="anatomy__diagram">
+    {isCallout && image ? (
+      <img class="anatomy__img" src={image} alt={imgAlt} />
+    ) : (
+      <span class="anatomy__diagram-label" aria-hidden="true">Anatomy diagram coming from Figma</span>
+    )}
   </div>
   <ol class="anatomy__list">
     {parts.map((p, i) => (
@@ -15,9 +56,21 @@ const { parts } = Astro.props;
         <span class="anatomy__num">{i + 1}</span>
         <div class="anatomy__copy">
           <strong>{p.name}</strong>
-          <div class="anatomy__desc">{p.description}</div>
+          {isCallout ? (
+            <div class="anatomy__desc">
+              {[p.kind, p.text ? `"${p.text}"` : null].filter(Boolean).join(" · ")}
+            </div>
+          ) : (
+            <div class="anatomy__desc">{p.description}</div>
+          )}
         </div>
       </li>
     ))}
   </ol>
+  {isCallout && summary && <p class="anatomy__layout">{summary}</p>}
 </div>
+
+<style>
+  .anatomy__img { display: block; max-width: 100%; height: auto; border-radius: 4px; }
+  .anatomy__layout { margin-top: 0.5rem; font-size: 0.85em; opacity: 0.8; }
+</style>
