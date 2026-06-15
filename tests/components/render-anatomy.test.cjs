@@ -89,6 +89,13 @@ test("renderAnatomy: falls back to category-defaults placeholder when capture no
   assert.doesNotMatch(out, /layout=\{/);
   reset();
 });
+test("renderAnatomy: emits name= prop (drives the diagram alt) when a display name is given", function () {
+  renderMdx.setAnatomyIndex({ components: { button: BUTTON_ANATOMY } });
+  renderMdx.setMediaIndex({ media: { button: { default: "components/dist/media/button/default.webp" } } });
+  assert.match(renderMdx.renderAnatomy("button", null, "Button"), /name="Button"/);
+  assert.doesNotMatch(renderMdx.renderAnatomy("button", null), /name=/);
+  reset();
+});
 test("renderAnatomy: empty string when no usable anatomy and no defaults", function () {
   renderMdx.setAnatomyIndex(null);
   assert.equal(renderMdx.renderAnatomy("button", null), "");

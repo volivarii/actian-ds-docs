@@ -16,9 +16,11 @@ interface Props {
   parts: Part[];
   image?: string;
   layout?: Layout;
+  name?: string; // component display name — names the diagram for assistive tech
 }
-const { parts, image, layout } = Astro.props;
+const { parts, image, layout, name } = Astro.props;
 const isCallout = !!layout;
+const imgAlt = name ? `Anatomy of the ${name} component` : "Component anatomy diagram";
 
 function layoutSummary(l?: Layout): string {
   if (!l) return "";
@@ -43,7 +45,7 @@ const summary = layoutSummary(layout);
 <div class="anatomy">
   <div class="anatomy__diagram">
     {isCallout && image ? (
-      <img class="anatomy__img" src={image} alt="" />
+      <img class="anatomy__img" src={image} alt={imgAlt} />
     ) : (
       <span class="anatomy__diagram-label" aria-hidden="true">Anatomy diagram coming from Figma</span>
     )}

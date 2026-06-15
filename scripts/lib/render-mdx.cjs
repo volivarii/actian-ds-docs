@@ -349,7 +349,7 @@ var DESIGN_SECTIONS = [
   { key: "anatomy",  heading: "Anatomy",        mediaRole: "parts",
     aliases: ["anatomy", "parts"],
     placeholderStructured: true,
-    structured: function (entry, defaults, slug) { return renderAnatomy(slug, defaults); } },
+    structured: function (entry, defaults, slug) { return renderAnatomy(slug, defaults, entry && entry.name); } },
   { key: "variants", heading: "Variants",        mediaRole: "variations",
     aliases: ["variants", "variations"],
     placeholderStructured: true,
@@ -395,16 +395,21 @@ function renderDesignSections(entry, defaults, guideline, slug, WARNINGS) {
     }
 
     var seenMediaRoles = new Set();
-    // When the anatomy section renders the real image-led callout (default.webp
-    // + legend), suppress the separate "parts" media board so the section shows
-    // one image, not two.
-    if (sec.key === "anatomy") {
-      var _a = getAnatomy(slug);
-      if (_a && isAnatomyUsable(_a)) seenMediaRoles.add("parts");
-    }
     var body = matched
       ? renderContentSectionBody(matched, WARNINGS, { mediaRoleMap: mediaRoleMap, seenMediaRoles: seenMediaRoles })
       : "";
+
+    // The anatomy section renders the real image-led callout (default.webp +
+    // legend) only when a usable capture exists AND no authored prose occupies
+    // the section (authored prose wins — see the placeholderStructured gate
+    // below). In exactly that case the callout supersedes the separate "parts"
+    // media board, so suppress it to avoid two images. When authored prose
+    // wins the callout is NOT rendered, so leave the parts board intact —
+    // suppressing it then would drop content with nothing to replace it.
+    if (sec.key === "anatomy" && !body) {
+      var _a = getAnatomy(slug);
+      if (_a && isAnatomyUsable(_a)) seenMediaRoles.add("parts");
+    }
 
     var media = "";
     if (mediaRoleMap && (sec.mediaRole in mediaRoleMap) && !seenMediaRoles.has(sec.mediaRole)) {
@@ -470,13 +475,17 @@ function renderOverview(entry) {
     .join("\n\n");
 }
 
-function renderAnatomy(slug, defaults) {
+function renderAnatomy(slug, defaults, name) {
   var anatomy = getAnatomy(slug);
   if (anatomy && isAnatomyUsable(anatomy)) {
     var callout = toCallout(anatomy);
     var props = "parts={" + jsLit(callout.parts) + "} layout={" + jsLit(callout.layout) + "}";
     var img = anatomyImageSrc(slug);
     if (img) props += " image=" + JSON.stringify(img);
+    // Strip any leading status/confidence glyph (e.g. "⚠️ Tooltip") so it does
+    // not leak into the diagram's screen-reader alt text.
+    var cleanName = name ? String(name).replace(/^[^\p{L}\p{N}]+/u, "").trim() : "";
+    if (cleanName) props += " name=" + JSON.stringify(cleanName);
     return "<Anatomy " + props + " />";
   }
   // Fallback: category-defaults placeholder (unchanged legacy behavior).
