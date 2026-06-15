@@ -503,6 +503,24 @@ function main() {
   }
   renderMdx.setMediaIndex(mediaIndex);
 
+  // Load the anatomy bundle sidecar (knowledge v0.32.0+). Components with a
+  // usable capture render an image-led anatomy callout; the rest fall back to
+  // the category-defaults placeholder. Missing/unparseable bundle -> null ->
+  // every component falls back; the build does not fail.
+  var anatomyBundlePath = path.resolve(__dirname, "..", "vendor", "components", "dist", "anatomy.bundle.json");
+  var anatomyIndex = null;
+  if (fs.existsSync(anatomyBundlePath)) {
+    try {
+      anatomyIndex = JSON.parse(fs.readFileSync(anatomyBundlePath, "utf8"));
+    } catch (err) {
+      process.stderr.write(
+        "[generate] WARNING: couldn't parse anatomy bundle " + anatomyBundlePath +
+        " (" + err.message + ") — anatomy callouts will fall back to placeholders.\n"
+      );
+    }
+  }
+  renderMdx.setAnatomyIndex(anatomyIndex);
+
   var written = 0;
   var skipped = 0;
   var excluded = 0;
