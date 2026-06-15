@@ -46,4 +46,19 @@ test("isAnatomyUsable: false for null / missing", function () {
   assert.equal(renderMdx.isAnatomyUsable({}), false);
 });
 
+test("toCallout: extracts named parts (name + kind + optional text), drops flags", function () {
+  var c = renderMdx.toCallout(BUTTON_ANATOMY);
+  assert.deepEqual(c.parts, [
+    { name: "Leading icon", kind: "instance" },
+    { name: "Button", kind: "text", text: "Button" },
+    { name: "Trailing icon", kind: "instance" },
+  ]);
+  assert.equal(c.layout.axis, "row");
+  assert.equal(c.layout.gap, "8px");
+});
+test("toCallout: skips unnamed children", function () {
+  var c = renderMdx.toCallout({ root: { layout: {}, children: [{ name: "" }, { name: "Label", kind: "text" }] } });
+  assert.deepEqual(c.parts, [{ name: "Label", kind: "text" }]);
+});
+
 module.exports = { BUTTON_ANATOMY: BUTTON_ANATOMY, withDegraded: withDegraded };

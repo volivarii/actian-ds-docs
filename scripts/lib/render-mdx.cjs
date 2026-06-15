@@ -669,6 +669,22 @@ function isAnatomyUsable(anatomy) {
   return true;
 }
 
+// Reduce a captured anatomy to the callout's render data: a flat list of the
+// root's top-level named children (name + kind + optional text), plus the
+// root layout for the one-line summary. Deep tree / unresolved flags are
+// dropped — irrelevant to a parts legend.
+function toCallout(anatomy) {
+  var root = (anatomy && anatomy.root) || {};
+  var parts = (root.children || [])
+    .filter(function (c) { return c && typeof c.name === "string" && c.name.trim() !== ""; })
+    .map(function (c) {
+      var part = { name: c.name, kind: c.kind || "node" };
+      if (typeof c.text === "string" && c.text !== "") part.text = c.text;
+      return part;
+    });
+  return { parts: parts, layout: root.layout || null };
+}
+
 module.exports = {
   escapeMdxPlaceholders: escapeMdxPlaceholders,
   renderMarkdownTable: renderMarkdownTable,
@@ -683,4 +699,5 @@ module.exports = {
   renderStubFooter: renderStubFooter,
   buildSlugToPathMap: buildSlugToPathMap,
   isAnatomyUsable: isAnatomyUsable,
+  toCallout: toCallout,
 };
