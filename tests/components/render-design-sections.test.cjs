@@ -35,7 +35,25 @@ function makeDefaults(overrides) {
 
 function resetIndex() {
   renderMdx.setMediaIndex(null);
+  renderMdx.setAnatomyIndex(null);
 }
+
+// A usable captured anatomy (root.layout + named children + no degraded nodes),
+// shaped like vendor/components/dist/anatomy.bundle.json entries.
+var USABLE_ANATOMY = {
+  root: {
+    name: "Button", kind: "container",
+    layout: { axis: "row", gap: "8px", padding: {}, align: {}, sizing: {} },
+    children: [
+      { name: "Leading icon", kind: "instance" },
+      { name: "Button", kind: "text", text: "Button" },
+    ],
+  },
+  quality: { degraded: [] },
+};
+
+// Anatomy index is module-level state shared across test files; isolate it.
+renderMdx.setAnatomyIndex(null);
 
 // ---------------------------------------------------------------------------
 // 1. No duplicate headings when design domain AND structured data both present
@@ -150,6 +168,48 @@ test("renderDesignSections: <Anatomy>/<VariantMatrix> emitted as placeholders wh
 
   assert.match(out, /<Anatomy /, "<Anatomy> placeholder must render when there is no media and no prose");
   assert.match(out, /<VariantMatrix /, "<VariantMatrix> placeholder must render when there is no media and no prose");
+  resetIndex();
+});
+
+// ---------------------------------------------------------------------------
+// 3b. Real anatomy callout vs. the "parts" media board — the suppression must
+//     fire ONLY when the callout actually renders, never when prose wins.
+// ---------------------------------------------------------------------------
+
+test("renderDesignSections: usable anatomy + no prose → image-led callout renders and the parts board is suppressed", function () {
+  renderMdx.setAnatomyIndex({ components: { button: USABLE_ANATOMY } });
+  renderMdx.setMediaIndex({ media: { button: BUTTON_MEDIA } });
+  var WARNINGS = { unknownContentShapes: 0 };
+  var out = renderMdx.renderDesignSections(BUTTON_ENTRY, makeDefaults(), null, "button", WARNINGS);
+
+  assert.match(out, /<Anatomy [^>]*layout=\{/, "the image-led callout must render from the usable capture");
+  assert.doesNotMatch(out, /role="parts"/, "the redundant parts board must be suppressed when the callout renders");
+  resetIndex();
+});
+
+test("renderDesignSections: usable anatomy + authored prose → callout suppressed but parts board NOT dropped", function () {
+  // Regression guard: the parts-suppression must be conditional on the callout
+  // actually rendering. When authored Anatomy prose wins, the callout is gone,
+  // so the parts media board must survive (suppressing it would drop content
+  // with no replacement).
+  renderMdx.setAnatomyIndex({ components: { button: USABLE_ANATOMY } });
+  renderMdx.setMediaIndex({ media: { button: BUTTON_MEDIA } });
+  var guideline = {
+    domains: {
+      design: {
+        status: "draft",
+        sections: [
+          { heading: "Anatomy", content: [{ prose: "A button has a label." }] },
+        ],
+      },
+    },
+  };
+  var WARNINGS = { unknownContentShapes: 0 };
+  var out = renderMdx.renderDesignSections(BUTTON_ENTRY, makeDefaults(), guideline, "button", WARNINGS);
+
+  assert.doesNotMatch(out, /<Anatomy /, "the callout must be suppressed when authored Anatomy prose exists");
+  assert.match(out, /A button has a label\./, "authored prose must render");
+  assert.match(out, /role="parts"/, "the parts media board must NOT be dropped when prose wins");
   resetIndex();
 });
 

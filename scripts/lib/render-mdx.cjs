@@ -349,7 +349,7 @@ var DESIGN_SECTIONS = [
   { key: "anatomy",  heading: "Anatomy",        mediaRole: "parts",
     aliases: ["anatomy", "parts"],
     placeholderStructured: true,
-    structured: function (entry, defaults) { return renderAnatomy(defaults); } },
+    structured: function (entry, defaults, slug) { return renderAnatomy(slug, defaults, entry && entry.name); } },
   { key: "variants", heading: "Variants",        mediaRole: "variations",
     aliases: ["variants", "variations"],
     placeholderStructured: true,
@@ -399,6 +399,18 @@ function renderDesignSections(entry, defaults, guideline, slug, WARNINGS) {
       ? renderContentSectionBody(matched, WARNINGS, { mediaRoleMap: mediaRoleMap, seenMediaRoles: seenMediaRoles })
       : "";
 
+    // The anatomy section renders the real image-led callout (default.webp +
+    // legend) only when a usable capture exists AND no authored prose occupies
+    // the section (authored prose wins — see the placeholderStructured gate
+    // below). In exactly that case the callout supersedes the separate "parts"
+    // media board, so suppress it to avoid two images. When authored prose
+    // wins the callout is NOT rendered, so leave the parts board intact —
+    // suppressing it then would drop content with nothing to replace it.
+    if (sec.key === "anatomy" && !body) {
+      var _a = getAnatomy(slug);
+      if (_a && isAnatomyUsable(_a)) seenMediaRoles.add("parts");
+    }
+
     var media = "";
     if (mediaRoleMap && (sec.mediaRole in mediaRoleMap) && !seenMediaRoles.has(sec.mediaRole)) {
       media = "<Media role=" + JSON.stringify(sec.mediaRole) +
@@ -412,7 +424,7 @@ function renderDesignSections(entry, defaults, guideline, slug, WARNINGS) {
     if (sec.structured) {
       var isPlaceholder = sec.placeholderStructured === true;
       if (!isPlaceholder || (!body && !media)) {
-        structured = sec.structured(entry, defaults);
+        structured = sec.structured(entry, defaults, slug);
       }
     }
 
@@ -463,9 +475,22 @@ function renderOverview(entry) {
     .join("\n\n");
 }
 
-function renderAnatomy(defaults) {
+function renderAnatomy(slug, defaults, name) {
+  var anatomy = getAnatomy(slug);
+  if (anatomy && isAnatomyUsable(anatomy)) {
+    var callout = toCallout(anatomy);
+    var props = "parts={" + jsLit(callout.parts) + "} layout={" + jsLit(callout.layout) + "}";
+    var img = anatomyImageSrc(slug);
+    if (img) props += " image=" + JSON.stringify(img);
+    // Strip any leading status/confidence glyph (e.g. "⚠️ Tooltip") so it does
+    // not leak into the diagram's screen-reader alt text.
+    var cleanName = name ? String(name).replace(/^[^\p{L}\p{N}]+/u, "").trim() : "";
+    if (cleanName) props += " name=" + JSON.stringify(cleanName);
+    return "<Anatomy " + props + " />";
+  }
+  // Fallback: category-defaults placeholder (unchanged legacy behavior).
   if (!(defaults && defaults.anatomy && Array.isArray(defaults.anatomy.parts) && defaults.anatomy.parts.length)) return "";
-  return '<Anatomy parts={' + jsLit(defaults.anatomy.parts) + '} />';
+  return "<Anatomy parts={" + jsLit(defaults.anatomy.parts) + "} />";
 }
 
 function renderVariantsMatrix(entry, defaults) {
@@ -640,6 +665,26 @@ function setMediaIndex(idx) {
   _mediaIndex = idx;
 }
 
+// Module-level anatomy index — the components roll-up from
+// vendor/components/dist/anatomy.bundle.json, injected by the generator via
+// setAnatomyIndex() (mirrors the media-index pattern above).
+var _anatomyIndex = null;
+function setAnatomyIndex(idx) { _anatomyIndex = idx; }
+function getAnatomy(slug) {
+  if (!_anatomyIndex || !_anatomyIndex.components) return null;
+  return _anatomyIndex.components[slug] || null;
+}
+
+// Resolve the single-component default.webp public URL for a slug, reusing the
+// same vendor->public path rewrite renderMediaPreview uses. Returns null when
+// absent so the callout renders legend-only.
+function anatomyImageSrc(slug) {
+  if (!_mediaIndex || !_mediaIndex.media) return null;
+  var entry = _mediaIndex.media[slug];
+  if (!entry || !entry.default) return null;
+  return "/" + String(entry.default).replace(/^components\/dist\/media\//, "media/");
+}
+
 function renderMediaPreview(slug) {
   if (!_mediaIndex || !_mediaIndex.media) return "";
   var entry = _mediaIndex.media[slug];
@@ -649,6 +694,40 @@ function renderMediaPreview(slug) {
   // puts the file at public/media/<slug>/preview.png.
   var publicPath = "/" + String(entry.preview).replace(/^components\/dist\/media\//, "media/");
   return "<MediaAsset src=" + JSON.stringify(publicPath) + ' alt="" />';
+}
+
+// True when a captured anatomy is good enough to render as a real callout:
+// the root has layout, has at least one named child, and the capture is not
+// flagged degraded. NOTE: intentionally NOT gated on quality.ratio — a low
+// ratio (e.g. button 0.5) just means deep instances weren't expanded, which
+// is irrelevant to a top-level parts legend.
+function isAnatomyUsable(anatomy) {
+  if (!anatomy || !anatomy.root || !anatomy.root.layout) return false;
+  var children = anatomy.root.children;
+  if (!Array.isArray(children)) return false;
+  var hasNamedChild = children.some(function (c) {
+    return c && typeof c.name === "string" && c.name.trim() !== "";
+  });
+  if (!hasNamedChild) return false;
+  var degraded = anatomy.quality && anatomy.quality.degraded;
+  if (Array.isArray(degraded) && degraded.length > 0) return false;
+  return true;
+}
+
+// Reduce a captured anatomy to the callout's render data: a flat list of the
+// root's top-level named children (name + kind + optional text), plus the
+// root layout for the one-line summary. Deep tree / unresolved flags are
+// dropped — irrelevant to a parts legend.
+function toCallout(anatomy) {
+  var root = (anatomy && anatomy.root) || {};
+  var parts = (root.children || [])
+    .filter(function (c) { return c && typeof c.name === "string" && c.name.trim() !== ""; })
+    .map(function (c) {
+      var part = { name: c.name, kind: c.kind || "node" };
+      if (typeof c.text === "string" && c.text !== "") part.text = c.text;
+      return part;
+    });
+  return { parts: parts, layout: root.layout || null };
 }
 
 module.exports = {
@@ -664,4 +743,8 @@ module.exports = {
   renderResources: renderResources,
   renderStubFooter: renderStubFooter,
   buildSlugToPathMap: buildSlugToPathMap,
+  isAnatomyUsable: isAnatomyUsable,
+  toCallout: toCallout,
+  setAnatomyIndex: setAnatomyIndex,
+  renderAnatomy: renderAnatomy,
 };
