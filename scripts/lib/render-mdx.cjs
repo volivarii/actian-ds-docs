@@ -651,6 +651,24 @@ function renderMediaPreview(slug) {
   return "<MediaAsset src=" + JSON.stringify(publicPath) + ' alt="" />';
 }
 
+// True when a captured anatomy is good enough to render as a real callout:
+// the root has layout, has at least one named child, and the capture is not
+// flagged degraded. NOTE: intentionally NOT gated on quality.ratio — a low
+// ratio (e.g. button 0.5) just means deep instances weren't expanded, which
+// is irrelevant to a top-level parts legend.
+function isAnatomyUsable(anatomy) {
+  if (!anatomy || !anatomy.root || !anatomy.root.layout) return false;
+  var children = anatomy.root.children;
+  if (!Array.isArray(children)) return false;
+  var hasNamedChild = children.some(function (c) {
+    return c && typeof c.name === "string" && c.name.trim() !== "";
+  });
+  if (!hasNamedChild) return false;
+  var degraded = anatomy.quality && anatomy.quality.degraded;
+  if (Array.isArray(degraded) && degraded.length > 0) return false;
+  return true;
+}
+
 module.exports = {
   escapeMdxPlaceholders: escapeMdxPlaceholders,
   renderMarkdownTable: renderMarkdownTable,
@@ -664,4 +682,5 @@ module.exports = {
   renderResources: renderResources,
   renderStubFooter: renderStubFooter,
   buildSlugToPathMap: buildSlugToPathMap,
+  isAnatomyUsable: isAnatomyUsable,
 };
