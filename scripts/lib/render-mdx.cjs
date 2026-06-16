@@ -675,14 +675,18 @@ function getAnatomy(slug) {
   return _anatomyIndex.components[slug] || null;
 }
 
-// Resolve the single-component default.webp public URL for a slug, reusing the
-// same vendor->public path rewrite renderMediaPreview uses. Returns null when
-// absent so the callout renders legend-only.
+// Resolve the anatomy callout image for a slug: the FIRST captured "parts"
+// board — the labeled parts/anatomy diagram from Figma's "Anatomy" / "Parts &
+// tokens" section (knowledge media `parts` role, capture:"all" → an array).
+// Returns null when the component has no parts capture, so the callout renders
+// legend-only rather than borrowing the unrelated default-variant screenshot
+// (default.webp is a plain component shot, not an anatomy diagram).
 function anatomyImageSrc(slug) {
   if (!_mediaIndex || !_mediaIndex.media) return null;
   var entry = _mediaIndex.media[slug];
-  if (!entry || !entry.default) return null;
-  return "/" + String(entry.default).replace(/^components\/dist\/media\//, "media/");
+  var parts = entry && entry.parts;
+  if (!Array.isArray(parts) || parts.length === 0) return null;
+  return "/" + String(parts[0]).replace(/^components\/dist\/media\//, "media/");
 }
 
 function renderMediaPreview(slug) {
