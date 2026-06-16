@@ -33,6 +33,29 @@ function escapeQuotes(s) {
   return String(s).replace(/"/g, '\\"');
 }
 
+// Icons are documented as a single grouped catalog (with live, themeable
+// glyphs) on the Foundations → Icons page, NOT as per-component pages. A grid
+// of ComponentCards here would link to /components/icons/<slug>, which 404s
+// (no per-icon pages exist). So the icons category page is a thin pointer to
+// the catalog. The root-relative link is base-prefixed by Starlight.
+function buildIconsPage(categoryLabel, count) {
+  const lines = [];
+  lines.push("---");
+  lines.push('title: "' + escapeQuotes(categoryLabel) + '"');
+  lines.push("---");
+  lines.push("");
+  lines.push(
+    "The DS-Kit ships " + count +
+    " icons. They are documented as one grouped, searchable catalog — with live, themeable glyphs — on the **[Icons foundations page](/foundations/icons/)**."
+  );
+  lines.push("");
+  lines.push(
+    "Unlike interactive components, icons have no per-icon documentation page; browse and copy them from the catalog."
+  );
+  lines.push("");
+  return lines.join("\n");
+}
+
 function buildPage(categoryLabel, slug, components) {
   const lines = [];
   lines.push("---");
@@ -102,7 +125,9 @@ function main(opts) {
       );
     }
     group.items.sort(function (a, b) { return a.name.localeCompare(b.name); });
-    const body = buildPage(group.label, catSlug, group.items);
+    const body = catSlug === "icons"
+      ? buildIconsPage(group.label, group.items.length)
+      : buildPage(group.label, catSlug, group.items);
     fs.writeFileSync(path.join(outDir, catSlug + ".mdx"), body);
   }
 

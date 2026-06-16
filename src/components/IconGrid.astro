@@ -14,6 +14,8 @@
 // "Actual icons" — same UX as before, but at least collapsed into one
 // page instead of 234 sidebar entries.
 
+import iconsData from "../../vendor/components/dist/icons/icons.json";
+
 export interface Props {
   icons: Array<{
     slug: string;
@@ -24,6 +26,13 @@ export interface Props {
 }
 
 const { icons } = Astro.props;
+
+// Glyph geometry ({viewBox, body}) keyed by slug, from the vendored knowledge
+// read-surface. Monochrome UI icons resolve here (body uses currentColor, so
+// the inline SVG inherits the card's text color); multicolor connector/brand
+// logos have no entry yet and fall back to the placeholder box — honest
+// coverage rather than a broken glyph.
+const glyphs = (iconsData && iconsData.icons) || {};
 
 // Build group → icons[] map. Multi-group icons appear in each section.
 // Iteration order preserves data order (which itself follows knowledge's
@@ -65,12 +74,31 @@ for (const items of sections.values()) {
         <span class="icon-section__count">{items.length}</span>
       </h2>
       <div class="icon-grid">
-        {items.map((icon: { slug: string; name: string }) => (
-          <div class="icon-card" data-slug={icon.slug}>
-            <div class="icon-card__placeholder" aria-hidden="true" />
-            <code class="icon-card__slug">{icon.slug}</code>
-          </div>
-        ))}
+        {items.map((icon: { slug: string; name: string }) => {
+          const glyph = glyphs[icon.slug as keyof typeof glyphs] as
+            | { viewBox: string; body: string }
+            | undefined;
+          return (
+            <div class="icon-card" data-slug={icon.slug}>
+              {glyph ? (
+                <svg
+                  class="icon-card__svg"
+                  viewBox={glyph.viewBox}
+                  role="img"
+                  aria-label={`${icon.name} icon`}
+                  set:html={glyph.body}
+                />
+              ) : (
+                <div
+                  class="icon-card__placeholder"
+                  aria-hidden="true"
+                  title="No monochrome glyph yet (multicolor logo)"
+                />
+              )}
+              <code class="icon-card__slug">{icon.slug}</code>
+            </div>
+          );
+        })}
       </div>
     </section>
   ))
@@ -151,6 +179,12 @@ for (const items of sections.values()) {
     height: 32px;
     border-radius: 4px;
     background: var(--sl-color-hairline, rgba(128, 128, 128, 0.15));
+  }
+  .icon-card__svg {
+    width: 32px;
+    height: 32px;
+    display: block;
+    color: var(--sl-color-text);
   }
   .icon-card__slug {
     font-size: 0.75rem;
