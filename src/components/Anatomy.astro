@@ -1,4 +1,10 @@
 ---
+// Real captures render their image through MediaAsset — the single image
+// component, which owns BASE-prefixing so the URL resolves under the deployed
+// base path. The dashed placeholder box below is kept only for the
+// category-defaults fallback (no captured image).
+import MediaAsset from "./MediaAsset.astro";
+
 interface Part {
   name: string;
   description?: string; // placeholder mode (category defaults)
@@ -43,13 +49,13 @@ const summary = layoutSummary(layout);
 ---
 
 <div class="anatomy">
-  <div class="anatomy__diagram">
-    {isCallout && image ? (
-      <img class="anatomy__img" src={image} alt={imgAlt} />
-    ) : (
+  {isCallout && image ? (
+    <MediaAsset src={image} alt={imgAlt} />
+  ) : (
+    <div class="anatomy__diagram">
       <span class="anatomy__diagram-label" aria-hidden="true">Anatomy diagram coming from Figma</span>
-    )}
-  </div>
+    </div>
+  )}
   <ol class="anatomy__list">
     {parts.map((p, i) => (
       <li class="anatomy__item">
@@ -71,6 +77,5 @@ const summary = layoutSummary(layout);
 </div>
 
 <style>
-  .anatomy__img { display: block; max-width: 100%; height: auto; border-radius: 4px; }
   .anatomy__layout { margin-top: 0.5rem; font-size: 0.85em; opacity: 0.8; }
 </style>
