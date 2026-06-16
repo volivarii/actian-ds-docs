@@ -11,6 +11,9 @@ import IconGrid from "../../../components/IconGrid.astro";
 import iconColors from "../../../../vendor/foundations/dist/tokens/icons/icon-colors.json";
 import iconSizes from "../../../../vendor/foundations/dist/tokens/icons/icon-sizes.json";
 import dskit from "../../../../vendor/components/dist/registries/dskit.json";
+import iconGlyphs from "../../../../vendor/components/dist/icons/icons.json";
+
+export const glyphCount = Object.keys(iconGlyphs.icons).length;
 
 <PageMetadata
   slug="foundations.icons"
@@ -37,6 +40,8 @@ Icon color tokens are exposed under `color.icon` and rendered on the [Color](/fo
 ## Catalog
 
 The DS-Kit ships **234 icons** organized into **11 semantic groups** derived from the Figma Actual-icons layout. Eight icons (`add`, `book-bookmark`, `dataset`, `directory`, `download`, `export`, `minimize`, `process`) belong to multiple groups and appear in each section below.
+
+{glyphCount} monochrome UI icons render below as live, themeable glyphs (they inherit text color via `currentColor`). The remaining connector and brand logos are multicolor and show as placeholder tiles pending a dedicated full-color asset pipeline.
 
 Group order is specific-first: context-specific groups (Connector, Status, Cursor) come before universal ones (Common). Same ordering as the knowledge-side priority resolver in [`components/src/icon-groups.json`](https://github.com/volivarii/actian-ds-knowledge/blob/main/components/src/icon-groups.json).
 
