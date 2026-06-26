@@ -77,7 +77,7 @@ const authoringStatusByCategory = Object.entries(categories.categories || {}).re
       <h3>{r.label}</h3>
       <ul>
         {r.recent_releases.map((rel: any) => (
-          <li><a href={rel.html_url}><code>{rel.tag_name}</code></a> — {rel.name || ""} <span style="color: var(--zen-color-text-secondary); font-family: var(--zen-font-family-mono);">({rel.published_at && rel.published_at.slice(0, 10)})</span></li>
+          <li><a href={rel.html_url}><code>{rel.tag_name}</code></a> — {rel.name || ""} <span style="color: var(--docs-color-text-secondary); font-family: var(--docs-font-family-mono);">({rel.published_at && rel.published_at.slice(0, 10)})</span></li>
         ))}
       </ul>
     </section>

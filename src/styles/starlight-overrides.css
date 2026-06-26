@@ -8,56 +8,56 @@
  * Re-verify after any palette change. */
 
 /*
- * starlight-overrides.css — Map Starlight design vars to the Actian token
- * scale + apply editorial layout rules.
+ * starlight-overrides.css — Map Starlight design vars to the DOCS-OWNED palette
+ * (--docs-*, defined in docs-theme.css) + apply editorial layout rules.
  *
- * Type system lives in typography.css (loaded first).
- * Card/component chrome lives in docs-chrome.css (loaded last).
- *
- * Substitution notes (vendor tokens differ from original plan names):
- *   --zen-color-theme-primary   → --zen-color-primary-500
- *   --zen-color-bg-default      → kept
- *   --zen-color-bg-subtle       → kept (was bg-grey-1)
- *   --zen-color-bg-muted        → kept (was bg-grey-2)
- *   --zen-border-default        → kept (no `color-` infix)
- *   --zen-focus-ring-primary    → kept (no `color-` infix)
+ * The chrome is DECOUPLED from product --zen-* tokens: it consumes only --docs-*,
+ * so a vendor token refresh (value OR meaning change) can't silently re-skin the
+ * docs. Enforced by tests/styles/chrome-no-product-tokens.test.cjs. Type system
+ * lives in typography.css; card/component chrome in docs-chrome.css (loaded last).
  */
 
 :root {
   /* Accent — single decisive Actian blue. */
-  --sl-color-accent: var(--zen-color-primary-500);
+  --sl-color-accent: var(--docs-color-primary-500);
   --sl-color-accent-high: var(
-    --zen-color-primary-700,
-    var(--zen-color-primary-500)
+    --docs-color-primary-700,
+    var(--docs-color-primary-500)
   );
   --sl-color-accent-low: var(
-    --zen-color-primary-300,
-    var(--zen-color-primary-500)
+    --docs-color-primary-300,
+    var(--docs-color-primary-500)
   );
   --sl-color-text-accent: var(
-    --zen-color-primary-700,
-    var(--zen-color-primary-500)
+    --docs-color-primary-700,
+    var(--docs-color-primary-500)
   );
 
   /* Body text. */
-  --sl-color-text: var(--zen-color-text-default);
-  --sl-color-text-secondary: var(--zen-color-text-secondary);
+  --sl-color-text: var(--docs-color-text-default);
+  --sl-color-text-secondary: var(--docs-color-text-secondary);
   --sl-color-text-invert: #fff;
 
   /* Backgrounds — editorial: white page, hairline chrome. */
-  --sl-color-bg: var(--zen-color-bg-default);
-  --sl-color-bg-nav: var(--zen-color-bg-default);
-  --sl-color-bg-sidebar: var(--zen-color-bg-default);
-  --sl-color-bg-inline-code: var(--zen-color-bg-muted);
-  --sl-color-hairline: var(--zen-color-neutral-100, var(--zen-border-default));
+  --sl-color-bg: var(--docs-color-bg-default);
+  --sl-color-bg-nav: var(--docs-color-bg-default);
+  --sl-color-bg-sidebar: var(--docs-color-bg-default);
+  --sl-color-bg-inline-code: var(--docs-color-bg-muted);
+  --sl-color-hairline: var(
+    --docs-color-neutral-100,
+    var(--docs-border-default)
+  );
 
   /* Focus ring — Actian primary. */
-  --sl-color-focus: var(--zen-focus-ring-primary, var(--zen-color-primary-500));
+  --sl-color-focus: var(
+    --docs-focus-ring-primary,
+    var(--docs-color-primary-500)
+  );
 
   /* Search bar — light, blends with header. */
-  --sl-color-bg-search: var(--zen-color-bg-subtle);
-  --sl-color-search-text: var(--zen-color-text-default);
-  --sl-color-search-icon: var(--zen-color-text-secondary);
+  --sl-color-bg-search: var(--docs-color-bg-subtle);
+  --sl-color-search-text: var(--docs-color-text-default);
+  --sl-color-search-icon: var(--docs-color-text-secondary);
 
   /* Layout — wide pane for token tables; sidebar gets a touch more room. */
   --sl-content-width: 72rem;
@@ -82,12 +82,12 @@
   --motion-easing-emphasized: cubic-bezier(0.3, 0, 0, 1);
 
   --border-hairline: 1px solid
-    var(--zen-color-neutral-100, var(--zen-border-default));
+    var(--docs-color-neutral-100, var(--docs-border-default));
   /* ComponentTabs.astro (Track A, merged) consumes --transition-base +
    * --motion-easing-standard for its hover/active transitions — wired
    * in docs-chrome.css alongside the .component-tabs__tab rule. */
   --border-hairline-strong: 1px solid
-    var(--zen-color-neutral-200, var(--zen-border-default));
+    var(--docs-color-neutral-200, var(--docs-border-default));
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -108,8 +108,8 @@
 /* Header — refined: tighter, hairline border, branded. */
 header.header {
   border-bottom: 1px solid
-    var(--zen-color-neutral-100, var(--zen-border-default));
-  background: var(--zen-color-bg-default);
+    var(--docs-color-neutral-100, var(--docs-border-default));
+  background: var(--docs-color-bg-default);
   backdrop-filter: saturate(180%) blur(8px);
 }
 
@@ -117,9 +117,9 @@ header.header {
 button[data-open-modal],
 .sl-flex.action,
 site-search button {
-  background: var(--zen-color-bg-subtle) !important;
-  color: var(--zen-color-text-secondary) !important;
-  border: 1px solid var(--zen-color-neutral-100, var(--zen-border-default)) !important;
+  background: var(--docs-color-bg-subtle) !important;
+  color: var(--docs-color-text-secondary) !important;
+  border: 1px solid var(--docs-color-neutral-100, var(--docs-border-default)) !important;
   border-radius: 6px !important;
   font-family: var(--font-body, system-ui) !important;
   font-size: 0.8125rem !important;
@@ -142,18 +142,18 @@ site-search button {
 
 /* Prev/Next overrides */
 .pagination-links {
-  border-top: 1px solid var(--zen-color-neutral-100);
+  border-top: 1px solid var(--docs-color-neutral-100);
 }
 .pagination-links a {
   border: none;
   border-radius: 0.5rem;
   padding: 1rem 0;
   text-decoration: none;
-  color: var(--zen-color-primary-700);
+  color: var(--docs-color-primary-700);
   box-shadow: none;
 }
 .pagination-links a .link-title {
-  color: var(--zen-color-primary-700);
+  color: var(--docs-color-primary-700);
   font-size: var(--sl-text-xl);
 }
 
@@ -164,14 +164,14 @@ starlight-toc nav ul > li:first-child {
 
 /* Sidebar — tighter, editorial. */
 .sidebar-pane {
-  border-inline-end: 1px solid var(--zen-color-neutral-100);
+  border-inline-end: 1px solid var(--docs-color-neutral-100);
 }
 .sidebar-content {
   font-size: 0.8125rem;
 }
 .sidebar-content .group-label .large,
 .sidebar-content .top-level > li > a.large {
-  color: var(--zen-color-text-default) !important;
+  color: var(--docs-color-text-default) !important;
   font-weight: 600 !important;
   font-size: 0.6875rem !important;
   text-transform: uppercase !important;
@@ -179,24 +179,24 @@ starlight-toc nav ul > li:first-child {
   opacity: 1 !important;
 }
 .sidebar-content details ul > li {
-  border-inline-start: 1px solid var(--zen-color-neutral-100);
+  border-inline-start: 1px solid var(--docs-color-neutral-100);
 }
 
 /* Nested sidebar items — comfortable, readable. */
 .sidebar-content details ul > li > a:not([aria-current="page"]) {
-  color: var(--zen-color-text-secondary);
+  color: var(--docs-color-text-secondary);
   font-size: 0.8125rem;
   opacity: 1;
   transition: color 0.12s;
 }
 .sidebar-content details ul > li > a:not([aria-current="page"]):hover {
-  color: var(--zen-color-primary-500);
+  color: var(--docs-color-primary-500);
 }
 
 /* Active page — branded chip. */
 .sidebar-content a[aria-current="page"] {
   color: #fff !important;
-  background: var(--zen-color-primary-500) !important;
+  background: var(--docs-color-primary-500) !important;
   font-weight: 500 !important;
 }
 
@@ -213,7 +213,8 @@ starlight-toc nav ul > li:first-child {
 
 /* Right-rail TOC — refined: tight, hairline. */
 .right-sidebar {
-  border-left: 1px solid var(--zen-color-neutral-100, var(--zen-border-default));
+  border-left: 1px solid
+    var(--docs-color-neutral-100, var(--docs-border-default));
 }
 starlight-toc nav {
   font-size: 0.75rem;
@@ -224,24 +225,24 @@ starlight-toc h2 {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--zen-color-text-secondary);
+  color: var(--docs-color-text-secondary);
 }
 
 /* Light only in MVP. */
 :root[data-theme="dark"] {
-  --sl-color-bg: var(--zen-color-bg-default);
-  --sl-color-text: var(--zen-color-text-default);
+  --sl-color-bg: var(--docs-color-bg-default);
+  --sl-color-text: var(--docs-color-text-default);
 }
 
 /* Selection — branded. */
 ::selection {
-  background: var(--zen-color-primary-100, var(--zen-color-bg-subtle));
-  color: var(--zen-color-primary-900, var(--zen-color-text-primary));
+  background: var(--docs-color-primary-100, var(--docs-color-bg-subtle));
+  color: var(--docs-color-primary-900, var(--docs-color-text-primary));
 }
 
 /* Focus visible — Actian primary ring. */
 *:focus-visible {
-  outline: 2px solid var(--zen-color-primary-500);
+  outline: 2px solid var(--docs-color-primary-500);
   outline-offset: 2px;
   border-radius: 2px;
 }

@@ -1,0 +1,80 @@
+/*
+ * docs-theme.css — DOCS-OWNED semantic palette (independent from product tokens).
+ *
+ * The docs CHROME — typography.css, starlight-overrides.css, docs-chrome.css,
+ * homepage.css, and chrome components — is styled ENTIRELY from these --docs-*
+ * vars, never from the product --zen-* tokens. This DECOUPLES the docs'
+ * appearance from the design system: a vendor token refresh (a value change OR
+ * a meaning change) can no longer silently re-skin the docs.
+ *
+ * Why this exists: the v0.34.29 refresh repurposed --zen-color-text-primary
+ * from a dark text color to the interactive blue (#0f5fdc); because the chrome
+ * used text-primary as its dark-text token, every docs heading/body/table went
+ * blue (fixed reactively in #140). Owning the palette makes that class of
+ * breakage impossible.
+ *
+ * SNAPSHOT: these values mirror the Actian default-theme product palette as of
+ * 2026-06-26. They are intentionally LITERAL (not var(--zen-*)) so product
+ * churn can't flow through. To re-sync the docs look to the current product
+ * palette, regenerate from vendor/tokens/tokens.css and review the diff — a
+ * DELIBERATE bump, not an automatic ripple.
+ *
+ * Product --zen-* tokens remain available to deliberate SHOWCASE surfaces only
+ * (TokenTable.astro / TokenScale.astro), which must reflect the live product.
+ * Guard: tests/styles/chrome-no-product-tokens.test.cjs fails if any chrome
+ * stylesheet references --zen-*.
+ */
+:root {
+  /* Text */
+  --docs-color-text-default: #000000;
+  --docs-color-text-secondary: #40404a;
+  --docs-color-text-primary: #0f5fdc; /* legacy accent — kept for fallback chains; chrome dark text uses text-default */
+  --docs-color-text-error: #dc3514;
+
+  /* Backgrounds */
+  --docs-color-bg-default: #ffffff;
+  --docs-color-bg-subtle: #f5f5f8;
+  --docs-color-bg-muted: #e1e1e6;
+
+  /* Neutrals + borders */
+  --docs-color-neutral-50: #e1e1e6;
+  --docs-color-neutral-100: #c7c7ce;
+  --docs-color-neutral-200: #adadb7;
+  --docs-color-neutral-700: #50505d;
+  --docs-border-default: #c7c7ce;
+
+  /* Accent (Actian blue scale) */
+  --docs-color-primary-25: #f3f5f9;
+  --docs-color-primary-50: #cbe3ff;
+  --docs-color-primary-100: #aacafe;
+  --docs-color-primary-300: #6296ef;
+  --docs-color-primary-500: #0f5fdc;
+  --docs-color-primary-700: #0047bc;
+  --docs-color-primary-900: #0d316d;
+  --docs-focus-ring-primary: #0f5fdc;
+
+  /* Status — error */
+  --docs-color-error-25: #f8f4f3;
+  --docs-color-error-50: #ffdacf;
+  --docs-color-error-200: #ffa38f;
+  --docs-color-error-900: #762a1c;
+  --docs-color-icon-error: #dc3514;
+
+  /* Status — warning */
+  --docs-color-warning-25: #f7f4f2;
+  --docs-color-warning-50: #ffebce;
+  --docs-color-warning-200: #ffcd92;
+  --docs-color-warning-900: #83551f;
+  --docs-color-icon-warning: #ef8d00;
+
+  /* Status — success */
+  --docs-color-success-25: #f3f6f3;
+  --docs-color-success-50: #d3efcd;
+  --docs-color-success-200: #92cc89;
+  --docs-color-success-900: #1a4b14;
+  --docs-color-icon-success: #098900;
+
+  /* Fonts (used by chrome components) */
+  --docs-font-family-text: "Roboto", sans-serif;
+  --docs-font-family-mono: "Roboto Mono", sans-serif;
+}
