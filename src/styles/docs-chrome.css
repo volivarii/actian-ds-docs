@@ -138,7 +138,7 @@ footer .meta {
   font-size: 0.875rem;
   font-weight: 600;
   margin-bottom: 2px;
-  color: var(--zen-color-text-primary);
+  color: var(--zen-color-text-default);
 }
 .anatomy__desc {
   font-size: 0.8125rem;
@@ -171,7 +171,7 @@ footer .meta {
 }
 .a11y-refs__header a {
   text-decoration: none !important;
-  color: var(--zen-color-text-primary);
+  color: var(--zen-color-text-default);
 }
 .a11y-refs__header a:hover {
   color: var(--zen-color-primary-500);
@@ -308,7 +308,7 @@ footer .meta {
 .dodont__prose {
   font-size: 0.8125rem;
   line-height: 1.5;
-  color: var(--zen-color-text-primary);
+  color: var(--zen-color-text-default);
 }
 
 /* ------------------------------------------------------------------
@@ -354,7 +354,7 @@ footer .meta {
 .callout__body {
   font-size: 0.8125rem;
   line-height: 1.55;
-  color: var(--zen-color-text-primary);
+  color: var(--zen-color-text-default);
 }
 .callout__body > :first-child {
   margin-top: 0;
@@ -404,7 +404,7 @@ footer .meta {
   border-radius: 4px;
   background: var(--zen-color-bg-default);
   text-decoration: none !important;
-  color: var(--zen-color-text-primary);
+  color: var(--zen-color-text-default);
   transition:
     border-color 0.15s,
     background 0.15s;
@@ -416,7 +416,7 @@ footer .meta {
   font-weight: 600;
   font-size: 0.875rem;
   margin-bottom: 4px;
-  color: var(--zen-color-text-primary);
+  color: var(--zen-color-text-default);
 }
 .component-card__desc {
   font-size: 0.75rem;
@@ -579,7 +579,7 @@ button[data-open-modal] {
   color: var(--zen-color-primary-500);
 }
 .component-tabs__tab.is-active {
-  color: var(--zen-color-text-primary);
+  color: var(--zen-color-text-default);
   border-bottom-color: var(--zen-color-primary-500);
 }
 .component-tabs__tab:focus-visible {

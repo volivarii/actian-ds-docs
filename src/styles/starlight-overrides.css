@@ -1,6 +1,10 @@
-/* WCAG-AA contrast verified 2026-05-16:
+/* WCAG-AA contrast re-verified 2026-06-26 (after the v0.34.29 token refresh
+ * repurposed text-primary → interactive blue #0f5fdc):
  *   primary-500 (Actian blue) on bg-default (white) → ~7.6:1 (AAA)
- *   text-primary on bg-default → covered by vendored tokens scale.
+ *   text-default (black) is now the dark-text token across the docs theme —
+ *     all content text/headings/tables/cards migrated off text-primary, which
+ *     on the muted inline-code chip (#e1e1e6) had dropped to 4.36:1 (below AA).
+ *   axe sweep (/, button, spacing, accessibility) → 0 color-contrast violations.
  * Re-verify after any palette change. */
 
 /*
@@ -36,7 +40,7 @@
   );
 
   /* Body text. */
-  --sl-color-text: var(--zen-color-text-primary);
+  --sl-color-text: var(--zen-color-text-default);
   --sl-color-text-secondary: var(--zen-color-text-secondary);
   --sl-color-text-invert: #fff;
 
@@ -52,7 +56,7 @@
 
   /* Search bar — light, blends with header. */
   --sl-color-bg-search: var(--zen-color-bg-subtle);
-  --sl-color-search-text: var(--zen-color-text-primary);
+  --sl-color-search-text: var(--zen-color-text-default);
   --sl-color-search-icon: var(--zen-color-text-secondary);
 
   /* Layout — wide pane for token tables; sidebar gets a touch more room. */
@@ -125,9 +129,9 @@ site-search button {
 .content-panel:first-child {
   padding-bottom: 0;
 }
-.content-panel+.content-panel {
-    border-top: none;
-    padding-top: 0;
+.content-panel + .content-panel {
+  border-top: none;
+  padding-top: 0;
 }
 
 /* Main container margins */
@@ -148,11 +152,10 @@ site-search button {
   color: var(--zen-color-primary-700);
   box-shadow: none;
 }
-.pagination-links a .link-title{
+.pagination-links a .link-title {
   color: var(--zen-color-primary-700);
   font-size: var(--sl-text-xl);
 }
-
 
 /* Toc "top" removal */
 starlight-toc nav ul > li:first-child {
@@ -168,7 +171,7 @@ starlight-toc nav ul > li:first-child {
 }
 .sidebar-content .group-label .large,
 .sidebar-content .top-level > li > a.large {
-  color: var(--zen-color-text-primary) !important;
+  color: var(--zen-color-text-default) !important;
   font-weight: 600 !important;
   font-size: 0.6875rem !important;
   text-transform: uppercase !important;
@@ -227,7 +230,7 @@ starlight-toc h2 {
 /* Light only in MVP. */
 :root[data-theme="dark"] {
   --sl-color-bg: var(--zen-color-bg-default);
-  --sl-color-text: var(--zen-color-text-primary);
+  --sl-color-text: var(--zen-color-text-default);
 }
 
 /* Selection — branded. */
