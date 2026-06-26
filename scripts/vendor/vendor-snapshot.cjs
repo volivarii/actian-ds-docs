@@ -75,6 +75,26 @@ if (require.main === module) {
       // the docs "tree refreshed" line occupied in the pre-shared-client main().
       postVendorHook: function () {
         process.stdout.write("[vendor] tree refreshed at " + VENDOR_DIR + "\n");
+        // Re-sync the byte-identity-guarded build core from the freshly
+        // vendored canonical. docs is `type: module`, so the build needs a
+        // CommonJS copy it can require() without importing the bundle it
+        // produces; the canonical ships as .js inside the snapshot. Keeping the
+        // copy in lockstep here means a refresh that changes the client never
+        // leaves scripts/vendor/vendor-snapshot-core.cjs stale — the failure
+        // mode that red-lit the build at v0.34.29 (manual cp was missed).
+        // Guarded by tests/vendor/vendor-snapshot-core-drift.test.cjs.
+        var canonicalClient = path.join(
+          VENDOR_DIR,
+          "clients",
+          "vendor-snapshot.js",
+        );
+        var buildCore = path.join(__dirname, "vendor-snapshot-core.cjs");
+        if (fs.existsSync(canonicalClient)) {
+          fs.copyFileSync(canonicalClient, buildCore);
+          process.stdout.write(
+            "[vendor] re-synced build core ← " + canonicalClient + "\n",
+          );
+        }
       },
     });
     // Hand the resolved version to the workflow (used by vendor-snapshot.yml).
