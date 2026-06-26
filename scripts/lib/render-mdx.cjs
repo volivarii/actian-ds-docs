@@ -40,6 +40,9 @@ var _slugToPath = {};
 var SLUG_ALIASES = {
   "notification-toast": "notification",  // alert-banner.json references old name
   "tag": "tag-interactive",              // tag-default.json links to generic "tag"
+  "toggle-control": "toggle",            // segmented-control content; registry group is "Toggle control"
+  "text-input": "input",                 // rich-text content; registry group is "Text input"
+  "dropdown-select": "dropdown-select-default",  // radio-button content; registry name "Dropdown, Select, default"
 };
 
 // Slugs with no component page that should have their markdown link syntax

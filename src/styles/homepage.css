@@ -54,7 +54,7 @@
 .stat-card__label {
   font-size: 0.6875rem;
   font-weight: 600;
-  color: var(--zen-color-text-primary);
+  color: var(--zen-color-text-default);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   margin-bottom: 4px;
@@ -83,7 +83,7 @@
   border-radius: 4px;
   background: var(--zen-color-bg-default);
   text-decoration: none !important;
-  color: var(--zen-color-text-primary);
+  color: var(--zen-color-text-default);
   transition: border-color 0.15s;
   position: relative;
 }
@@ -146,7 +146,7 @@
   border-radius: 4px;
   background: var(--zen-color-bg-default);
   text-decoration: none !important;
-  color: var(--zen-color-text-primary);
+  color: var(--zen-color-text-default);
   transition: border-color 0.15s;
 }
 .foundation-card:hover {
@@ -172,7 +172,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--zen-color-text-primary);
+  color: var(--zen-color-text-default);
 }
 
 /* ------------------------------------------------------------------
@@ -193,7 +193,7 @@
   padding: 16px 18px;
   background: var(--zen-color-bg-default);
   text-decoration: none !important;
-  color: var(--zen-color-text-primary);
+  color: var(--zen-color-text-default);
   transition: background 0.15s;
 }
 .feature-card:hover {
@@ -204,7 +204,7 @@
   font-family: var(--font-body, sans-serif) !important;
   font-size: 0.9375rem !important;
   font-weight: 600 !important;
-  color: var(--zen-color-text-primary) !important;
+  color: var(--zen-color-text-default) !important;
   letter-spacing: -0.005em !important;
 }
 .feature-card p {
@@ -226,7 +226,7 @@
   font-weight: 600 !important;
   letter-spacing: -0.015em !important;
   line-height: 1.15 !important;
-  color: var(--zen-color-text-primary) !important;
+  color: var(--zen-color-text-default) !important;
   margin: 0 0 0.5em 0 !important;
 }
 
@@ -278,7 +278,7 @@
 .hero .action.minimal {
   background: var(--zen-color-bg-default) !important;
   border: 1px solid var(--zen-color-neutral-200, var(--zen-border-default)) !important;
-  color: var(--zen-color-text-primary) !important;
+  color: var(--zen-color-text-default) !important;
   font-family: var(--font-body) !important;
   font-weight: 500 !important;
   font-size: 0.875rem !important;

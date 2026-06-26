@@ -79,7 +79,7 @@ body {
   font-weight: 400;
   letter-spacing: var(--track-display);
   line-height: var(--leading-display);
-  color: var(--zen-color-text-primary) !important;
+  color: var(--zen-color-text-default) !important;
 }
 
 .sl-markdown-content h1,
@@ -105,7 +105,7 @@ body {
   font-weight: 600;
   letter-spacing: -0.005em;
   line-height: var(--leading-tight);
-  color: var(--zen-color-text-primary) !important;
+  color: var(--zen-color-text-default) !important;
 }
 
 .sl-markdown-content h3 {
@@ -125,9 +125,9 @@ body {
 
 /* Description prose */
 .sl-markdown-content p.component-description {
-  font-size: var(--type-description)!important;
+  font-size: var(--type-description) !important;
   line-height: var(--leading-body);
-  color: var(--zen-color-text-primary);
+  color: var(--zen-color-text-default);
 }
 
 /* Body prose */
@@ -137,7 +137,7 @@ body {
 .sl-markdown-content blockquote {
   font-size: var(--type-body);
   line-height: var(--leading-body);
-  color: var(--zen-color-text-primary);
+  color: var(--zen-color-text-default);
 }
 
 /* Links — docs: subtle underline, primary on hover */
@@ -172,7 +172,12 @@ body {
   background: var(--zen-color-bg-muted, var(--zen-color-bg-subtle));
   padding: 0.1em 0.4em;
   border-radius: 3px;
-  color: var(--zen-color-text-primary);
+  /* text-default (not text-primary): the v0.34.29 token refresh repurposed
+     text-primary to the interactive blue (#0f5fdc), which on the muted code
+     background (#e1e1e6) is only 4.36:1 — below WCAG AA. Black text-default
+     restores AA on the chip (also fixes inline code nested in links, which
+     would otherwise inherit the accent-blue link color). */
+  color: var(--zen-color-text-default);
 }
 
 /* Tables — tabular figures, thin rules */
@@ -200,7 +205,7 @@ body {
   border-bottom: 1px solid
     var(--zen-color-neutral-100, var(--zen-border-default));
   vertical-align: middle;
-  color: var(--zen-color-text-primary);
+  color: var(--zen-color-text-default);
 }
 .sl-markdown-content table tr:last-child td {
   border-bottom: none;
