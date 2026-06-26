@@ -30,7 +30,14 @@ export default defineConfig({
         alt: "Actian",
       },
       customCss: [
+        // Product tokens — kept global ONLY for showcase surfaces (TokenTable /
+        // TokenScale) that must reflect the live design system. The chrome does
+        // NOT consume these; it uses the docs-owned palette below. A CI guard
+        // (tests/styles/chrome-no-product-tokens.test.cjs) enforces that.
         "./src/styles/tokens.css",
+        // Docs-owned palette — the chrome's --docs-* vars (snapshot of product
+        // values, decoupled). Must load before the chrome stylesheets.
+        "./src/styles/docs-theme.css",
         "./src/styles/typography.css",
         "./src/styles/starlight-overrides.css",
         "./src/styles/docs-chrome.css",

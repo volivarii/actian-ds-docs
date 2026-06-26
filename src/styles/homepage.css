@@ -10,7 +10,7 @@
 .hero .tagline {
   font-size: 1rem !important;
   line-height: 1.55;
-  color: var(--zen-color-text-secondary);
+  color: var(--docs-color-text-secondary);
   max-width: 56ch;
   margin-block: 0.5rem 1rem;
 }
@@ -23,17 +23,17 @@
   grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 1px;
   margin: 16px 0 32px;
-  background: var(--zen-color-neutral-100, var(--zen-border-default));
-  border: 1px solid var(--zen-color-neutral-100, var(--zen-border-default));
+  background: var(--docs-color-neutral-100, var(--docs-border-default));
+  border: 1px solid var(--docs-color-neutral-100, var(--docs-border-default));
   border-radius: 4px;
   overflow: hidden;
 }
 .stat-card {
   padding: 18px 20px;
-  background: var(--zen-color-bg-default);
+  background: var(--docs-color-bg-default);
 }
 .stat-card--accent {
-  background: var(--zen-color-primary-25, var(--zen-color-bg-subtle));
+  background: var(--docs-color-primary-25, var(--docs-color-bg-subtle));
 }
 .stat-card__number {
   font-family: var(--font-display, serif);
@@ -43,25 +43,25 @@
   font-size: 2rem;
   font-weight: 500;
   font-variant-numeric: tabular-nums lining-nums;
-  color: var(--zen-color-primary-900, var(--zen-color-text-primary));
+  color: var(--docs-color-primary-900, var(--docs-color-text-primary));
   line-height: 1;
   letter-spacing: -0.02em;
   margin-bottom: 6px;
 }
 .stat-card--accent .stat-card__number {
-  color: var(--zen-color-primary-500);
+  color: var(--docs-color-primary-500);
 }
 .stat-card__label {
   font-size: 0.6875rem;
   font-weight: 600;
-  color: var(--zen-color-text-default);
+  color: var(--docs-color-text-default);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   margin-bottom: 4px;
 }
 .stat-card__sub {
   font-size: 0.6875rem;
-  color: var(--zen-color-text-secondary);
+  color: var(--docs-color-text-secondary);
   font-family: var(--font-mono, monospace);
   line-height: 1.4;
 }
@@ -79,23 +79,23 @@
   display: grid;
   gap: 4px;
   padding: 18px 20px;
-  border: 1px solid var(--zen-color-neutral-100, var(--zen-border-default));
+  border: 1px solid var(--docs-color-neutral-100, var(--docs-border-default));
   border-radius: 4px;
-  background: var(--zen-color-bg-default);
+  background: var(--docs-color-bg-default);
   text-decoration: none !important;
-  color: var(--zen-color-text-default);
+  color: var(--docs-color-text-default);
   transition: border-color 0.15s;
   position: relative;
 }
 .category-browse-card:hover {
-  border-color: var(--zen-color-primary-500);
+  border-color: var(--docs-color-primary-500);
 }
 .category-browse-card:hover::after {
   content: "→";
   position: absolute;
   top: 14px;
   right: 16px;
-  color: var(--zen-color-primary-500);
+  color: var(--docs-color-primary-500);
   font-family: var(--font-mono, monospace);
   font-size: 1rem;
 }
@@ -108,17 +108,17 @@
   font-size: 1.125rem !important;
   font-weight: 500 !important;
   letter-spacing: -0.01em !important;
-  color: var(--zen-color-primary-900, var(--zen-color-text-primary)) !important;
+  color: var(--docs-color-primary-900, var(--docs-color-text-primary)) !important;
 }
 .category-browse-card p {
   margin: 0;
   font-size: 0.8125rem;
-  color: var(--zen-color-text-secondary);
+  color: var(--docs-color-text-secondary);
   max-width: none !important;
 }
 .category-browse-count {
   font-size: 0.625rem;
-  color: var(--zen-color-text-secondary);
+  color: var(--docs-color-text-secondary);
   font-family: var(--font-mono, monospace);
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -142,37 +142,37 @@
   gap: 24px;
   min-height: 140px;
   padding: 16px;
-  border: 1px solid var(--zen-color-neutral-100, var(--zen-border-default));
+  border: 1px solid var(--docs-color-neutral-100, var(--docs-border-default));
   border-radius: 4px;
-  background: var(--zen-color-bg-default);
+  background: var(--docs-color-bg-default);
   text-decoration: none !important;
-  color: var(--zen-color-text-default);
+  color: var(--docs-color-text-default);
   transition: border-color 0.15s;
 }
 .foundation-card:hover {
-  border-color: var(--zen-color-primary-500);
+  border-color: var(--docs-color-primary-500);
 }
 .foundation-card--color {
   background: linear-gradient(
     135deg,
-    var(--zen-color-primary-50) 0%,
-    var(--zen-color-success-50) 33%,
-    var(--zen-color-warning-50) 66%,
-    var(--zen-color-error-50) 100%
+    var(--docs-color-primary-50) 0%,
+    var(--docs-color-success-50) 33%,
+    var(--docs-color-warning-50) 66%,
+    var(--docs-color-error-50) 100%
   );
 }
 .foundation-card__icon {
   font-size: 1.75rem;
   line-height: 1;
   font-family: var(--font-display, serif);
-  color: var(--zen-color-primary-900, var(--zen-color-text-primary));
+  color: var(--docs-color-primary-900, var(--docs-color-text-primary));
 }
 .foundation-card__label {
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--zen-color-text-default);
+  color: var(--docs-color-text-default);
 }
 
 /* ------------------------------------------------------------------
@@ -183,34 +183,34 @@
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 1px;
   margin: 16px 0 32px;
-  background: var(--zen-color-neutral-100, var(--zen-border-default));
-  border: 1px solid var(--zen-color-neutral-100, var(--zen-border-default));
+  background: var(--docs-color-neutral-100, var(--docs-border-default));
+  border: 1px solid var(--docs-color-neutral-100, var(--docs-border-default));
   border-radius: 4px;
   overflow: hidden;
 }
 .feature-card {
   display: block;
   padding: 16px 18px;
-  background: var(--zen-color-bg-default);
+  background: var(--docs-color-bg-default);
   text-decoration: none !important;
-  color: var(--zen-color-text-default);
+  color: var(--docs-color-text-default);
   transition: background 0.15s;
 }
 .feature-card:hover {
-  background: var(--zen-color-bg-subtle);
+  background: var(--docs-color-bg-subtle);
 }
 .feature-card h3 {
   margin: 0 0 4px 0 !important;
   font-family: var(--font-body, sans-serif) !important;
   font-size: 0.9375rem !important;
   font-weight: 600 !important;
-  color: var(--zen-color-text-default) !important;
+  color: var(--docs-color-text-default) !important;
   letter-spacing: -0.005em !important;
 }
 .feature-card p {
   margin: 0;
   font-size: 0.8125rem;
-  color: var(--zen-color-text-secondary);
+  color: var(--docs-color-text-secondary);
   line-height: 1.45;
   max-width: none !important;
 }
@@ -226,7 +226,7 @@
   font-weight: 600 !important;
   letter-spacing: -0.015em !important;
   line-height: 1.15 !important;
-  color: var(--zen-color-text-default) !important;
+  color: var(--docs-color-text-default) !important;
   margin: 0 0 0.5em 0 !important;
 }
 
@@ -243,7 +243,7 @@
   align-items: flex-start !important;
   padding-block: 2.5rem 1.5rem !important;
   border-bottom: 1px solid
-    var(--zen-color-neutral-100, var(--zen-border-default));
+    var(--docs-color-neutral-100, var(--docs-border-default));
   margin-bottom: 2rem !important;
 }
 .hero .stack {
@@ -255,8 +255,8 @@
 
 /* Hero CTA buttons — primary/secondary refinement */
 .hero .action.primary {
-  background: var(--zen-color-primary-500) !important;
-  border-color: var(--zen-color-primary-500) !important;
+  background: var(--docs-color-primary-500) !important;
+  border-color: var(--docs-color-primary-500) !important;
   color: #fff !important;
   font-family: var(--font-body) !important;
   font-weight: 500 !important;
@@ -266,19 +266,19 @@
 }
 .hero .action.primary:hover {
   background: var(
-    --zen-color-primary-700,
-    var(--zen-color-primary-500)
+    --docs-color-primary-700,
+    var(--docs-color-primary-500)
   ) !important;
   border-color: var(
-    --zen-color-primary-700,
-    var(--zen-color-primary-500)
+    --docs-color-primary-700,
+    var(--docs-color-primary-500)
   ) !important;
 }
 .hero .action.secondary,
 .hero .action.minimal {
-  background: var(--zen-color-bg-default) !important;
-  border: 1px solid var(--zen-color-neutral-200, var(--zen-border-default)) !important;
-  color: var(--zen-color-text-default) !important;
+  background: var(--docs-color-bg-default) !important;
+  border: 1px solid var(--docs-color-neutral-200, var(--docs-border-default)) !important;
+  color: var(--docs-color-text-default) !important;
   font-family: var(--font-body) !important;
   font-weight: 500 !important;
   font-size: 0.875rem !important;
@@ -287,8 +287,8 @@
 }
 .hero .action.secondary:hover,
 .hero .action.minimal:hover {
-  border-color: var(--zen-color-primary-500) !important;
-  color: var(--zen-color-primary-700, var(--zen-color-primary-500)) !important;
+  border-color: var(--docs-color-primary-500) !important;
+  color: var(--docs-color-primary-700, var(--docs-color-primary-500)) !important;
 }
 
 /* ------------------------------------------------------------------
