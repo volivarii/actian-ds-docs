@@ -79,7 +79,7 @@ body {
   font-weight: 400;
   letter-spacing: var(--track-display);
   line-height: var(--leading-display);
-  color: var(--zen-color-text-default) !important;
+  color: var(--docs-color-text-default) !important;
 }
 
 .sl-markdown-content h1,
@@ -105,7 +105,7 @@ body {
   font-weight: 600;
   letter-spacing: -0.005em;
   line-height: var(--leading-tight);
-  color: var(--zen-color-text-default) !important;
+  color: var(--docs-color-text-default) !important;
 }
 
 .sl-markdown-content h3 {
@@ -127,7 +127,7 @@ body {
 .sl-markdown-content p.component-description {
   font-size: var(--type-description) !important;
   line-height: var(--leading-body);
-  color: var(--zen-color-text-default);
+  color: var(--docs-color-text-default);
 }
 
 /* Body prose */
@@ -137,7 +137,7 @@ body {
 .sl-markdown-content blockquote {
   font-size: var(--type-body);
   line-height: var(--leading-body);
-  color: var(--zen-color-text-default);
+  color: var(--docs-color-text-default);
 }
 
 /* Links — docs: subtle underline, primary on hover */
@@ -145,12 +145,12 @@ body {
   a:not(.component-card):not(.category-browse-card):not(.foundation-card):not(
     .feature-card
   ):not(.stat-card) {
-  color: var(--zen-color-primary-700, var(--zen-color-primary-500));
+  color: var(--docs-color-primary-700, var(--docs-color-primary-500));
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-decoration-color: var(
-    --zen-color-primary-300,
-    var(--zen-color-primary-500)
+    --docs-color-primary-300,
+    var(--docs-color-primary-500)
   );
   text-underline-offset: 3px;
   transition:
@@ -161,7 +161,7 @@ body {
   a:not(.component-card):not(.category-browse-card):not(.foundation-card):not(
     .feature-card
   ):not(.stat-card):hover {
-  color: var(--zen-color-primary-500);
+  color: var(--docs-color-primary-500);
   text-decoration-color: currentColor;
 }
 
@@ -169,7 +169,7 @@ body {
 .sl-markdown-content code:not(pre code) {
   font-family: var(--font-mono);
   font-size: 0.875em;
-  background: var(--zen-color-bg-muted, var(--zen-color-bg-subtle));
+  background: var(--docs-color-bg-muted, var(--docs-color-bg-subtle));
   padding: 0.1em 0.4em;
   border-radius: 3px;
   /* text-default (not text-primary): the v0.34.29 token refresh repurposed
@@ -177,7 +177,7 @@ body {
      background (#e1e1e6) is only 4.36:1 — below WCAG AA. Black text-default
      restores AA on the chip (also fixes inline code nested in links, which
      would otherwise inherit the accent-blue link color). */
-  color: var(--zen-color-text-default);
+  color: var(--docs-color-text-default);
 }
 
 /* Tables — tabular figures, thin rules */
@@ -197,15 +197,15 @@ body {
   text-align: left;
   padding: 8px 12px;
   border-bottom: 1px solid
-    var(--zen-color-neutral-200, var(--zen-border-default));
-  color: var(--zen-color-text-secondary);
+    var(--docs-color-neutral-200, var(--docs-border-default));
+  color: var(--docs-color-text-secondary);
 }
 .sl-markdown-content table td {
   padding: 10px 12px;
   border-bottom: 1px solid
-    var(--zen-color-neutral-100, var(--zen-border-default));
+    var(--docs-color-neutral-100, var(--docs-border-default));
   vertical-align: middle;
-  color: var(--zen-color-text-default);
+  color: var(--docs-color-text-default);
 }
 .sl-markdown-content table tr:last-child td {
   border-bottom: none;

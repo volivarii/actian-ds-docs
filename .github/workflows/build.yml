@@ -41,6 +41,7 @@ jobs:
           node --test tests/vendor/version-range-resolution.test.cjs
           node --test tests/vendor/vendor-snapshot-core-drift.test.cjs
           node --test tests/validation/composition-manifest.test.cjs
+          node --test tests/styles/chrome-no-product-tokens.test.cjs
 
       - name: Build site
         env:
