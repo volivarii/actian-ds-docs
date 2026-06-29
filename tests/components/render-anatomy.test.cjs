@@ -63,12 +63,14 @@ test("toCallout: skips unnamed children", function () {
 
 function reset() { renderMdx.setAnatomyIndex(null); renderMdx.setMediaIndex(null); }
 
-test("renderAnatomy: image-led callout when capture usable + default.webp present", function () {
+test("renderAnatomy: image-led callout when capture usable + parts capture present", function () {
   renderMdx.setAnatomyIndex({ components: { button: BUTTON_ANATOMY } });
-  renderMdx.setMediaIndex({ media: { button: { default: "components/dist/media/button/default.webp" } } });
+  // The callout image comes from the FIRST parts capture (anatomyImageSrc),
+  // not default.webp (a plain variant shot, not an anatomy diagram).
+  renderMdx.setMediaIndex({ media: { button: { parts: ["components/dist/media/button/parts-0.webp"] } } });
   var out = renderMdx.renderAnatomy("button", null);
   assert.match(out, /<Anatomy\s/);
-  assert.match(out, /image="\/media\/button\/default\.webp"/);
+  assert.match(out, /image="\/media\/button\/parts-0\.webp"/);
   assert.match(out, /parts=\{/);
   assert.match(out, /layout=\{/);
   reset();
@@ -82,11 +84,14 @@ test("renderAnatomy: callout without image when no default.webp in media index",
   assert.doesNotMatch(out, /image=/);
   reset();
 });
-test("renderAnatomy: falls back to category-defaults placeholder when capture not usable", function () {
+test("renderAnatomy: empty string when capture not usable, even with category defaults (placeholder removed)", function () {
+  // The category-defaults Anatomy placeholder was removed (2026-06-29): with no
+  // usable capture, renderAnatomy returns "" regardless of category defaults.
   renderMdx.setAnatomyIndex({ components: { button: withDegraded() } });
-  var out = renderMdx.renderAnatomy("button", { anatomy: { parts: [{ name: "Container", description: "wrapper" }] } });
-  assert.match(out, /<Anatomy parts=\{/);
-  assert.doesNotMatch(out, /layout=\{/);
+  assert.equal(
+    renderMdx.renderAnatomy("button", { anatomy: { parts: [{ name: "Container", description: "wrapper" }] } }),
+    ""
+  );
   reset();
 });
 test("renderAnatomy: emits name= prop (drives the diagram alt) when a display name is given", function () {
@@ -105,13 +110,12 @@ test("renderDesignSections: anatomy renders real callout and suppresses the part
   renderMdx.setAnatomyIndex({ components: { button: BUTTON_ANATOMY } });
   renderMdx.setMediaIndex({
     media: { button: {
-      default: "components/dist/media/button/default.webp",
       parts: ["components/dist/media/button/parts-0.webp"],
     } },
   });
   var out = renderMdx.renderDesignSections({}, null, null, "button", {});
   assert.match(out, /## Anatomy/);
-  assert.match(out, /<Anatomy[^>]*image="\/media\/button\/default\.webp"/);
+  assert.match(out, /<Anatomy[^>]*image="\/media\/button\/parts-0\.webp"/);
   assert.doesNotMatch(out, /<Media role="parts"/);
   renderMdx.setAnatomyIndex(null); renderMdx.setMediaIndex(null);
 });
