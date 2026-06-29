@@ -122,8 +122,10 @@ test("renderDesignSections: canonical section order is Anatomy → Variants → 
 });
 
 // ---------------------------------------------------------------------------
-// 3. <Anatomy> / <VariantMatrix> are conditional placeholders — emitted only
+// 3. <Anatomy> is a conditional placeholder (real capture only) — emitted only
 //    when the section has neither Figma media nor authored design.md prose.
+//    <VariantMatrix> is never emitted: the Variants section is media/authored-
+//    only (registry axes do not trigger it).
 // ---------------------------------------------------------------------------
 
 test("renderDesignSections: <Anatomy>/<VariantMatrix> suppressed when media is present", function () {
@@ -161,13 +163,44 @@ test("renderDesignSections: <Anatomy>/<VariantMatrix> suppressed when design.md 
   resetIndex();
 });
 
-test("renderDesignSections: <Anatomy>/<VariantMatrix> emitted as placeholders when neither media nor prose exists", function () {
+test("renderDesignSections: no real Anatomy/Variants data → sections omitted (category-default placeholders removed)", function () {
+  // Entry with no registry variants; no capture, no media, no authored prose.
+  // The category-default Anatomy/Variants placeholders were removed
+  // (2026-06-29) so both sections — heading included — disappear entirely.
+  var entry = { name: "Spinner", description: "Loading indicator." };
   renderMdx.setMediaIndex(null);
+  renderMdx.setAnatomyIndex(null);
+  var WARNINGS = { unknownContentShapes: 0 };
+  var out = renderMdx.renderDesignSections(entry, makeDefaults(), null, "spinner", WARNINGS);
+
+  assert.doesNotMatch(out, /^## Anatomy$/m, "Anatomy section must be omitted when there is no capture, media, or prose");
+  assert.doesNotMatch(out, /^## Variants$/m, "Variants section must be omitted when there are no registry axes, media, or prose");
+  assert.doesNotMatch(out, /<Anatomy /, "no category-default <Anatomy> placeholder");
+  assert.doesNotMatch(out, /<VariantMatrix /, "no category-default <VariantMatrix> placeholder");
+  resetIndex();
+});
+
+test("renderDesignSections: registry variants alone do NOT produce a Variants section", function () {
+  // entry.variants is present but there's no variations media and no authored
+  // Variants prose — the section (and any VariantMatrix) must be omitted.
+  renderMdx.setMediaIndex(null);
+  renderMdx.setAnatomyIndex(null);
   var WARNINGS = { unknownContentShapes: 0 };
   var out = renderMdx.renderDesignSections(BUTTON_ENTRY, makeDefaults(), null, "button", WARNINGS);
 
-  assert.match(out, /<Anatomy /, "<Anatomy> placeholder must render when there is no media and no prose");
-  assert.match(out, /<VariantMatrix /, "<VariantMatrix> placeholder must render when there is no media and no prose");
+  assert.doesNotMatch(out, /^## Variants$/m, "Variants must be omitted without media or authored prose");
+  assert.doesNotMatch(out, /<VariantMatrix /, "registry variant axes must not render a VariantMatrix");
+  resetIndex();
+});
+
+test("renderDesignSections: Variants section renders from variations media", function () {
+  renderMdx.setMediaIndex({ media: { button: BUTTON_MEDIA } });
+  renderMdx.setAnatomyIndex(null);
+  var WARNINGS = { unknownContentShapes: 0 };
+  var out = renderMdx.renderDesignSections(BUTTON_ENTRY, makeDefaults(), null, "button", WARNINGS);
+
+  assert.match(out, /^## Variants$/m, "Variants section renders when variations media exists");
+  assert.match(out, /role="variations"/, "the variations media board renders");
   resetIndex();
 });
 
@@ -234,16 +267,18 @@ test("renderDesignSections: <MotionPattern> is NOT conditional — renders even 
 });
 
 // ---------------------------------------------------------------------------
-// 4. Component with NO design domain still gets ## Anatomy / ## Variants
+// 4. Component with NO design domain: ## Anatomy from a usable capture only;
+//    ## Variants is NOT produced by registry axes alone.
 // ---------------------------------------------------------------------------
 
-test("renderDesignSections: no design domain → still emits ## Anatomy and ## Variants from structured data", function () {
+test("renderDesignSections: no design domain → ## Anatomy from a usable capture; ## Variants omitted (registry axes don't trigger it)", function () {
+  renderMdx.setAnatomyIndex({ components: { button: USABLE_ANATOMY } });
   renderMdx.setMediaIndex(null);
   var WARNINGS = { unknownContentShapes: 0 };
   var out = renderMdx.renderDesignSections(BUTTON_ENTRY, makeDefaults(), null, "button", WARNINGS);
 
-  assert.match(out, /^## Anatomy$/m, "## Anatomy must be present even without design domain");
-  assert.match(out, /^## Variants$/m, "## Variants must be present even without design domain");
+  assert.match(out, /^## Anatomy$/m, "## Anatomy renders from the usable capture");
+  assert.doesNotMatch(out, /^## Variants$/m, "## Variants must be omitted — registry axes alone don't trigger it");
   resetIndex();
 });
 
