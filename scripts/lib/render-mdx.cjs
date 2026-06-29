@@ -57,10 +57,20 @@ var SLUG_ALIASES = {
 // where pattern fanout injects the same cross-references.
 var REMOVE_LINK_SLUGS = new Set(["forms", "validation-messages", "wizards"]);
 
+// Base-URL prefix expression, shared with renderGlobalA11yLink /
+// renderRelatedPatterns. Resolved by Astro per-build (/actian-ds-docs in
+// production, / for the link-check build) so the emitted href is always
+// base-correct.
+var BASE_URL_EXPR = "${import.meta.env.BASE_URL.replace(/\\/?$/, '/')}";
+
 /**
- * Rewrite bare-slug markdown links to absolute doc paths.
- * Converts `[label](slug)` to `[label](/components/category/slug/)`
- * when `slug` is a known component. Unknown slugs are left untouched
+ * Rewrite bare-slug markdown links to base-aware absolute doc links.
+ * Converts `[label](slug)` to a JSX
+ * `<a href={`${import.meta.env.BASE_URL...}components/category/slug/`}>label</a>`
+ * when `slug` is a known component. A plain `[label](/components/...)` markdown
+ * link drops the site base prefix and 404s in production — Astro does not
+ * auto-prepend the base to markdown links — so we emit the same BASE_URL-prefixed
+ * JSX form the other generated cross-links use. Unknown slugs are left untouched
  * so the validator can still flag genuinely broken links.
  * @param {string} s - input markdown/MDX text
  * @returns {string}
@@ -75,7 +85,11 @@ function rewriteComponentLinks(s) {
     // Resolve via alias first, then direct slug lookup.
     var canonical = SLUG_ALIASES[slug] || slug;
     var abs = _slugToPath[canonical];
-    return abs ? ("[" + label + "](" + abs + ")") : match;
+    if (!abs) return match;
+    // abs is root-absolute ("/components/cat/slug/"); strip the leading slash
+    // so it sits directly after the (trailing-slashed) BASE_URL.
+    var rel = abs.replace(/^\//, "");
+    return "<a href={`" + BASE_URL_EXPR + rel + "`}>" + label + "</a>";
   });
 }
 
@@ -355,8 +369,11 @@ var DESIGN_SECTIONS = [
     structured: function (entry, defaults, slug) { return renderAnatomy(slug, defaults, entry && entry.name); } },
   { key: "variants", heading: "Variants",        mediaRole: "variations",
     aliases: ["variants", "variations"],
-    placeholderStructured: true,
-    structured: function (entry, defaults) { return renderVariantsMatrix(entry, defaults); } },
+    // No structured placeholder: the Variants section renders only from authored
+    // design prose or Figma "variations" media. Registry variant axes alone do
+    // NOT produce a section (per request 2026-06-29) — same rule as Spacing &
+    // size / Layout below.
+    structured: null },
   { key: "spacing",  heading: "Spacing & size",  mediaRole: "spacing",
     aliases: ["spacing & size", "spacing", "spacing and size", "sizing"],
     structured: null },
@@ -491,21 +508,12 @@ function renderAnatomy(slug, defaults, name) {
     if (cleanName) props += " name=" + JSON.stringify(cleanName);
     return "<Anatomy " + props + " />";
   }
-  // Fallback: category-defaults placeholder (unchanged legacy behavior).
-  if (!(defaults && defaults.anatomy && Array.isArray(defaults.anatomy.parts) && defaults.anatomy.parts.length)) return "";
-  return "<Anatomy parts={" + jsLit(defaults.anatomy.parts) + "} />";
-}
-
-function renderVariantsMatrix(entry, defaults) {
-  if (entry.variants && Object.keys(entry.variants).length) {
-    var axes = Object.entries(entry.variants).map(function (pair) {
-      return { axis: pair[0], values: pair[1] };
-    });
-    return '<VariantMatrix variantAxes={' + jsLit(axes) + '} />';
-  }
-  if (defaults && defaults.variants && Array.isArray(defaults.variants.variantAxes) && defaults.variants.variantAxes.length) {
-    return '<VariantMatrix variantAxes={' + jsLit(defaults.variants.variantAxes) + '} />';
-  }
+  // No usable capture → no Anatomy. The category-defaults placeholder was
+  // removed (2026-06-29): the Anatomy section renders only from a real capture,
+  // authored design prose, or Figma media — never a generic category-level
+  // placeholder. With this returning "" and no body/media, renderDesignSections
+  // drops the whole ## Anatomy section. (`defaults` is retained for signature
+  // stability with the DESIGN_SECTIONS factory.)
   return "";
 }
 

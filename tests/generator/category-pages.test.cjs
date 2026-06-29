@@ -36,6 +36,20 @@ test("each category page contains H1, count, and at least one ComponentCard", ()
   for (const slug of slugs) {
     const body = fs.readFileSync(path.join(OUT_DIR, slug + ".mdx"), "utf8");
     assert.match(body, /^---\s*\ntitle:\s*"[^"]+"\s*\n---/m, slug + ": has frontmatter title");
+
+    if (slug === "icons") {
+      // Icons is an intentional pointer page: no per-icon documentation pages
+      // exist, so ComponentCards would link to /components/icons/<slug> and
+      // 404. Instead it carries an icon count and a base-aware link to the
+      // Foundations icon catalog. See buildIconsPage in
+      // scripts/generate-category-pages.cjs.
+      assert.match(body, /\d+\s+icons/i, "icons: has an icon count");
+      assert.match(body, /import\.meta\.env\.BASE_URL[^`]*foundations\/icons\//, "icons: base-aware link to the foundations catalog");
+      assert.doesNotMatch(body, /<ComponentCard\s/, "icons: must NOT list ComponentCards (they would 404)");
+      assert.doesNotMatch(body, /\]\(\/foundations/, "icons: no base-less markdown link to foundations");
+      continue;
+    }
+
     assert.match(body, /\d+\s+components?/i, slug + ": has count line");
     assert.match(body, /<ComponentCard\s/, slug + ": has at least one ComponentCard");
   }
