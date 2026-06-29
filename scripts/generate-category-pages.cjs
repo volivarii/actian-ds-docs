@@ -37,7 +37,9 @@ function escapeQuotes(s) {
 // glyphs) on the Foundations → Icons page, NOT as per-component pages. A grid
 // of ComponentCards here would link to /components/icons/<slug>, which 404s
 // (no per-icon pages exist). So the icons category page is a thin pointer to
-// the catalog. The root-relative link is base-prefixed by Starlight.
+// the catalog. The link is emitted as a base-aware JSX <a> (Astro does NOT
+// auto-prepend the site base to plain markdown links, so a bare
+// `/foundations/icons/` would drop the base and 404 in production).
 function buildIconsPage(categoryLabel, count) {
   const lines = [];
   lines.push("---");
@@ -46,7 +48,8 @@ function buildIconsPage(categoryLabel, count) {
   lines.push("");
   lines.push(
     "The DS-Kit ships " + count +
-    " icons. They are documented as one grouped, searchable catalog — with live, themeable glyphs — on the **[Icons foundations page](/foundations/icons/)**."
+    " icons. They are documented as one grouped, searchable catalog — with live, themeable glyphs — on the " +
+    "<a href={`${import.meta.env.BASE_URL.replace(/\\/?$/, '/')}foundations/icons/`}><strong>Icons foundations page</strong></a>."
   );
   lines.push("");
   lines.push(
