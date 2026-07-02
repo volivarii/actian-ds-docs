@@ -2,21 +2,22 @@
   "_schema_version": 1,
   "slug": "input",
   "kit": "dskit",
-  "synced_at": "2026-07-01T10:42:32.186Z",
+  "synced_at": "2026-07-02T10:07:52.442Z",
   "source": {
     "fileKey": "l8biHxfarNi1I2RMvVxVOK",
-    "nodeId": "7238:2487",
+    "nodeId": "18857:3168",
     "variant": "States=Default"
   },
   "quality": {
-    "nodesTotal": 10,
-    "nodesNormalized": 10,
+    "nodesTotal": 12,
+    "nodesNormalized": 12,
     "ratio": 1,
     "degraded": []
   },
   "root": {
     "name": "States=Default",
     "kind": "container",
+    "id": "18857:3169",
     "layout": {
       "axis": "column",
       "gap": "4px",
@@ -37,11 +38,12 @@
     },
     "children": [
       {
-        "name": "Label",
+        "name": "Label + description",
         "kind": "container",
+        "id": "18857:3170",
         "layout": {
-          "axis": "row",
-          "gap": "4px",
+          "axis": "column",
+          "gap": "0px",
           "padding": {
             "top": "0px",
             "right": "0px",
@@ -50,7 +52,7 @@
           },
           "align": {
             "main": "start",
-            "cross": "center"
+            "cross": "start"
           },
           "sizing": {
             "h": "fill",
@@ -60,29 +62,59 @@
         "children": [
           {
             "name": "Label",
-            "kind": "text",
-            "text": "Label"
+            "kind": "container",
+            "id": "18857:3171",
+            "layout": {
+              "axis": "row",
+              "gap": "4px",
+              "padding": {
+                "top": "0px",
+                "right": "0px",
+                "bottom": "0px",
+                "left": "0px"
+              },
+              "align": {
+                "main": "start",
+                "cross": "center"
+              },
+              "sizing": {
+                "h": "fill",
+                "v": "hug"
+              }
+            },
+            "children": [
+              {
+                "name": "Label",
+                "kind": "text",
+                "id": "18857:3172",
+                "text": "Label"
+              },
+              {
+                "name": "Label",
+                "kind": "text",
+                "id": "18857:3173",
+                "text": "*"
+              },
+              {
+                "name": "info",
+                "kind": "instance",
+                "slug": "info",
+                "id": "18857:3174"
+              }
+            ]
           },
           {
-            "name": "Required",
+            "name": "description",
             "kind": "text",
-            "text": "*"
-          },
-          {
-            "name": "info",
-            "kind": "instance",
-            "slug": "info"
+            "id": "18857:3175",
+            "text": "A description helps users to define and understand the purpose of the input."
           }
         ]
       },
       {
-        "name": "Description",
-        "kind": "text",
-        "text": "A description helps users to define and understand the purpose of the input."
-      },
-      {
-        "name": "Input field",
+        "name": "input field",
         "kind": "container",
+        "id": "18857:3176",
         "layout": {
           "axis": "row",
           "gap": "8px",
@@ -105,18 +137,27 @@
           {
             "name": "Input text",
             "kind": "text",
+            "id": "18857:3177",
             "text": "Placeholder text"
           },
           {
             "name": "close",
             "kind": "instance",
-            "slug": "close"
+            "slug": "close",
+            "id": "18857:3178"
+          },
+          {
+            "name": "arrow-down",
+            "kind": "instance",
+            "slug": "arrow-down",
+            "id": "18857:3179"
           }
         ]
       },
       {
-        "name": "Helper text",
+        "name": "helper text",
         "kind": "text",
+        "id": "18857:3180",
         "text": "Helper text goes here"
       }
     ]
