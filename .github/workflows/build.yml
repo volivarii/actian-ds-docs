@@ -33,15 +33,10 @@ jobs:
       - name: Drift guards
         run: node scripts/validation/validate-build.cjs
 
+      # npm test runs the full suite from package.json; a hand-picked subset
+      # here silently skipped newer test files (e.g. remark-base-links).
       - name: Unit tests
-        run: |
-          node --test tests/lib/paths.test.cjs
-          node --test tests/lib/category-defaults-loader.test.cjs
-          node --test tests/validation/validate-build.test.cjs
-          node --test tests/vendor/version-range-resolution.test.cjs
-          node --test tests/vendor/vendor-snapshot-core-drift.test.cjs
-          node --test tests/validation/composition-manifest.test.cjs
-          node --test tests/styles/chrome-no-product-tokens.test.cjs
+        run: npm test
 
       - name: Build site
         env:
