@@ -1,6 +1,7 @@
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 import remarkCustomHeaderId from "remark-custom-header-id";
+import remarkBaseLinks from "./scripts/remark-base-links.mjs";
 import starlightLinksValidator from "starlight-links-validator";
 import componentsSidebar from "./src/data/components-sidebar.json";
 import brandSidebar from "./src/data/brand-sidebar.json";
@@ -36,7 +37,12 @@ export default defineConfig({
     // (content.md). Plugin emits proper id attributes so Starlight's
     // right-rail TOC and cross-link anchors work.
     // Note: accessibility is now a composed .mdx page (no {#slug} anchors).
-    remarkPlugins: [remarkCustomHeaderId],
+    //
+    // remarkBaseLinks base-prefixes root-absolute markdown links (Astro does
+    // not apply `base` to md link hrefs). No-op when BASE is "/" — so the
+    // links-validator build (SITE_BASE=/) validates the unprefixed paths.
+    // MDX pages inherit this via @astrojs/mdx's extendMarkdownConfig default.
+    remarkPlugins: [remarkCustomHeaderId, [remarkBaseLinks, { base: BASE }]],
   },
   integrations: [
     starlight({
