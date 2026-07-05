@@ -10,10 +10,27 @@ import { createRequire } from "node:module";
 const { SITE_URL: SITE } = createRequire(import.meta.url)("./scripts/lib/site-url.cjs");
 const BASE = process.env.SITE_BASE || "/actian-ds-docs";
 
+// Astro base-prefixes each redirect's FROM route but NOT its destination, so
+// a root-absolute destination in the manifest 404s under the deployed
+// /actian-ds-docs base (and poisons the stub's rel=canonical, which Astro
+// builds from the destination). The manifest stays base-agnostic data
+// (generate-component-pages.cjs emits unprefixed paths); we prefix at this
+// consumption point so even a stale manifest is corrected. `prefixDestination`
+// is a no-op when the base is "/" (links-validator and a11y builds) and never
+// double-prefixes an already-prefixed destination.
+const BASE_NO_SLASH = BASE.endsWith("/") ? BASE.slice(0, -1) : BASE;
+const prefixDestination = (dest) =>
+  !BASE_NO_SLASH || dest === BASE_NO_SLASH || dest.startsWith(BASE_NO_SLASH + "/")
+    ? dest
+    : BASE_NO_SLASH + dest;
+const redirects = Object.fromEntries(
+  Object.entries(redirectsManifest).map(([from, to]) => [from, prefixDestination(to)]),
+);
+
 export default defineConfig({
   site: SITE,
   base: BASE,
-  redirects: redirectsManifest,
+  redirects,
   markdown: {
     // Parse `## Title {#slug}` anchor syntax used by vendored MDs
     // (content.md). Plugin emits proper id attributes so Starlight's
