@@ -1,7 +1,7 @@
 "use strict";
 
 /**
- * check-base-prefix.cjs — Production-artifact guard: every root-absolute URL
+ * check-base-prefix.cjs (production-artifact guard): every root-absolute URL
  * in the built HTML must carry the deploy base path.
  *
  * The site deploys to GitHub Pages under /actian-ds-docs. Any
@@ -38,7 +38,7 @@ var RAW_BASE = process.env.SITE_BASE || "/actian-ds-docs";
 var BASE = RAW_BASE.endsWith("/") ? RAW_BASE.slice(0, -1) : RAW_BASE;
 
 // Path prefixes allowed to appear root-absolute (unprefixed) in built HTML.
-// Empty on purpose — see header comment before adding anything.
+// Empty on purpose; see header comment before adding anything.
 var ALLOWED_PREFIXES = [];
 
 // Root-absolute URLs in attributes that the browser resolves against the
@@ -107,7 +107,7 @@ function main() {
     );
     return 1;
   }
-  console.log("check-base-prefix: OK — all root-absolute URLs in dist HTML carry the " + BASE + " base.");
+  console.log("check-base-prefix: OK, all root-absolute URLs in dist HTML carry the " + BASE + " base.");
   return 0;
 }
 

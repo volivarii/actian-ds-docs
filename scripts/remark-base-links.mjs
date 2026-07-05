@@ -1,7 +1,7 @@
 // Remark plugin: base-prefix root-absolute internal links in Markdown/MDX.
 //
 // Astro/Starlight do NOT apply the configured `base` to plain markdown links
-// like `[Color](/foundations/color/)` — the href reaches the rendered HTML
+// like `[Color](/foundations/color/)`: the href reaches the rendered HTML
 // verbatim and 404s under the deployed /actian-ds-docs base. This plugin
 // rewrites `link`, `definition`, and `image` node urls at build time, so
 // authored and vendored/generated markdown (content.md and friends) stays

@@ -111,7 +111,7 @@ jobs:
               echo "No checks registered yet (attempt $attempt); retrying in 20s..."
               sleep 20
             else
-              break  # checks exist (pending or failing) — proceed to watch
+              break  # checks exist (pending or failing); proceed to watch
             fi
           done
           gh pr checks "$PR" --repo "$REPO" --watch --fail-fast

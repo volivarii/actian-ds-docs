@@ -44,7 +44,7 @@ export default defineConfig({
     // Note: accessibility is now a composed .mdx page (no {#slug} anchors).
     //
     // remarkBaseLinks base-prefixes root-absolute markdown links (Astro does
-    // not apply `base` to md link hrefs). No-op when BASE is "/" — so the
+    // not apply `base` to md link hrefs). No-op when BASE is "/", so the
     // links-validator build (SITE_BASE=/) validates the unprefixed paths.
     // MDX pages inherit this via @astrojs/mdx's extendMarkdownConfig default.
     remarkPlugins: [remarkCustomHeaderId, [remarkBaseLinks, { base: BASE }]],

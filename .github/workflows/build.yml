@@ -48,7 +48,7 @@ jobs:
       # The site deploys under /actian-ds-docs, so EVERY root-absolute URL in
       # the rendered HTML (href/src attributes and redirect meta-refresh urls)
       # must carry that base or it 404s in production. The link-validator job
-      # builds at SITE_BASE=/ and so cannot catch this — it must run on this
+      # builds at SITE_BASE=/ and so cannot catch this; it must run on this
       # prod build. Replaces the earlier /media/-only grep, which missed the
       # ~160 unprefixed markdown links and redirect destinations. Scope,
       # allowlist, and rationale live in the script (also runnable locally
