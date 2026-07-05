@@ -50,22 +50,18 @@ jobs:
           SITE_BASE: /actian-ds-docs
         run: npm run build
 
-      # The site deploys under /actian-ds-docs, so every media asset must be
-      # referenced as /actian-ds-docs/media/... A bare ="/media/... in rendered
-      # HTML is a root-absolute path that 404s in production (the anatomy-callout
-      # image regression). All images go through MediaAsset.astro, which prefixes
-      # import.meta.env.BASE_URL; this guards the deployed artifact against any
-      # future raw <img> that bypasses it. The link-validator job builds at
-      # SITE_BASE=/ and so cannot catch this — it must run on this prod build.
-      # Scoped to *.html: the .md / llms*.txt dumps carry the raw pre-render MDX
-      # source (`<MediaAsset src="/media/...">`), where the bare path is correct.
-      - name: Assert media assets are base-prefixed
-        run: |
-          if grep -rIn --include='*.html' '="/media/' dist; then
-            echo "::error::Root-absolute /media/ asset path(s) in rendered HTML — they 404 under /actian-ds-docs. Render images via MediaAsset.astro so BASE_URL is applied."
-            exit 1
-          fi
-          echo "OK: no unprefixed /media/ asset paths in the deployed HTML."
+      # The site deploys under /actian-ds-docs, so EVERY root-absolute URL in
+      # the rendered HTML (href/src attributes and redirect meta-refresh urls)
+      # must carry that base or it 404s in production. The link-validator job
+      # builds at SITE_BASE=/ and so cannot catch this — it must run on this
+      # prod build. Replaces the earlier /media/-only grep, which missed the
+      # ~160 unprefixed markdown links and redirect destinations. Scope,
+      # allowlist, and rationale live in the script (also runnable locally
+      # via `npm run check:base-prefix`).
+      - name: Assert all root-absolute URLs are base-prefixed
+        env:
+          SITE_BASE: /actian-ds-docs
+        run: npm run check:base-prefix
 
       - name: Upload artifact
         if: github.ref == 'refs/heads/main'
