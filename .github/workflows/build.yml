@@ -33,17 +33,20 @@ jobs:
       - name: Drift guards
         run: node scripts/validation/validate-build.cjs
 
-      # npm test runs the full suite from package.json; a hand-picked subset
-      # here silently skipped newer test files (e.g. remark-base-links).
-      - name: Unit tests
-        run: npm test
-
       - name: Build site
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SITE_URL: https://volivarii.github.io/actian-ds-docs
           SITE_BASE: /actian-ds-docs
         run: npm run build
+
+      # npm test runs the full suite from package.json; a hand-picked subset
+      # here silently skipped newer test files (e.g. remark-base-links).
+      # Runs AFTER the build: some generator tests assert the generated
+      # category/component pages, which prebuild produces and the vendor
+      # refresh does not commit, so a fresh checkout lacks them until built.
+      - name: Unit tests
+        run: npm test
 
       # The site deploys under /actian-ds-docs, so EVERY root-absolute URL in
       # the rendered HTML (href/src attributes and redirect meta-refresh urls)
