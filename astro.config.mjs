@@ -20,10 +20,15 @@ const BASE = process.env.SITE_BASE || "/actian-ds-docs";
 // is a no-op when the base is "/" (links-validator and a11y builds) and never
 // double-prefixes an already-prefixed destination.
 const BASE_NO_SLASH = BASE.endsWith("/") ? BASE.slice(0, -1) : BASE;
-const prefixDestination = (dest) =>
-  !BASE_NO_SLASH || dest === BASE_NO_SLASH || dest.startsWith(BASE_NO_SLASH + "/")
-    ? dest
-    : BASE_NO_SLASH + dest;
+const prefixDestination = (dest) => {
+  // Only root-absolute string destinations get the base. Everything else
+  // passes through untouched: external https:// urls, protocol-relative
+  // //host paths, and Astro's object-form { status, destination } redirect
+  // values (prefixing must never mangle them or TypeError at config load).
+  if (typeof dest !== "string" || !dest.startsWith("/") || dest.startsWith("//")) return dest;
+  if (!BASE_NO_SLASH || dest === BASE_NO_SLASH || dest.startsWith(BASE_NO_SLASH + "/")) return dest;
+  return BASE_NO_SLASH + dest;
+};
 const redirects = Object.fromEntries(
   Object.entries(redirectsManifest).map(([from, to]) => [from, prefixDestination(to)]),
 );
