@@ -570,7 +570,6 @@ button[data-open-modal] {
   font-weight: 500;
   color: var(--docs-color-text-secondary);
   text-decoration: none !important;
-  text
   transition:
     color var(--transition-base) var(--motion-easing-standard),
     border-color var(--transition-base) var(--motion-easing-standard);

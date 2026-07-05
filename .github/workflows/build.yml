@@ -33,16 +33,6 @@ jobs:
       - name: Drift guards
         run: node scripts/validation/validate-build.cjs
 
-      - name: Unit tests
-        run: |
-          node --test tests/lib/paths.test.cjs
-          node --test tests/lib/category-defaults-loader.test.cjs
-          node --test tests/validation/validate-build.test.cjs
-          node --test tests/vendor/version-range-resolution.test.cjs
-          node --test tests/vendor/vendor-snapshot-core-drift.test.cjs
-          node --test tests/validation/composition-manifest.test.cjs
-          node --test tests/styles/chrome-no-product-tokens.test.cjs
-
       - name: Build site
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -50,22 +40,26 @@ jobs:
           SITE_BASE: /actian-ds-docs
         run: npm run build
 
-      # The site deploys under /actian-ds-docs, so every media asset must be
-      # referenced as /actian-ds-docs/media/... A bare ="/media/... in rendered
-      # HTML is a root-absolute path that 404s in production (the anatomy-callout
-      # image regression). All images go through MediaAsset.astro, which prefixes
-      # import.meta.env.BASE_URL; this guards the deployed artifact against any
-      # future raw <img> that bypasses it. The link-validator job builds at
-      # SITE_BASE=/ and so cannot catch this — it must run on this prod build.
-      # Scoped to *.html: the .md / llms*.txt dumps carry the raw pre-render MDX
-      # source (`<MediaAsset src="/media/...">`), where the bare path is correct.
-      - name: Assert media assets are base-prefixed
-        run: |
-          if grep -rIn --include='*.html' '="/media/' dist; then
-            echo "::error::Root-absolute /media/ asset path(s) in rendered HTML — they 404 under /actian-ds-docs. Render images via MediaAsset.astro so BASE_URL is applied."
-            exit 1
-          fi
-          echo "OK: no unprefixed /media/ asset paths in the deployed HTML."
+      # npm test runs the full suite from package.json; a hand-picked subset
+      # here silently skipped newer test files (e.g. remark-base-links).
+      # Runs AFTER the build: some generator tests assert the generated
+      # category/component pages, which prebuild produces and the vendor
+      # refresh does not commit, so a fresh checkout lacks them until built.
+      - name: Unit tests
+        run: npm test
+
+      # The site deploys under /actian-ds-docs, so EVERY root-absolute URL in
+      # the rendered HTML (href/src attributes and redirect meta-refresh urls)
+      # must carry that base or it 404s in production. The link-validator job
+      # builds at SITE_BASE=/ and so cannot catch this; it must run on this
+      # prod build. Replaces the earlier /media/-only grep, which missed the
+      # ~160 unprefixed markdown links and redirect destinations. Scope,
+      # allowlist, and rationale live in the script (also runnable locally
+      # via `npm run check:base-prefix`).
+      - name: Assert all root-absolute URLs are base-prefixed
+        env:
+          SITE_BASE: /actian-ds-docs
+        run: npm run check:base-prefix
 
       - name: Upload artifact
         if: github.ref == 'refs/heads/main'
@@ -136,9 +130,11 @@ jobs:
   # Deploy must live in the same workflow as the artifact upload — the
   # deploy-pages action reads artifacts from the current workflow run,
   # and workflow_run-triggered deploys can't see upstream artifacts.
+  # Gated on ALL verification jobs (build, links, a11y): previously it only
+  # needed `build`, so a red links or a11y job still shipped to production.
   deploy:
     if: github.ref == 'refs/heads/main'
-    needs: build
+    needs: [build, links, a11y]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -146,7 +142,13 @@ jobs:
       id-token: write
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url || steps.deployment-retry.outputs.page_url }}
     steps:
+      # Pages deploys occasionally fail transiently (API 5xx / artifact
+      # propagation). One retry before failing the run for real.
       - uses: actions/deploy-pages@v4
         id: deployment
+        continue-on-error: true
+      - uses: actions/deploy-pages@v4
+        id: deployment-retry
+        if: steps.deployment.outcome == 'failure'

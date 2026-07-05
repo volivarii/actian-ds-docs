@@ -636,6 +636,8 @@ function main() {
   // top of astro.config.mjs (added in this task).
   //   /<base>/design/ → /<base>/#anatomy   (Anatomy is the upstream design-domain heading)
   //   /<base>/usage/  → /<base>/#when-to-use  (When to use heading on Overview)
+  // Destinations stay base-agnostic (root-absolute); astro.config.mjs prefixes
+  // them with the configured site base at the consumption point.
   var redirects = {};
   Object.entries(registry.components).forEach(function (pair) {
     var slug = pair[0];
