@@ -99,9 +99,11 @@ function main() {
         offenders.length +
         " root-absolute URL(s) missing the " +
         BASE +
-        " base — they 404 on the deployed site. Route markdown links through" +
+        " base: they 404 on the deployed site. Route markdown links through" +
         " remark-base-links, images through MediaAsset.astro, and redirect" +
-        " destinations through the astro.config.mjs prefix wrapper.",
+        " destinations through the astro.config.mjs prefix wrapper. Raw-HTML" +
+        " or JSX hrefs (in .astro/.mdx components) are NOT rewritten by" +
+        " remark-base-links; build those from import.meta.env.BASE_URL.",
     );
     return 1;
   }
