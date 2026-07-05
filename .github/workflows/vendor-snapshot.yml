@@ -85,11 +85,34 @@ jobs:
           # attributes to the App, matching the PR author identity.
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
+          set -euo pipefail
           PR="${{ steps.cpr.outputs.pull-request-number }}"
           REPO="${{ github.repository }}"
-          # `gh pr merge --auto` exits non-zero when the PR is already in a
-          # clean, mergeable state (no pending required checks to wait on) —
-          # "Pull request is in clean status". Fall back to an immediate
-          # squash merge so the vendor refresh still lands.
-          gh pr merge "$PR" --auto --squash --repo "$REPO" \
-            || gh pr merge "$PR" --squash --repo "$REPO"
+          # main has no branch protection / required checks, so GitHub
+          # refuses `gh pr merge --auto` (the PR is immediately "clean";
+          # auto-merge has nothing to wait on). The old fallback squashed
+          # instantly, merging vendor refreshes BEFORE the build/links/a11y
+          # checks ran. Instead: if --auto is unavailable, explicitly wait
+          # for the PR's checks to finish and merge only when they all pass.
+          # On check failure this step fails and the PR stays open for
+          # review; nothing merges silently.
+          if gh pr merge "$PR" --auto --squash --repo "$REPO"; then
+            echo "Auto-merge enabled; GitHub merges when required checks pass."
+            exit 0
+          fi
+          echo "Auto-merge unavailable (no required checks on main); watching PR checks instead."
+          # Check suites register a few seconds after PR creation; poll until
+          # at least one check is reported so --watch has something to watch.
+          for attempt in 1 2 3 4 5 6; do
+            if OUT=$(gh pr checks "$PR" --repo "$REPO" 2>&1); then
+              break
+            fi
+            if echo "$OUT" | grep -qi "no checks reported"; then
+              echo "No checks registered yet (attempt $attempt); retrying in 20s..."
+              sleep 20
+            else
+              break  # checks exist (pending or failing) — proceed to watch
+            fi
+          done
+          gh pr checks "$PR" --repo "$REPO" --watch --fail-fast
+          gh pr merge "$PR" --squash --repo "$REPO"
