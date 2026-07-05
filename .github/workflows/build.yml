@@ -132,9 +132,11 @@ jobs:
   # Deploy must live in the same workflow as the artifact upload — the
   # deploy-pages action reads artifacts from the current workflow run,
   # and workflow_run-triggered deploys can't see upstream artifacts.
+  # Gated on ALL verification jobs (build, links, a11y): previously it only
+  # needed `build`, so a red links or a11y job still shipped to production.
   deploy:
     if: github.ref == 'refs/heads/main'
-    needs: build
+    needs: [build, links, a11y]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -142,7 +144,13 @@ jobs:
       id-token: write
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url || steps.deployment-retry.outputs.page_url }}
     steps:
+      # Pages deploys occasionally fail transiently (API 5xx / artifact
+      # propagation). One retry before failing the run for real.
       - uses: actions/deploy-pages@v4
         id: deployment
+        continue-on-error: true
+      - uses: actions/deploy-pages@v4
+        id: deployment-retry
+        if: steps.deployment.outcome == 'failure'
