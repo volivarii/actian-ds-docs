@@ -235,6 +235,13 @@
               "description": "Resolved fill color.",
               "examples": ["#f2f6f8", "rgba(0, 0, 0, 0.5)"]
             },
+            "backgroundToken": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^--",
+              "description": "Published --zen-* custom property the fill is bound to (P2 name layer; key-based join, only names that exist in tokens.css with a color value). Consumers emit var(<backgroundToken>, <background>).",
+              "examples": ["--zen-color-bg-selected"]
+            },
             "border": {
               "description": "Resolved border color and width.",
               "examples": [{ "color": "#607d8c", "width": "1px" }],
@@ -290,6 +297,11 @@
                     "description": "Delta fill (null = removed).",
                     "examples": ["#dc3514", null]
                   },
+                  "backgroundToken": {
+                    "type": ["string", "null"],
+                    "description": "Delta fill token binding (P2 name layer; null = the base binding is removed for these values).",
+                    "examples": ["--zen-color-bg-selected", null]
+                  },
                   "radius": {
                     "type": ["string", "null"],
                     "description": "Delta radius (null = removed).",
@@ -310,6 +322,12 @@
                       { "$ref": "#/$defs/textShape" },
                       { "type": "null" }
                     ]
+                  },
+                  "slug": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Instance content swap: the registry slug of the component this instance references for these values (e.g. a per-status icon). Replaces the node's base slug when the delta matches; never null — an unresolved variant instance captures nothing rather than removing the base glyph.",
+                    "examples": ["check-circle--outline"]
                   }
                 }
               }
@@ -348,15 +366,22 @@
             "axis": { "enum": ["row", "column"] },
             "gap": {
               "type": "string",
-              "description": "Item spacing as a token ref or px value.",
-              "examples": ["--zen-spacing-200", "8px"]
+              "description": "Item spacing as a px value.",
+              "examples": ["8px"]
+            },
+            "gapToken": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^--",
+              "description": "Published --zen-* length custom property the item spacing is bound to (P2 name layer; length-gated join). Consumers emit gap:var(<gapToken>, <gap>).",
+              "examples": ["--zen-spacing-200"]
             },
             "padding": {
               "type": "object",
-              "description": "Per-side padding as token refs or px values.",
+              "description": "Per-side padding as px values.",
               "examples": [
                 {
-                  "top": "--zen-spacing-150",
+                  "top": "16px",
                   "right": "16px",
                   "bottom": "16px",
                   "left": "16px"
@@ -383,6 +408,43 @@
                   "type": "string",
                   "description": "Left padding.",
                   "examples": ["16px"]
+                }
+              }
+            },
+            "paddingTokens": {
+              "type": "object",
+              "description": "Published --zen-* length custom property each padding side is bound to (P2 name layer; length-gated). Only bound sides appear. Consumers emit each side as var(<paddingTokens.side>, <padding.side>).",
+              "examples": [
+                { "top": "--zen-spacing-150", "left": "--zen-spacing-100" }
+              ],
+              "properties": {
+                "top": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^--",
+                  "description": "Top padding length token.",
+                  "examples": ["--zen-spacing-150"]
+                },
+                "right": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^--",
+                  "description": "Right padding length token.",
+                  "examples": ["--zen-spacing-100"]
+                },
+                "bottom": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^--",
+                  "description": "Bottom padding length token.",
+                  "examples": ["--zen-spacing-150"]
+                },
+                "left": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^--",
+                  "description": "Left padding length token.",
+                  "examples": ["--zen-spacing-100"]
                 }
               }
             },
@@ -428,6 +490,13 @@
           "description": "Stroke color as sRGB hex or rgba.",
           "examples": ["#607d8c"]
         },
+        "colorToken": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^--",
+          "description": "Published --zen-* custom property the stroke color is bound to (P2 name layer; key-based join, only names that exist in tokens.css with a color value). Consumers emit var(<colorToken>, <color>).",
+          "examples": ["--zen-color-primary-500"]
+        },
         "width": {
           "type": "string",
           "description": "Stroke weight as px value.",
@@ -443,6 +512,13 @@
           "type": "string",
           "description": "Text fill color as sRGB hex or rgba.",
           "examples": ["#50505d"]
+        },
+        "colorToken": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^--",
+          "description": "Published --zen-* custom property the text color is bound to (P2 name layer). Consumers emit var(<colorToken>, <color>).",
+          "examples": ["--zen-color-text-secondary"]
         },
         "size": {
           "type": "string",
