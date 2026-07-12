@@ -165,3 +165,57 @@ jobs:
       - uses: actions/deploy-pages@v4
         id: deployment-retry
         if: steps.deployment.outcome == 'failure'
+
+  # Make failure reach a human.
+  #
+  # main was red from 2026-07-09 to 2026-07-12 and the site silently stopped
+  # deploying for three days. Nobody knew, because nothing said so: `deploy` is
+  # gated on build+links+a11y, so when a11y broke (a ChromeDriver/Chrome version
+  # drift, nothing to do with our code) the pipeline just... stopped shipping.
+  # Meanwhile the nightly vendor PRs kept auto-merging into that red main, which
+  # made the repo look busy and healthy.
+  #
+  # GitHub emails the actor who triggered a failed run. These runs are triggered
+  # by a bot on a schedule, so that email goes nowhere. This turns a red main
+  # into ONE tracking issue (not one per push) that auto-closes when main is
+  # green again. Same self-managing pattern as the knowledge repo's
+  # sync-failure issue.
+  notify-red-main:
+    # always(): this must run even though the jobs it watches failed.
+    if: always() && github.ref == 'refs/heads/main'
+    needs: [build, links, a11y, deploy]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Open or update the red-main issue
+        if: contains(needs.*.result, 'failure')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          BUILD: ${{ needs.build.result }}
+          LINKS: ${{ needs.links.result }}
+          A11Y: ${{ needs.a11y.result }}
+          DEPLOY: ${{ needs.deploy.result }}
+        # Best-effort: a notification hiccup must never be the thing that fails.
+        run: |
+          gh label create red-main --color B60205 --description "main is red; the site is not deploying" 2>/dev/null || true
+          note="Run: $RUN_URL"$'\n\n'"| job | result |"$'\n'"|---|---|"$'\n'"| build | \`$BUILD\` |"$'\n'"| links | \`$LINKS\` |"$'\n'"| a11y | \`$A11Y\` |"$'\n'"| deploy | \`$DEPLOY\` |"
+          existing=$(gh issue list --state open --label red-main --json number --jq '.[0].number // empty' 2>/dev/null || true)
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "Still red on $(git rev-parse --short HEAD 2>/dev/null || echo main)."$'\n\n'"$note" || true
+          else
+            gh issue create --title "🔴 docs main is red: the site is NOT deploying" --label red-main \
+              --body "\`deploy\` is gated on build + links + a11y, so while any of them is red **nothing ships to production**."$'\n\n'"$note"$'\n\n'"This issue auto-closes when main is green again." || true
+          fi
+
+      - name: Close the red-main issue when main is green again
+        if: ${{ !contains(needs.*.result, 'failure') }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          for n in $(gh issue list --state open --label red-main --json number --jq '.[].number' 2>/dev/null || true); do
+            gh issue close "$n" --comment "✅ main is green and the site is deploying again. $RUN_URL" || true
+          done
