@@ -3297,27 +3297,6 @@
                 "status": "shipped"
               },
               {
-                "Token": "--zen-color-text-link-default",
-                "Resolves To": "--zen-color-primary-500",
-                "Usage": "Hyperlinks",
-                "status_note": "Shipped",
-                "status": "shipped"
-              },
-              {
-                "Token": "--zen-color-text-link-reverse",
-                "Resolves To": "--zen-color-white",
-                "Usage": "Hyperlinks on dark or primary-colored backgrounds",
-                "status_note": "Proposed",
-                "status": "proposed"
-              },
-              {
-                "Token": "--zen-color-text-link-visited",
-                "Resolves To": "--zen-color-primary-700",
-                "Usage": "Visited hyperlinks",
-                "status_note": "Proposed",
-                "status": "proposed"
-              },
-              {
                 "Token": "--zen-color-text-warning",
                 "Resolves To": "--zen-color-warning-800",
                 "Usage": "Warning messages",
@@ -3381,6 +3360,13 @@
                 "Usage": "Default — headings and body",
                 "status_note": "Shipped",
                 "status": "shipped"
+              },
+              {
+                "Token": "--zen-font-family-brand",
+                "Value": "HCLTech Roobert",
+                "Usage": "Brand accent font. Use sparingly for high-impact moments — landing/marketing pages (e.g. Explorer landing), hero and display headers, and occasional accent headings. Never for body copy, UI controls, or data.",
+                "status_note": "Proposed",
+                "status": "proposed"
               },
               {
                 "Token": "--zen-font-family-mono",
@@ -4727,14 +4713,14 @@
               {
                 "Token": "--zen-size-trigger-min",
                 "Value": "24px",
-                "Usage": "Minimum interactive target area for desktop (WCAG 2.5.5 Level AA)",
+                "Usage": "Minimum interactive target area for desktop (WCAG 2.5.8 Level AA)",
                 "status_note": "Proposed",
                 "status": "proposed"
               },
               {
                 "Token": "--zen-size-trigger-min-mobile",
                 "Value": "44px",
-                "Usage": "Minimum interactive target area for mobile (WCAG 2.5.5 Level AA)",
+                "Usage": "Minimum interactive target area for mobile (WCAG 2.5.8 Level AA)",
                 "status_note": "Proposed",
                 "status": "proposed"
               }
