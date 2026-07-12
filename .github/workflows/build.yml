@@ -78,7 +78,20 @@ jobs:
           node-version: '22'
           cache: npm
 
-      - run: npm ci
+      # DETECT_CHROMEDRIVER_VERSION makes the chromedriver postinstall download
+      # the driver matching the Chrome actually installed on the runner, instead
+      # of the version frozen in package-lock.json.
+      #
+      # Without it this job breaks every time the runner image bumps Chrome:
+      # the lockfile pinned chromedriver 148, ubuntu-latest moved to Chrome 150,
+      # and axe died with "This version of ChromeDriver only supports Chrome
+      # version 148". Red since 2026-07-09, which also blocked `deploy` (it
+      # needs build+links+a11y). Pinning Chrome instead would just move the
+      # breakage to the next bump and test an ever-staler browser.
+      - name: Install deps (chromedriver matched to the runner's Chrome)
+        env:
+          DETECT_CHROMEDRIVER_VERSION: "true"
+        run: npm ci
 
       # Build with SITE_BASE=/ so the local http-server serving dist/ at
       # root URL aligns with the generated link paths. (Production uses
