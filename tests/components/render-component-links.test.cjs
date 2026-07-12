@@ -97,3 +97,81 @@ test("rewriteComponentLinks: card family slug resolves to the card-for-items pag
   assert.match(out, /components\/data-display\/card-for-items\//);
   assert.match(out, />card<\/a>/);
 });
+
+// ---------------------------------------------------------------------------
+// rewriteComponentLinksMarkdown: the plain-Markdown emitter used for the
+// vendored content-guidelines page (a .md file, so JSX would render as literal
+// text). Same policy as the MDX emitter, different output shape: a root-absolute
+// markdown link, which remark-base-links base-prefixes at build time.
+//
+// Before this existed, sync-vendored-md.cjs copied the vendored markdown
+// verbatim: every bare-slug cross-reference reached the HTML unresolved, and a
+// hand-maintained allowlist in astro.config.mjs was the only thing keeping the
+// links validator green. Knowledge #369 added four new cross-links and the
+// build went red (docs main, 2026-07-10).
+// ---------------------------------------------------------------------------
+
+var CONTENT_PAGE_REGISTRY = {
+  components: {
+    tabs: { category: "Navigation", section: "Components", name: "Tabs" },
+    "input-date": { category: "Action", section: "Components", name: "Input date" },
+    "dropdown-select-default": { category: "Form (input & selection)", section: "Components", name: "Dropdown, Select, default" },
+  },
+};
+
+function buildContentPageMap() {
+  renderMdx.buildSlugToPathMap(CONTENT_PAGE_REGISTRY, {}, { Components: "components" }, "components", slugifyCategory);
+}
+
+test("rewriteComponentLinksMarkdown: known slug → root-absolute markdown link (not JSX)", function () {
+  buildContentPageMap();
+  var out = renderMdx.rewriteComponentLinksMarkdown("Do not use for page-level navigation - use [tabs](tabs) instead.");
+  assert.equal(out, "Do not use for page-level navigation - use [tabs](/components/navigation/tabs/) instead.");
+  assert.doesNotMatch(out, /import\.meta\.env|<a href/, "a .md page cannot evaluate JSX, so it must stay markdown");
+});
+
+test("rewriteComponentLinksMarkdown: alias resolves (dropdown-select → dropdown-select-default)", function () {
+  buildContentPageMap();
+  var out = renderMdx.rewriteComponentLinksMarkdown("use a [single-select dropdown](dropdown-select) instead");
+  assert.equal(out, "use a [single-select dropdown](/components/form-input-selection/dropdown-select-default/) instead");
+});
+
+test("rewriteComponentLinksMarkdown: slug with no page degrades to plain text", function () {
+  buildContentPageMap();
+  var out = renderMdx.rewriteComponentLinksMarkdown("**Use a** **[multi-select dropdown](multi-select)** **when:**");
+  assert.equal(out, "**Use a** **multi-select dropdown** **when:**", "label kept, dead link syntax dropped");
+});
+
+test("rewriteComponentLinksMarkdown: the four links that broke docs main all resolve or degrade", function () {
+  buildContentPageMap();
+  var body = [
+    "**Use a** **[multi-select dropdown](multi-select)** **when:**",
+    "For more than seven, use a [single-select dropdown](dropdown-select) instead.",
+    "* Do not use for page-level navigation - use [tabs](tabs) instead.",
+    "See [date input](input-date).",
+  ].join("\n");
+  var out = renderMdx.rewriteComponentLinksMarkdown(body);
+  assert.doesNotMatch(out, /\]\((?!\/)[a-z]/, "no bare-slug link may survive; that is what the validator rejects");
+  assert.match(out, /\[single-select dropdown\]\(\/components\//);
+  assert.match(out, /\[tabs\]\(\/components\/navigation\/tabs\/\)/);
+  assert.match(out, /\[date input\]\(\/components\/action\/input-date\/\)/);
+});
+
+test("rewriteComponentLinksMarkdown: unknown slug left untouched for the links validator to flag", function () {
+  buildContentPageMap();
+  var out = renderMdx.rewriteComponentLinksMarkdown("see [mystery](does-not-exist) here");
+  assert.equal(out, "see [mystery](does-not-exist) here");
+});
+
+test("rewriteComponentLinksMarkdown: external and root-absolute links pass through", function () {
+  buildContentPageMap();
+  var body = "[docs](https://example.com) and [spacing](/foundations/spacing/) and [anchor](#heading)";
+  assert.equal(renderMdx.rewriteComponentLinksMarkdown(body), body);
+});
+
+test("setSlugToPathMap / getSlugToPathMap round-trip (the cross-process handoff)", function () {
+  renderMdx.setSlugToPathMap({ tabs: "/components/navigation/tabs/" });
+  assert.deepEqual(renderMdx.getSlugToPathMap(), { tabs: "/components/navigation/tabs/" });
+  var out = renderMdx.rewriteComponentLinksMarkdown("[tabs](tabs)");
+  assert.equal(out, "[tabs](/components/navigation/tabs/)");
+});
