@@ -13,6 +13,36 @@ site's content or behavior.
 ## [Unreleased]
 
 ### Fixed
+- **The site deploys again.** `main` had been red since 2026-07-09 and `deploy` is gated on
+  `build + links + a11y`, so nothing shipped to production for three days. Two unrelated causes:
+  - **a11y**: the runner image moved to Chrome 150 while `package-lock.json` pins ChromeDriver
+    148, and axe died with a version-mismatch error before testing a single page. The a11y job
+    now installs the driver matching the runner's actual Chrome
+    (`DETECT_CHROMEDRIVER_VERSION=true`), so a future Chrome bump cannot break it again. (Pinning
+    Chrome instead would move the breakage to the next bump and test an ever-staler browser.) No
+    real a11y debt was hiding behind the error: all four target pages report 0 violations.
+  - **links**: `sync-vendored-md.cjs` copied the vendored content guidelines verbatim, so its
+    bare-slug cross-references (`[tabs](tabs)`) reached the HTML as relative links that resolved
+    to nothing. A hand-maintained slug allowlist in `astro.config.mjs` was all that kept the links
+    validator green, so every new cross-reference in knowledge broke this build. Knowledge #369
+    added four, and it did.
+- Cross-component links on the content-guidelines page now work. `sync-vendored-md.cjs` runs the
+  same link policy the component pages use (`scripts/lib/render-mdx.cjs`, now with a
+  plain-Markdown emitter alongside the MDX one): known slugs and aliases resolve to real page
+  paths, slugs with no component page degrade to plain text. Four links that had never resolved
+  now do (`tabs`, `input-date`, `dropdown-select`, `checkbox`); `multi-select` degrades. The
+  `astro.config.mjs` allowlist is deleted, and a test asserts the generated page has no
+  unresolved bare-slug links, so the next unknown slug fails by name in the test suite instead of
+  in an Astro build hook. The slug→path map is emitted once by `generate-component-pages.cjs`
+  (`src/data/slug-paths.json`) and read by `sync-vendored-md.cjs`, which now runs after it in the
+  prebuild chain, so there is a single owner of the category/group nesting rules.
+- Cross-component links in the Usage-guideline wave (knowledge #403) now have a resolution
+  story before any usage content renders here: `checkbox`, `global-toast`, and the family slug
+  `card` map to their registry-named pages (checkbox-with-label, notification, card-for-items),
+  and the four guideline slugs with no registry component yet (inline-toast, multi-select,
+  combo-box, success-state) degrade to plain text. The site does not render the usage domain
+  yet (that renderer is upcoming work); this pre-clears the link validator for when it does,
+  and already covers usage links that surface through today's rendered domains.
 - Redirect stub pages (the legacy `/design/` and `/usage/` tab URLs, about 154 of them) sent
   visitors to root-absolute destinations that returned 404 on the deployed site, because Astro
   prefixes a redirect's source route with the base path but not its destination. Destinations are

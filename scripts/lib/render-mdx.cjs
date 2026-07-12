@@ -43,6 +43,9 @@ var SLUG_ALIASES = {
   "toggle-control": "toggle",            // segmented-control content; registry group is "Toggle control"
   "text-input": "input",                 // rich-text content; registry group is "Text input"
   "dropdown-select": "dropdown-select-default",  // radio-button content; registry name "Dropdown, Select, default"
+  "checkbox": "checkbox-with-label",     // usage.md wave (knowledge #403); registry name carries the -with-label suffix
+  "global-toast": "notification",        // usage.md wave; the registry's `notification` is what the guidelines call global toast
+  "card": "card-for-items",              // usage.md wave links the family slug; card-for-items is the browse/grid card those links mean
 };
 
 // Slugs with no component page that should have their markdown link syntax
@@ -55,7 +58,15 @@ var SLUG_ALIASES = {
 // covers the global /content.md page; this set covers per-component
 // content.mdx files (e.g. components/form-input-selection/*/content.mdx)
 // where pattern fanout injects the same cross-references.
-var REMOVE_LINK_SLUGS = new Set(["forms", "validation-messages", "wizards"]);
+//
+// `inline-toast`, `multi-select`, `combo-box`, `success-state` are guideline
+// slugs from the Usage wave (knowledge #403) whose components are absent from
+// dskit.json, so no page is generated. Drop the link syntax (keep the label)
+// until those components reach the registry.
+var REMOVE_LINK_SLUGS = new Set([
+  "forms", "validation-messages", "wizards",
+  "inline-toast", "multi-select", "combo-box", "success-state",
+]);
 
 // Base-URL prefix expression, shared with renderGlobalA11yLink /
 // renderRelatedPatterns. Resolved by Astro per-build (/actian-ds-docs in
@@ -63,8 +74,31 @@ var REMOVE_LINK_SLUGS = new Set(["forms", "validation-messages", "wizards"]);
 // base-correct.
 var BASE_URL_EXPR = "${import.meta.env.BASE_URL.replace(/\\/?$/, '/')}";
 
+// Bare-slug markdown link: `[label](slug)`. No / prefix, no scheme, no hash
+// anchor; must close with ) . Shared by both rewriters below.
+var BARE_SLUG_LINK = /\[([^\]]+)\]\(([a-z][a-z0-9-]*)\)/g;
+
 /**
- * Rewrite bare-slug markdown links to base-aware absolute doc links.
+ * Resolve one bare slug against the link policy (aliases, removals, the
+ * slug→path map). Single source of truth for BOTH emitters below, so the MDX
+ * component pages and the Markdown content page can never disagree about what
+ * a given slug means.
+ * @param {string} slug
+ * @returns {{action: "remove"} | {action: "link", path: string} | {action: "keep"}}
+ *   remove → drop link syntax, keep the label (no page exists)
+ *   link   → rewrite to `path` (root-absolute, trailing-slashed)
+ *   keep   → leave untouched, so the links validator still flags it
+ */
+function resolveSlugLink(slug) {
+  if (REMOVE_LINK_SLUGS.has(slug)) return { action: "remove" };
+  var canonical = SLUG_ALIASES[slug] || slug;
+  var abs = _slugToPath[canonical];
+  if (!abs) return { action: "keep" };
+  return { action: "link", path: abs };
+}
+
+/**
+ * Rewrite bare-slug markdown links to base-aware absolute doc links, MDX flavor.
  * Converts `[label](slug)` to a JSX
  * `<a href={`${import.meta.env.BASE_URL...}components/category/slug/`}>label</a>`
  * when `slug` is a known component. A plain `[label](/components/...)` markdown
@@ -72,25 +106,60 @@ var BASE_URL_EXPR = "${import.meta.env.BASE_URL.replace(/\\/?$/, '/')}";
  * auto-prepend the base to markdown links — so we emit the same BASE_URL-prefixed
  * JSX form the other generated cross-links use. Unknown slugs are left untouched
  * so the validator can still flag genuinely broken links.
+ *
+ * For plain-Markdown pages (no JSX evaluation) use rewriteComponentLinksMarkdown.
  * @param {string} s - input markdown/MDX text
  * @returns {string}
  */
 function rewriteComponentLinks(s) {
   if (typeof s !== "string") return s;
-  // Match markdown link targets that look like a bare slug (no / prefix,
-  // no http://, not a hash anchor). Must be followed by ) to close the link.
-  return s.replace(/\[([^\]]+)\]\(([a-z][a-z0-9-]*)\)/g, function (match, label, slug) {
-    // Remove link syntax entirely for slugs with no component page.
-    if (REMOVE_LINK_SLUGS.has(slug)) return label;
-    // Resolve via alias first, then direct slug lookup.
-    var canonical = SLUG_ALIASES[slug] || slug;
-    var abs = _slugToPath[canonical];
-    if (!abs) return match;
-    // abs is root-absolute ("/components/cat/slug/"); strip the leading slash
-    // so it sits directly after the (trailing-slashed) BASE_URL.
-    var rel = abs.replace(/^\//, "");
-    return "<a href={`" + BASE_URL_EXPR + rel + "`}>" + label + "</a>";
+  return s.replace(BARE_SLUG_LINK, function (match, label, slug) {
+    var r = resolveSlugLink(slug);
+    if (r.action === "remove") return label;
+    if (r.action === "keep") return match;
+    // r.path is root-absolute ("/components/cat/slug/"); strip the leading
+    // slash so it sits directly after the (trailing-slashed) BASE_URL.
+    return "<a href={`" + BASE_URL_EXPR + r.path.replace(/^\//, "") + "`}>" + label + "</a>";
   });
+}
+
+/**
+ * Rewrite bare-slug markdown links, plain-Markdown flavor.
+ *
+ * Same policy as rewriteComponentLinks, different emitter: a `.md` page is not
+ * MDX, so a JSX `<a href={...}>` would render as literal text. We emit an
+ * ordinary root-absolute markdown link instead and let the remark-base-links
+ * plugin (astro.config.mjs → markdown.remarkPlugins) apply the site base at
+ * build time. Used for the vendored content-guidelines page, whose bare-slug
+ * cross-references previously reached the HTML verbatim: they resolved to
+ * nothing, and the links validator failed the build on each new one.
+ * @param {string} s - input markdown text
+ * @returns {string}
+ */
+function rewriteComponentLinksMarkdown(s) {
+  if (typeof s !== "string") return s;
+  return s.replace(BARE_SLUG_LINK, function (match, label, slug) {
+    var r = resolveSlugLink(slug);
+    if (r.action === "remove") return label;
+    if (r.action === "keep") return match;
+    return "[" + label + "](" + r.path + ")";
+  });
+}
+
+/**
+ * Inject a slug→path map built elsewhere (a separate Node process cannot see
+ * the module state buildSlugToPathMap populates). generate-component-pages.cjs
+ * emits the map it builds to src/data/slug-paths.json; sync-vendored-md.cjs
+ * loads that file and calls this.
+ * @param {Record<string,string>} map
+ */
+function setSlugToPathMap(map) {
+  _slugToPath = map || {};
+}
+
+/** @returns {Record<string,string>} the current slug→path map (for emitting it). */
+function getSlugToPathMap() {
+  return _slugToPath;
 }
 
 // ---------------------------------------------------------------------------
@@ -747,6 +816,9 @@ function toCallout(anatomy) {
 
 module.exports = {
   escapeMdxPlaceholders: escapeMdxPlaceholders,
+  rewriteComponentLinksMarkdown: rewriteComponentLinksMarkdown,
+  setSlugToPathMap: setSlugToPathMap,
+  getSlugToPathMap: getSlugToPathMap,
   renderMarkdownTable: renderMarkdownTable,
   renderOverview: renderOverview,
   renderDesignSections: renderDesignSections,

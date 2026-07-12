@@ -628,6 +628,21 @@ function main() {
     );
   });
 
+  // Emit the slug → page-path map that buildSlugToPathMap() just built.
+  // sync-vendored-md.cjs runs in a separate Node process (prebuild chains
+  // scripts, so module state does not carry over) and needs the same map to
+  // resolve the bare-slug cross-references inside the vendored content page.
+  // Emitting it here keeps ONE owner of the category/group nesting rules; the
+  // prebuild order in package.json runs this generator before sync-vendored-md.
+  var slugPathsPath = path.join(__dirname, "..", "src", "data", "slug-paths.json");
+  var slugPaths = renderMdx.getSlugToPathMap();
+  fs.writeFileSync(slugPathsPath, JSON.stringify(slugPaths, null, 2) + "\n");
+  console.log(
+    "generate-component-pages: wrote slug→path map → src/data/slug-paths.json (" +
+      Object.keys(slugPaths).length +
+      " slugs)",
+  );
+
   // Emit redirects manifest — preserves deep links from the legacy
   // /components/<cat>/<slug>/{design,usage}/ tab URLs (now merged into the
   // Overview tab) by mapping them to fragment anchors on the parent page.

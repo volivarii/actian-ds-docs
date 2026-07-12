@@ -135,25 +135,17 @@ export default defineConfig({
               // exclude(context) receives {file, link, slug} per the
               // starlight-links-validator 0.24 API.
               exclude: ({ file, link }) => {
-                // content.md is auto-generated from vendor/content/dist/global.md
-                // by scripts/sync-vendored-md.cjs on every build. The 3 slugs
-                // below reference concepts (forms, validation-messages, wizards)
-                // that don't have dedicated component pages in the DS Kit —
-                // the bare-slug links are intentional cross-section references,
-                // not component links. All other content.md links are validated.
+                // NOTE: content.md used to need a hand-maintained allowlist of
+                // bare slugs here. It no longer does. scripts/sync-vendored-md.cjs
+                // now runs the same link policy the component pages use over the
+                // vendored content page: known slugs (and their aliases) become
+                // real page links, slugs with no page lose their link syntax.
+                // Nothing reaches the validator unresolved, so every content.md
+                // link is validated for real. Do NOT reintroduce an allowlist
+                // here: a new unresolvable slug belongs in REMOVE_LINK_SLUGS
+                // (scripts/lib/render-mdx.cjs), where it degrades to plain text
+                // instead of shipping a dead link.
                 //
-                // 5 previously-excluded slugs (alert-banner, popover, stepper,
-                // checkbox, filters) were converted to absolute paths upstream
-                // in knowledge#76 (knowledge v0.14.1+). They're now validated
-                // normally.
-                if (file.endsWith("/content.md") || file.endsWith("\\content.md")) {
-                  const unfixableSlugs = [
-                    "forms",
-                    "validation-messages",
-                    "wizards",
-                  ];
-                  if (unfixableSlugs.some((s) => link === s || link.endsWith("/" + s))) return true;
-                }
                 // confidence.mdx links to /migrations and /state, which are real
                 // pages served from src/pages/ (custom Astro pages, not Starlight
                 // content-collection pages). starlight-links-validator 0.24 flags
