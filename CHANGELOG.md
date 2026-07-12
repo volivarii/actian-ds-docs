@@ -13,6 +13,13 @@ site's content or behavior.
 ## [Unreleased]
 
 ### Fixed
+- Cross-component links in the Usage-guideline wave (knowledge #403) now have a resolution
+  story before any usage content renders here: `checkbox`, `global-toast`, and the family slug
+  `card` map to their registry-named pages (checkbox-with-label, notification, card-for-items),
+  and the four guideline slugs with no registry component yet (inline-toast, multi-select,
+  combo-box, success-state) degrade to plain text. The site does not render the usage domain
+  yet (that renderer is upcoming work); this pre-clears the link validator for when it does,
+  and already covers usage links that surface through today's rendered domains.
 - Redirect stub pages (the legacy `/design/` and `/usage/` tab URLs, about 154 of them) sent
   visitors to root-absolute destinations that returned 404 on the deployed site, because Astro
   prefixes a redirect's source route with the base path but not its destination. Destinations are

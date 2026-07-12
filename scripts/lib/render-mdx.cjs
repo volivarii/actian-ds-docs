@@ -43,6 +43,9 @@ var SLUG_ALIASES = {
   "toggle-control": "toggle",            // segmented-control content; registry group is "Toggle control"
   "text-input": "input",                 // rich-text content; registry group is "Text input"
   "dropdown-select": "dropdown-select-default",  // radio-button content; registry name "Dropdown, Select, default"
+  "checkbox": "checkbox-with-label",     // usage.md wave (knowledge #403); registry name carries the -with-label suffix
+  "global-toast": "notification",        // usage.md wave; the registry's `notification` is what the guidelines call global toast
+  "card": "card-for-items",              // usage.md wave links the family slug; card-for-items is the browse/grid card those links mean
 };
 
 // Slugs with no component page that should have their markdown link syntax
@@ -55,7 +58,15 @@ var SLUG_ALIASES = {
 // covers the global /content.md page; this set covers per-component
 // content.mdx files (e.g. components/form-input-selection/*/content.mdx)
 // where pattern fanout injects the same cross-references.
-var REMOVE_LINK_SLUGS = new Set(["forms", "validation-messages", "wizards"]);
+//
+// `inline-toast`, `multi-select`, `combo-box`, `success-state` are guideline
+// slugs from the Usage wave (knowledge #403) whose components are absent from
+// dskit.json, so no page is generated. Drop the link syntax (keep the label)
+// until those components reach the registry.
+var REMOVE_LINK_SLUGS = new Set([
+  "forms", "validation-messages", "wizards",
+  "inline-toast", "multi-select", "combo-box", "success-state",
+]);
 
 // Base-URL prefix expression, shared with renderGlobalA11yLink /
 // renderRelatedPatterns. Resolved by Astro per-build (/actian-ds-docs in
