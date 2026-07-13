@@ -19,13 +19,14 @@ import ConfidenceChip from "../components/ConfidenceChip.astro";
     <ConfidenceChip variant="medium" field="motion" value="medium" />
     <ConfidenceChip variant="high" field="a11y" value="high" />
     <ConfidenceChip variant="low" field="content" value="low" />
+    <ConfidenceChip variant="medium" field="usage" value="medium" />
   </div>
 
   These tell you, **at a glance**, how well-curated each facet of a component's documentation is. A chip is NOT a quality score for the component itself — it's a score for **the documentation about the component**.
 
   ## Reading the chips
 
-  ### The five facets
+  ### The six facets
 
   | Field | What it covers |
   |---|---|
@@ -34,6 +35,7 @@ import ConfidenceChip from "../components/ConfidenceChip.astro";
   | **motion** | Interaction/animation patterns the component participates in (hover, press, expand, etc.). Linked from the Motion section. |
   | **a11y** | WCAG 2.2 AA requirements and the patterns the component should follow. Linked from the Accessibility section. |
   | **content** | UI copy guidance — labels, helper text, error states, tone. Component-specific (not category-defaulted). |
+  | **usage** | When-to-use / when-not-to-use guidance, variant selection, and do/don't guidance. Component-specific. Drives the Usage section on the Overview tab. |
 
   ### The three levels
 
@@ -72,6 +74,14 @@ import ConfidenceChip from "../components/ConfidenceChip.astro";
   - <span style="vertical-align: middle;"><ConfidenceChip variant="medium" field="medium" /></span> when the component has a hand-curated guideline but no content section.
   - <span style="vertical-align: middle;"><ConfidenceChip variant="low" field="low" /></span> for auto-stub guidelines or missing guidelines.
 
+  ### usage
+
+  Synthesized per-component at page-generation time, same mapping as content:
+
+  - <span style="vertical-align: middle;"><ConfidenceChip variant="high" field="high" /></span> when the component's usage domain (`domains.usage` in the knowledge guideline) is `approved`.
+  - <span style="vertical-align: middle;"><ConfidenceChip variant="medium" field="medium" /></span> when the usage domain is `draft` or `synthesized` — this is the level you'll see on every page today: all authored usage guidance is `draft`, finished writing but not yet reviewed by a design lead, and the page says so with a "pending design lead review" note directly in the Usage section.
+  - <span style="vertical-align: middle;"><ConfidenceChip variant="low" field="low" /></span> when the component has no usage domain at all.
+
   ## When to trust a page
 
   Roughly:
@@ -86,6 +96,7 @@ import ConfidenceChip from "../components/ConfidenceChip.astro";
 
   1. **anatomy / variants / motion / a11y:** bump by editing the category-defaults file in knowledge, then resync. Bumps lift every component in that category simultaneously.
   2. **content:** bump by curating the component's guideline JSON to include a `content_guidelines.sections` block. Bumps just that one component.
+  3. **usage:** bump by moving the component's `domains.usage` status from `draft` to `approved` in knowledge (a design-lead review sign-off) — the same move that also drops the in-page "pending design lead review" note. Bumps just that one component.
 
   The chip update reaches docs on the next vendor refresh (nightly cron, or manually via `vendor-snapshot.yml`).
 

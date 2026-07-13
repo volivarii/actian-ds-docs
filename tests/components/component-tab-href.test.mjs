@@ -31,11 +31,15 @@ test("overview tab renderer order (canonical section model — four topic render
   // anatomy + variantsTable + motion + designDomain collapsed into a single
   // designSections renderer (Task B1). confidenceChips is no longer a body
   // renderer — confidence chips render into the PageMetadata header meta row.
+  // usageDomain (authored usage) and categoryUsageBaseline (fallback) are
+  // mutually exclusive at render time (authored wins) but both occupy this
+  // array — industry-standard order is preview -> structure -> usage -> resources.
   // See generate-component-pages.cjs.
   assert.deepEqual(overview.renderers, [
     "overview",
     "mediaPreview",
     "designSections",
+    "usageDomain",
     "categoryUsageBaseline",
     "resources",
   ]);

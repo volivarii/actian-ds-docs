@@ -12,6 +12,24 @@ site's content or behavior.
 
 ## [Unreleased]
 
+### Added
+- **Component pages now render the substrate's authored Usage guidance.** The knowledge repo's
+  Usage domain (when to use / when not to use / variant selection / do-don't) renders on the
+  Overview tab via a new `renderUsageDomain()` in `scripts/lib/render-mdx.cjs`. Of the 56 authored
+  usage docs, **47 render today**; the other 9 (`card`, `combo-box`, `dropdown-select`,
+  `global-toast`, `inline-toast`, `multi-select`, `success-state`, `tag`, `upload-file`) have no
+  page because their guideline filename has no matching registry slug, so no component picks them
+  up — not a rendering gap. All 56 authored docs are `status: draft` (finished writing, not yet
+  reviewed by a design lead), so every rendered Usage section carries a visible
+  "Authored, pending design lead review." disclosure rather than withholding the guidance or
+  publishing it as if settled. This also restores the long-dangling `/usage/` → `#when-to-use`
+  redirect target: those legacy tab URLs have pointed at an anchor with nothing under it since the
+  redirects were added, and now land on real content.
+- **A sixth confidence facet: `usage`.** `renderConfidenceChips()` now emits a `usage` chip
+  alongside anatomy/variants/motion/a11y/content, mapped the same way as `content`: `approved` →
+  high, `draft`/`synthesized` → medium, absent → low. `src/pages/confidence.mdx` documents the new
+  facet (table row, example chip, "Where the values come from" entry).
+
 ### Changed
 - **Knowledge v0.34.89: the `checkbox` alias is retired (upstream slug rename).**
   Figma renamed two published components, so the knowledge registry now says
