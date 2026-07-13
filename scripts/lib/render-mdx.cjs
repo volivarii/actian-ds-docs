@@ -647,6 +647,34 @@ function renderContentDomain(contentDomain, WARNINGS) {
   return "## Content guidelines\n\n" + rendered.join("\n\n");
 }
 
+// The usage domain is { status, markdown } — a markdown blob, unlike the
+// content domain's { status, sections[] }. We pass the authored markdown
+// through unchanged (only rewriting bare-slug component links), because the
+// substrate owns the headings and one component legitimately authors its own.
+//
+// Content-bearing statuses mirror renderContentDomain's gate.
+var USAGE_CONTENT_STATUSES = ["approved", "draft", "synthesized"];
+
+function renderUsageDomain(usageDomain) {
+  if (!usageDomain) return "";
+  var md = usageDomain.markdown;
+  if (typeof md !== "string" || md.trim() === "") return "";
+  if (USAGE_CONTENT_STATUSES.indexOf(usageDomain.status) === -1) return "";
+
+  var body = escapeMdxPlaceholders(md).trim();
+
+  // Two axes, per Twilio Paste: a doc can be complete as writing and still
+  // unvalidated as policy. Disclose the review state as its own fact rather
+  // than withholding the guidance or publishing it as if settled.
+  // Deliberately not the bare word "Draft": Carbon renamed `experimental` to
+  // `preview` because the word itself was suppressing adoption, and these
+  // docs are finished writing awaiting a blessing, not half-typed pages.
+  if (usageDomain.status === "draft") {
+    body = ":::note\nAuthored, pending design lead review.\n:::\n\n" + body;
+  }
+  return body;
+}
+
 function renderA11yRefs(defaults) {
   if (!(defaults && defaults.a11y_refs && Array.isArray(defaults.a11y_refs.requirementRefs))) return "";
   var resolved = defaults.a11y_refs.requirementRefs.map(function (r) {
@@ -822,6 +850,7 @@ module.exports = {
   renderOverview: renderOverview,
   renderDesignSections: renderDesignSections,
   renderContentDomain: renderContentDomain,
+  renderUsageDomain: renderUsageDomain,
   renderA11yRefs: renderA11yRefs,
   renderConfidenceChips: renderConfidenceChips,
   renderMediaPreview: renderMediaPreview,
