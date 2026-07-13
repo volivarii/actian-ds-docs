@@ -1,0 +1,37 @@
+---
+title: Heights and Trigger Areas
+description: Component height and minimum trigger-area tokens from the Actian foundations.
+sidebar:
+  order: 7
+---
+
+import TokenTable from "../../../components/TokenTable.astro";
+import PageMetadata from "../../../components/PageMetadata.astro";
+import componentHeights from "../../../../vendor/foundations/dist/tokens/heights-and-trigger-areas/component-heights.json";
+import triggerArea from "../../../../vendor/foundations/dist/tokens/heights-and-trigger-areas/trigger-area.json";
+
+<PageMetadata
+  slug="foundations.heights-and-trigger-areas"
+  source="foundations/dist/tokens/heights-and-trigger-areas/"
+  schema={1}
+/>
+
+Component height and minimum interactive trigger-area tokens for the Actian DS.
+
+## Component Heights
+
+{componentHeights.body && <p>{componentHeights.body}</p>}
+
+{(componentHeights.blocks || []).filter((b) => b.type === "table").map((b) => (
+  <TokenTable headers={b.headers} rows={b.rows} />
+))}
+
+## Trigger Area
+
+{triggerArea.body && <p>{triggerArea.body}</p>}
+
+Minimum interactive target sizes per WCAG 2.5.8 (Level AA), for desktop and mobile.
+
+{(triggerArea.blocks || []).filter((b) => b.type === "table").map((b) => (
+  <TokenTable headers={b.headers} rows={b.rows} />
+))}
