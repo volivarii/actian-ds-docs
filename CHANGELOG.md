@@ -29,6 +29,26 @@ site's content or behavior.
   alongside anatomy/variants/motion/a11y/content, mapped the same way as `content`: `approved` →
   high, `draft`/`synthesized` → medium, absent → low. `src/pages/confidence.mdx` documents the new
   facet (table row, example chip, "Where the values come from" entry).
+- **Two foundations token sections that were vendored but never published: Heights and Trigger
+  Areas, and Focus Rings.** The knowledge substrate derives and vendors all foundations token
+  sections to `vendor/foundations/dist/tokens/`, but the docs page list under
+  `src/content/docs/foundations/` is composed from a hand-maintained manifest
+  (`src/data/composition/foundations.json`), and two sections never got an entry, so their tokens
+  (`--zen-size-height-*`, `--zen-size-trigger-*`, `--zen-focus-ring-*`) were correct in the vendor
+  snapshot but invisible on the site. Added `focus-rings.mdx` and
+  `heights-and-trigger-areas.mdx`, registered both in the composition manifest (alphabetical
+  position: after Elevation, before Icons), and renumbered the later pages' sidebar order.
+- A coverage gate (`tests/validation/foundations-token-coverage.test.cjs`) that fails, naming the
+  exact JSON path, if a vendored foundations token JSON under `vendor/foundations/dist/tokens/`
+  (walked recursively, any depth) is not genuinely consumed by a foundations docs page. An initial
+  version of this gate only checked that a same-named `.mdx` file existed at the top level, which
+  does not prove consumption: `color.mdx` satisfied it via a name alias while never actually
+  importing `global-color/theme-palettes.json` (see the Fixed entry below). The gate now asserts
+  real consumption through either of this repo's two legitimate mechanisms: a direct `import` of
+  the JSON in a hand-authored page, or resolution through
+  `src/data/composition/foundations.json` (reusing the same resolver the page generator uses, so
+  the check can't drift from what actually gets published). This is now the exact gap that let
+  the two sections above go unpublished silently, closed for real, at any depth.
 
 ### Changed
 - **Knowledge v0.34.89: the `checkbox` alias is retired (upstream slug rename).**
@@ -43,6 +63,16 @@ site's content or behavior.
   alias deletion are only correct together.
 
 ### Fixed
+- **`foundations/color` contradicted the substrate's theme list.** The page never imported
+  `global-color/theme-palettes.json` and instead rendered an unrelated JSON
+  (`vendor/tokens/tokens.json`) plus hand-written prose claiming "three theme rails (Actian, FM,
+  DS Kit)". FM and DS Kit are Figma kits, not themes, and the actual substrate-defined themes
+  (Actian, Studio, Explorer) were not published anywhere. The page now imports
+  `theme-palettes.json` and renders its own body and table as a new "Themes" section, so the
+  page states what the substrate states rather than a stale hand-written claim; existing
+  brand/feedback scale content is unchanged. `PageMetadata`'s `source` is corrected from the
+  no-longer-existent `foundations/dist/tokens/global-color.json` (a file that is now a
+  directory) to `foundations/dist/tokens/global-color/`.
 - **The site deploys again.** `main` had been red since 2026-07-09 and `deploy` is gated on
   `build + links + a11y`, so nothing shipped to production for three days. Two unrelated causes:
   - **a11y**: the runner image moved to Chrome 150 while `package-lock.json` pins ChromeDriver

@@ -5,17 +5,27 @@ sidebar:
   order: 4
 ---
 
+import TokenTable from "../../../components/TokenTable.astro";
 import TokenScale from "../../../components/TokenScale.astro";
 import PageMetadata from "../../../components/PageMetadata.astro";
 import dtcg from "../../../../vendor/tokens/tokens.json";
+import themePalettes from "../../../../vendor/foundations/dist/tokens/global-color/theme-palettes.json";
 
 <PageMetadata
   slug="foundations.brand-feedback-colors"
-  source="foundations/dist/tokens/global-color.json"
+  source="foundations/dist/tokens/global-color/"
   schema={1}
 />
 
-The Actian DS brand & feedback color scales — three theme rails (Actian, FM, DS Kit). Concrete hex values vary per theme; the token name is the stable identifier.
+The Actian DS brand and feedback color scales. Concrete hex values vary per theme; the token name is the stable identifier.
+
+## Themes
+
+{themePalettes.body && <p>{themePalettes.body}</p>}
+
+{(themePalettes.blocks || []).filter((b) => b.type === "table").map((b) => (
+  <TokenTable headers={b.headers} rows={b.rows} />
+))}
 
 ## Brand & status scales
 
