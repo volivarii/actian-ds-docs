@@ -39,8 +39,8 @@ export default defineConfig({
   redirects,
   markdown: {
     // Parse `## Title {#slug}` anchor syntax used by vendored MDs
-    // (content.md). Plugin emits proper id attributes so Starlight's
-    // right-rail TOC and cross-link anchors work.
+    // (content/{index,writing,patterns,product}.md). Plugin emits proper id
+    // attributes so Starlight's right-rail TOC and cross-link anchors work.
     // Note: accessibility is now a composed .mdx page (no {#slug} anchors).
     //
     // remarkBaseLinks base-prefixes root-absolute markdown links (Astro does
@@ -88,7 +88,20 @@ export default defineConfig({
       // docs-only top-level entries (no Figma equivalent).
       sidebar: [
         { label: "Foundations", items: [{ autogenerate: { directory: "foundations" } }] },
-        { label: "Content guidelines", link: "/content" },
+        {
+          label: "Content guidelines",
+          // Split from a single /content page into one page per content
+          // family (the /content page split), sourced from vendor/content/dist/
+          // {global,writing,patterns,product}.md via scripts/sync-vendored-md.cjs.
+          // The index keeps the /content URL alive (carries the "Global
+          // guidelines" section, which has no home on the three family pages).
+          items: [
+            { label: "Overview", link: "/content" },
+            { label: "Writing", link: "/content/writing" },
+            { label: "Patterns", link: "/content/patterns" },
+            { label: "Product", link: "/content/product" },
+          ],
+        },
         { label: "Accessibility", link: "/accessibility" },
         {
           label: "Components",
@@ -135,16 +148,21 @@ export default defineConfig({
               // exclude(context) receives {file, link, slug} per the
               // starlight-links-validator 0.24 API.
               exclude: ({ file, link }) => {
-                // NOTE: content.md used to need a hand-maintained allowlist of
-                // bare slugs here. It no longer does. scripts/sync-vendored-md.cjs
-                // now runs the same link policy the component pages use over the
-                // vendored content page: known slugs (and their aliases) become
-                // real page links, slugs with no page lose their link syntax.
-                // Nothing reaches the validator unresolved, so every content.md
+                // NOTE: the vendored content pages (content/index.md,
+                // content/writing.md, content/patterns.md, content/product.md)
+                // used to need a hand-maintained allowlist of bare slugs here.
+                // They no longer do. scripts/sync-vendored-md.cjs runs the same
+                // link policy the component pages use over each vendored
+                // content page: known slugs (and their aliases) become real
+                // page links, slugs with no page lose their link syntax.
+                // Nothing reaches the validator unresolved, so every content/*
                 // link is validated for real. Do NOT reintroduce an allowlist
                 // here: a new unresolvable slug belongs in REMOVE_LINK_SLUGS
                 // (scripts/lib/render-mdx.cjs), where it degrades to plain text
-                // instead of shipping a dead link.
+                // instead of shipping a dead link. Related-patterns links
+                // (`content/<family>/#<slug>`) are resolved separately, by
+                // scripts/lib/content-anchors.cjs — see renderRelatedPatterns
+                // in scripts/lib/render-mdx.cjs.
                 //
                 // confidence.mdx links to /migrations and /state, which are real
                 // pages served from src/pages/ (custom Astro pages, not Starlight
