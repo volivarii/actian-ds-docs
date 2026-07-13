@@ -228,3 +228,62 @@ test("PageMetadata omits updated prop when guideline has no updated_at", functio
   var out = gen.buildComponent("button", REG.components.button, BTN_GUIDE, null, REG);
   assert.doesNotMatch(out.files["index.mdx"], /<PageMetadata[\s\S]*updated="/);
 });
+
+// ---------------------------------------------------------------------------
+// "When to use" mutual exclusion — authored usage vs. category baseline.
+//
+// renderCategoryUsageBaseline() and renderMdx.renderUsageDomain() BOTH emit a
+// "## When to use" heading. If both rendered on the same page (overview /
+// index.mdx), the page would carry a duplicate heading AND a duplicate
+// #when-to-use anchor id — the /usage/ redirect targets that fragment, so a
+// duplicate makes the redirect ambiguous. The RENDERERS map in
+// buildComponent() guards this: categoryUsageBaseline only renders when
+// hasAuthoredUsage is false. These three tests pin that guard directly
+// against buildComponent's output (not just the two renderers in isolation),
+// so a regression that re-wires the RENDERERS map is caught.
+// ---------------------------------------------------------------------------
+
+var CATEGORY_DEFAULTS_WITH_USAGE = {
+  card_usage: { points: ["Fallback baseline point — must not appear when authored usage wins."] },
+};
+
+function whenToUseHeadingCount(body) {
+  var m = body.match(/^## When to use$/gm);
+  return m ? m.length : 0;
+}
+
+test("mutual exclusion: authored usage + category baseline both available -> authored wins, baseline suppressed", function () {
+  var guide = JSON.parse(JSON.stringify(BTN_GUIDE));
+  guide.domains.usage = {
+    status: "draft",
+    markdown: "## When to use\n\n* Authored guidance for buttons.",
+  };
+  var out = gen.buildComponent(
+    "button", REG.components.button, guide, CATEGORY_DEFAULTS_WITH_USAGE, REG);
+  var body = out.files["index.mdx"];
+  assert.equal(whenToUseHeadingCount(body), 1,
+    "exactly one '## When to use' heading must render, never a duplicate");
+  assert.match(body, /Authored guidance for buttons\./);
+  assert.doesNotMatch(body, /Fallback baseline point/,
+    "category baseline content must be fully suppressed when authored usage wins");
+});
+
+test("mutual exclusion: no authored usage, category baseline available -> baseline fallback renders", function () {
+  var guide = JSON.parse(JSON.stringify(BTN_GUIDE));
+  guide.domains.usage = { status: "not-started" };
+  var out = gen.buildComponent(
+    "button", REG.components.button, guide, CATEGORY_DEFAULTS_WITH_USAGE, REG);
+  var body = out.files["index.mdx"];
+  assert.equal(whenToUseHeadingCount(body), 1,
+    "the baseline fallback must still render exactly one heading when nothing regresses");
+  assert.match(body, /Fallback baseline point/);
+});
+
+test("mutual exclusion: neither authored usage nor category baseline available -> no heading at all", function () {
+  var guide = JSON.parse(JSON.stringify(BTN_GUIDE));
+  guide.domains.usage = { status: "not-started" };
+  var out = gen.buildComponent("button", REG.components.button, guide, null, REG);
+  var body = out.files["index.mdx"];
+  assert.equal(whenToUseHeadingCount(body), 0,
+    "no 'When to use' heading should render when neither source has content");
+});
