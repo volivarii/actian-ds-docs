@@ -12,6 +12,18 @@ site's content or behavior.
 
 ## [Unreleased]
 
+### Changed
+- **Knowledge v0.34.89: the `checkbox` alias is retired (upstream slug rename).**
+  Figma renamed two published components, so the knowledge registry now says
+  `checkbox` (was `checkbox-with-label`) and `breadcrumb` (was `breadcrumbs`)
+  ([knowledge #410]). The `SLUG_ALIASES` entry `checkbox → checkbox-with-label`
+  existed only to bridge that mismatch, and the rename **inverts** it: it would
+  now redirect all 24 authored `[checkbox](checkbox)` links to a page that no
+  longer exists, which the bare-slug link gate would catch as a red build. The
+  alias is deleted, and both slugs resolve straight to their pages with no hop.
+  Vendor snapshot bumped v0.34.87 → v0.34.89 in the same PR: the bump and the
+  alias deletion are only correct together.
+
 ### Fixed
 - **The site deploys again.** `main` had been red since 2026-07-09 and `deploy` is gated on
   `build + links + a11y`, so nothing shipped to production for three days. Two unrelated causes:
@@ -80,3 +92,5 @@ site's content or behavior.
 Releases before this changelog (the Astro Starlight site, the vendor-snapshot pipeline, the chrome
 styling decouple, and cross-link base-prefixing) are recorded in the git history and pull-request
 record.
+
+[knowledge #410]: https://github.com/volivarii/actian-ds-knowledge/pull/410

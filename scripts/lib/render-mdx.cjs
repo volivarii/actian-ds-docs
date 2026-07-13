@@ -43,7 +43,6 @@ var SLUG_ALIASES = {
   "toggle-control": "toggle",            // segmented-control content; registry group is "Toggle control"
   "text-input": "input",                 // rich-text content; registry group is "Text input"
   "dropdown-select": "dropdown-select-default",  // radio-button content; registry name "Dropdown, Select, default"
-  "checkbox": "checkbox-with-label",     // usage.md wave (knowledge #403); registry name carries the -with-label suffix
   "global-toast": "notification",        // usage.md wave; the registry's `notification` is what the guidelines call global toast
   "card": "card-for-items",              // usage.md wave links the family slug; card-for-items is the browse/grid card those links mean
 };

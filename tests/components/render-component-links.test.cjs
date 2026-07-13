@@ -60,7 +60,7 @@ test("rewriteComponentLinks: REMOVE_LINK_SLUGS reduced to plain text (no broken 
 var USAGE_WAVE_REGISTRY = {
   components: {
     "card-for-items": { category: "Data display", section: "Components", name: "Card for items" },
-    "checkbox-with-label": { category: "Form input selection", section: "Components", name: "Checkbox with label" },
+    "checkbox": { category: "Form input selection", section: "Components", name: "Checkbox" },
     "notification": { category: "Feedback", section: "Components", name: "Notification" },
   },
 };
@@ -69,10 +69,14 @@ function buildUsageWaveMap() {
   renderMdx.buildSlugToPathMap(USAGE_WAVE_REGISTRY, {}, { Components: "components" }, "components", slugifyCategory);
 }
 
-test("rewriteComponentLinks: checkbox alias resolves to the checkbox-with-label page", function () {
+// Figma renamed "Checkbox with label" to "Checkbox" (knowledge v0.34.89), so the
+// registry key now matches the slug the content authors already link to. The
+// alias that bridged the two is gone: this asserts the link resolves directly.
+test("rewriteComponentLinks: checkbox resolves straight to the checkbox page, no alias hop", function () {
   buildUsageWaveMap();
   var out = renderMdx.escapeMdxPlaceholders("use a [checkbox](checkbox) instead");
-  assert.match(out, /components\/form-input-selection\/checkbox-with-label\//);
+  assert.match(out, /components\/form-input-selection\/checkbox\//);
+  assert.doesNotMatch(out, /checkbox-with-label/, "the retired alias target is gone");
   assert.match(out, />checkbox<\/a>/, "label preserved");
 });
 
