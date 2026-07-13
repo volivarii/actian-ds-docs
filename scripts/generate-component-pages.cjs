@@ -268,7 +268,7 @@ function buildComponent(slug, entry, guideline, defaults, registry, opts) {
   // Confidence chips are component-level metadata, not a tab-body section:
   // they render into the page header meta row via the PageMetadata slot.
   // "" when the component carries no confidence data.
-  var confidenceHtml = renderMdx.renderConfidenceChips(defaults, contentDomain);
+  var confidenceHtml = renderMdx.renderConfidenceChips(defaults, contentDomain, usageDomain);
 
   var RENDERERS = {
     mediaPreview:          function () { return renderMdx.renderMediaPreview(slug); },

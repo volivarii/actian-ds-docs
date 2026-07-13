@@ -68,3 +68,31 @@ test("absent, empty, or non-content-bearing usage renders nothing", function () 
   assert.equal(renderMdx.renderUsageDomain({ status: "draft", markdown: "   " }), "");
   assert.equal(renderMdx.renderUsageDomain({ status: "inherited", markdown: "## When to use\n\n* x" }), "");
 });
+
+test("confidence chips report usage: draft -> medium", function () {
+  var out = renderMdx.renderConfidenceChips(
+    { confidence: { design: "high" } },
+    { status: "approved", sections: [] },
+    { status: "draft", markdown: "## When to use\n\n* x" }
+  );
+  assert.match(out, /field="usage"/);
+  assert.match(out, /<ConfidenceChip variant="medium" field="usage"/);
+});
+
+test("confidence chips report usage: approved -> high", function () {
+  var out = renderMdx.renderConfidenceChips(
+    { confidence: { design: "high" } },
+    { status: "approved", sections: [] },
+    { status: "approved", markdown: "## When to use\n\n* x" }
+  );
+  assert.match(out, /<ConfidenceChip variant="high" field="usage"/);
+});
+
+test("confidence chips report usage: absent -> low", function () {
+  var out = renderMdx.renderConfidenceChips(
+    { confidence: { design: "high" } },
+    { status: "approved", sections: [] },
+    null
+  );
+  assert.match(out, /<ConfidenceChip variant="low" field="usage"/);
+});

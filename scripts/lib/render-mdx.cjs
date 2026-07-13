@@ -683,7 +683,7 @@ function renderA11yRefs(defaults) {
   return "## Accessibility\n\n<AccessibilityRefs resolvedRefs={" + jsLit(resolved) + "} />";
 }
 
-function renderConfidenceChips(defaults, contentDomain) {
+function renderConfidenceChips(defaults, contentDomain, usageDomain) {
   if (!defaults || !defaults.confidence) return "";
   var contentConfidence = "low";
   if (contentDomain && contentDomain.status === "approved") contentConfidence = "high";
@@ -693,7 +693,16 @@ function renderConfidenceChips(defaults, contentDomain) {
   // content, but not component-specific" — coverage gap stays visible via
   // tabStatus + dashboard, not via the chip alone.
   else if (contentDomain && contentDomain.status === "synthesized") contentConfidence = "medium";
-  var merged = Object.assign({}, defaults.confidence, { content: contentConfidence });
+  // Same mapping as content: approved -> high, draft/synthesized -> medium.
+  // The chip is one axis (how much to trust it); the in-body "pending design
+  // lead review" note is the other (what specifically is missing).
+  var usageConfidence = "low";
+  if (usageDomain && usageDomain.status === "approved") usageConfidence = "high";
+  else if (usageDomain && (usageDomain.status === "draft" || usageDomain.status === "synthesized")) usageConfidence = "medium";
+  var merged = Object.assign({}, defaults.confidence, {
+    content: contentConfidence,
+    usage: usageConfidence,
+  });
   var chips = Object.entries(merged).map(function (kv) {
     return '<ConfidenceChip variant="' + kv[1] + '" field="' + kv[0] + '" value="' + kv[1] + '" />';
   }).join("\n  ");
