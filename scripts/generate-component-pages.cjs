@@ -53,6 +53,7 @@ var VALID_RENDERER_KEYS = new Set([
   "mediaPreview",
   "overview",
   "categoryUsageBaseline",
+  "usageDomain",
   "contentDomain",
   "designSections",
   "a11yRefs",
@@ -256,6 +257,12 @@ function buildComponent(slug, entry, guideline, defaults, registry, opts) {
     && (contentDomain.status === "approved"
         || contentDomain.status === "draft"
         || contentDomain.status === "synthesized"));
+
+  var usageDomain = guideline && guideline.domains && guideline.domains.usage;
+  // renderUsageDomain() owns the status gate; "" means nothing to show.
+  var usageBody = renderMdx.renderUsageDomain(usageDomain);
+  var hasAuthoredUsage = usageBody.trim() !== "";
+
   var categorySlug = slugifyCategory(entry.category);
 
   // Confidence chips are component-level metadata, not a tab-body section:
@@ -266,7 +273,12 @@ function buildComponent(slug, entry, guideline, defaults, registry, opts) {
   var RENDERERS = {
     mediaPreview:          function () { return renderMdx.renderMediaPreview(slug); },
     overview:              function () { return renderMdx.renderOverview(entry); },
-    categoryUsageBaseline: function () { return renderCategoryUsageBaseline(defaults); },
+    // Authored usage and the category baseline BOTH emit "## When to use".
+    // Rendering both would duplicate the heading and the #when-to-use anchor
+    // (which the /usage/ redirect targets). Authored wins; baseline is the
+    // fallback for components with no guideline file.
+    categoryUsageBaseline: function () { return hasAuthoredUsage ? "" : renderCategoryUsageBaseline(defaults); },
+    usageDomain:           function () { return usageBody; },
     contentDomain:         function () { return hasContent ? renderMdx.renderContentDomain(contentDomain, WARNINGS) : ""; },
     designSections:        function () { return renderMdx.renderDesignSections(entry, defaults, guideline, slug, WARNINGS); },
     a11yRefs:              function () { return renderMdx.renderA11yRefs(defaults); },
