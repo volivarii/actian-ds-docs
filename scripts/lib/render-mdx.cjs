@@ -62,9 +62,26 @@ var SLUG_ALIASES = {
 // slugs from the Usage wave (knowledge #403) whose components are absent from
 // dskit.json, so no page is generated. Drop the link syntax (keep the label)
 // until those components reach the registry.
+//
+// `upload-file` is NOT the same case, and the difference is worth recording.
+// It WAS a real registry component (present through knowledge #378, 2026-07-08)
+// and was removed on 2026-07-13 by the breaking Figma sync that knowledge #410
+// replayed — the one whose PR subject advertised only the checkbox/breadcrumb
+// rename while actually carrying the whole payload. It was swept out alongside
+// `view-card` and 34 icons, and no successor component was added to take its
+// place. Its guidance (557 authored words in
+// vendor/components/dist/guidelines/upload-file.json) is therefore stranded,
+// and `progress-bar-small`'s usage guidance still links to it.
+//
+// Removing the link syntax here is a deliberate, named decision, NOT a widened
+// tolerance: the label "file uploads" still reads correctly in the sentence,
+// and this entry is the record that we know the component is gone. If Figma
+// republishes upload-file, delete this entry and the link resolves again.
+// Tracked upstream with the other orphaned guideline slugs.
 var REMOVE_LINK_SLUGS = new Set([
   "forms", "validation-messages", "wizards",
   "inline-toast", "multi-select", "combo-box", "success-state",
+  "upload-file",
 ]);
 
 // Base-URL prefix expression, shared with renderGlobalA11yLink /
