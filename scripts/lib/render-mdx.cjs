@@ -77,7 +77,13 @@ var SLUG_ALIASES = {
 // tolerance: the label "file uploads" still reads correctly in the sentence,
 // and this entry is the record that we know the component is gone. If Figma
 // republishes upload-file, delete this entry and the link resolves again.
-// Tracked upstream with the other orphaned guideline slugs.
+//
+// This is NOT yet tracked upstream in the knowledge repo: the 557 stranded
+// words of authored guidance in
+// vendor/components/dist/guidelines/upload-file.json have no open issue
+// against them as of this writing. This comment is the only record. Removing
+// this entry restores the link the moment Figma republishes the component;
+// until then, this is the fix.
 var REMOVE_LINK_SLUGS = new Set([
   "forms", "validation-messages", "wizards",
   "inline-toast", "multi-select", "combo-box", "success-state",
@@ -666,10 +672,15 @@ function renderContentDomain(contentDomain, WARNINGS) {
 
 // The usage domain is { status, markdown } — a markdown blob, unlike the
 // content domain's { status, sections[] }. We pass the authored markdown
-// through unchanged (only rewriting bare-slug component links), because the
-// substrate owns the headings and one component legitimately authors its own.
+// through escapeMdxPlaceholders (which both rewrites bare-slug component
+// links via rewriteComponentLinks AND backtick-wraps `<foo>`-style
+// placeholder tokens via escapeMdxIdentifiers, so MDX doesn't try to parse
+// them as JSX), because the substrate owns the headings and one component
+// legitimately authors its own.
 //
-// Content-bearing statuses mirror renderContentDomain's gate.
+// Content-bearing statuses mirror the same three-status list `hasContent`
+// gates on in generate-component-pages.cjs (renderContentDomain itself has
+// no gate of its own — it renders whatever sections[] it's given).
 var USAGE_CONTENT_STATUSES = ["approved", "draft", "synthesized"];
 
 function renderUsageDomain(usageDomain) {
@@ -680,6 +691,23 @@ function renderUsageDomain(usageDomain) {
 
   var body = escapeMdxPlaceholders(md).trim();
 
+  // Starlight documents are FLAT: there is no nesting, so whatever we return
+  // here is concatenated directly after the previous domain's (design
+  // sections') output with nothing to scope it. Two authored shapes exist:
+  //   - most docs open with their own `## When to use` (or similar) heading
+  //   - 8 of the 56 docs open with a deliberate lede paragraph, no heading
+  // Without a leading heading of its own, a lede paragraph is absorbed into
+  // whatever ## heading came immediately before it in the page (e.g. the
+  // scroll-bar lede reading as the tail of the "Behavior" design section).
+  // Normalize: if the authored markdown doesn't already start with an H2,
+  // give it one so this domain always opens its own section and nothing
+  // can bleed backward into the previous one.
+  var firstLine = body.split(/\r?\n/).find(function (l) { return l.trim() !== ""; }) || "";
+  var startsWithH2 = /^##\s+\S/.test(firstLine);
+  if (!startsWithH2) {
+    body = "## Usage\n\n" + body;
+  }
+
   // Two axes, per Twilio Paste: a doc can be complete as writing and still
   // unvalidated as policy. Disclose the review state as its own fact rather
   // than withholding the guidance or publishing it as if settled.
@@ -687,7 +715,15 @@ function renderUsageDomain(usageDomain) {
   // `preview` because the word itself was suppressing adoption, and these
   // docs are finished writing awaiting a blessing, not half-typed pages.
   if (usageDomain.status === "draft") {
-    body = ":::note\nAuthored, pending design lead review.\n:::\n\n" + body;
+    // The note must land AFTER the heading, not before the whole blob: the
+    // /usage/ redirect targets the heading's auto-slugged anchor
+    // (#when-to-use), so a reader deep-linking there must land ON the
+    // heading and read the note as the first thing under it — not scroll
+    // past it because the note rendered above the anchor.
+    var splitAt = body.indexOf("\n");
+    var heading = splitAt === -1 ? body : body.slice(0, splitAt);
+    var rest = splitAt === -1 ? "" : body.slice(splitAt + 1).replace(/^\n+/, "");
+    body = heading + "\n\n:::note\nAuthored, pending design lead review.\n:::" + (rest ? "\n\n" + rest : "");
   }
   return body;
 }
