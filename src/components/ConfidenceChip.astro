@@ -3,8 +3,9 @@
  * ConfidenceChip — single source for the confidence chip markup.
  *
  * Used by:
- * - generate-component-pages.cjs (in renderConfidenceChips and the
- *   sidebar confidenceLine)
+ * - scripts/lib/render-mdx.cjs (renderConfidenceChips) — the actual chip
+ *   markup emitted onto each component page; generate-component-pages.cjs
+ *   just calls it and slots the result into the page header meta row.
  * - src/pages/confidence.mdx (chip examples + the level table)
  *
  * Props:

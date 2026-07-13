@@ -62,9 +62,32 @@ var SLUG_ALIASES = {
 // slugs from the Usage wave (knowledge #403) whose components are absent from
 // dskit.json, so no page is generated. Drop the link syntax (keep the label)
 // until those components reach the registry.
+//
+// `upload-file` is NOT the same case, and the difference is worth recording.
+// It WAS a real registry component (present through knowledge #378, 2026-07-08)
+// and was removed on 2026-07-13 by the breaking Figma sync that knowledge #410
+// replayed — the one whose PR subject advertised only the checkbox/breadcrumb
+// rename while actually carrying the whole payload. It was swept out alongside
+// `view-card` and 34 icons, and no successor component was added to take its
+// place. Its guidance (557 authored words in
+// vendor/components/dist/guidelines/upload-file.json) is therefore stranded,
+// and `progress-bar-small`'s usage guidance still links to it.
+//
+// Removing the link syntax here is a deliberate, named decision, NOT a widened
+// tolerance: the label "file uploads" still reads correctly in the sentence,
+// and this entry is the record that we know the component is gone. If Figma
+// republishes upload-file, delete this entry and the link resolves again.
+//
+// This is NOT yet tracked upstream in the knowledge repo: the 557 stranded
+// words of authored guidance in
+// vendor/components/dist/guidelines/upload-file.json have no open issue
+// against them as of this writing. This comment is the only record. Removing
+// this entry restores the link the moment Figma republishes the component;
+// until then, this is the fix.
 var REMOVE_LINK_SLUGS = new Set([
   "forms", "validation-messages", "wizards",
   "inline-toast", "multi-select", "combo-box", "success-state",
+  "upload-file",
 ]);
 
 // Base-URL prefix expression, shared with renderGlobalA11yLink /
@@ -647,6 +670,64 @@ function renderContentDomain(contentDomain, WARNINGS) {
   return "## Content guidelines\n\n" + rendered.join("\n\n");
 }
 
+// The usage domain is { status, markdown } — a markdown blob, unlike the
+// content domain's { status, sections[] }. We pass the authored markdown
+// through escapeMdxPlaceholders (which both rewrites bare-slug component
+// links via rewriteComponentLinks AND backtick-wraps `<foo>`-style
+// placeholder tokens via escapeMdxIdentifiers, so MDX doesn't try to parse
+// them as JSX), because the substrate owns the headings and one component
+// legitimately authors its own.
+//
+// Content-bearing statuses mirror the same three-status list `hasContent`
+// gates on in generate-component-pages.cjs (renderContentDomain itself has
+// no gate of its own — it renders whatever sections[] it's given).
+var USAGE_CONTENT_STATUSES = ["approved", "draft", "synthesized"];
+
+function renderUsageDomain(usageDomain) {
+  if (!usageDomain) return "";
+  var md = usageDomain.markdown;
+  if (typeof md !== "string" || md.trim() === "") return "";
+  if (USAGE_CONTENT_STATUSES.indexOf(usageDomain.status) === -1) return "";
+
+  var body = escapeMdxPlaceholders(md).trim();
+
+  // Starlight documents are FLAT: there is no nesting, so whatever we return
+  // here is concatenated directly after the previous domain's (design
+  // sections') output with nothing to scope it. Two authored shapes exist:
+  //   - most docs open with their own `## When to use` (or similar) heading
+  //   - 8 of the 56 docs open with a deliberate lede paragraph, no heading
+  // Without a leading heading of its own, a lede paragraph is absorbed into
+  // whatever ## heading came immediately before it in the page (e.g. the
+  // scroll-bar lede reading as the tail of the "Behavior" design section).
+  // Normalize: if the authored markdown doesn't already start with an H2,
+  // give it one so this domain always opens its own section and nothing
+  // can bleed backward into the previous one.
+  var firstLine = body.split(/\r?\n/).find(function (l) { return l.trim() !== ""; }) || "";
+  var startsWithH2 = /^##\s+\S/.test(firstLine);
+  if (!startsWithH2) {
+    body = "## Usage\n\n" + body;
+  }
+
+  // Two axes, per Twilio Paste: a doc can be complete as writing and still
+  // unvalidated as policy. Disclose the review state as its own fact rather
+  // than withholding the guidance or publishing it as if settled.
+  // Deliberately not the bare word "Draft": Carbon renamed `experimental` to
+  // `preview` because the word itself was suppressing adoption, and these
+  // docs are finished writing awaiting a blessing, not half-typed pages.
+  if (usageDomain.status === "draft") {
+    // The note must land AFTER the heading, not before the whole blob: the
+    // /usage/ redirect targets the heading's auto-slugged anchor
+    // (#when-to-use), so a reader deep-linking there must land ON the
+    // heading and read the note as the first thing under it — not scroll
+    // past it because the note rendered above the anchor.
+    var splitAt = body.indexOf("\n");
+    var heading = splitAt === -1 ? body : body.slice(0, splitAt);
+    var rest = splitAt === -1 ? "" : body.slice(splitAt + 1).replace(/^\n+/, "");
+    body = heading + "\n\n:::note\nAuthored, pending design lead review.\n:::" + (rest ? "\n\n" + rest : "");
+  }
+  return body;
+}
+
 function renderA11yRefs(defaults) {
   if (!(defaults && defaults.a11y_refs && Array.isArray(defaults.a11y_refs.requirementRefs))) return "";
   var resolved = defaults.a11y_refs.requirementRefs.map(function (r) {
@@ -655,7 +736,7 @@ function renderA11yRefs(defaults) {
   return "## Accessibility\n\n<AccessibilityRefs resolvedRefs={" + jsLit(resolved) + "} />";
 }
 
-function renderConfidenceChips(defaults, contentDomain) {
+function renderConfidenceChips(defaults, contentDomain, usageDomain) {
   if (!defaults || !defaults.confidence) return "";
   var contentConfidence = "low";
   if (contentDomain && contentDomain.status === "approved") contentConfidence = "high";
@@ -665,7 +746,16 @@ function renderConfidenceChips(defaults, contentDomain) {
   // content, but not component-specific" — coverage gap stays visible via
   // tabStatus + dashboard, not via the chip alone.
   else if (contentDomain && contentDomain.status === "synthesized") contentConfidence = "medium";
-  var merged = Object.assign({}, defaults.confidence, { content: contentConfidence });
+  // Same mapping as content: approved -> high, draft/synthesized -> medium.
+  // The chip is one axis (how much to trust it); the in-body "pending design
+  // lead review" note is the other (what specifically is missing).
+  var usageConfidence = "low";
+  if (usageDomain && usageDomain.status === "approved") usageConfidence = "high";
+  else if (usageDomain && (usageDomain.status === "draft" || usageDomain.status === "synthesized")) usageConfidence = "medium";
+  var merged = Object.assign({}, defaults.confidence, {
+    content: contentConfidence,
+    usage: usageConfidence,
+  });
   var chips = Object.entries(merged).map(function (kv) {
     return '<ConfidenceChip variant="' + kv[1] + '" field="' + kv[0] + '" value="' + kv[1] + '" />';
   }).join("\n  ");
@@ -822,6 +912,7 @@ module.exports = {
   renderOverview: renderOverview,
   renderDesignSections: renderDesignSections,
   renderContentDomain: renderContentDomain,
+  renderUsageDomain: renderUsageDomain,
   renderA11yRefs: renderA11yRefs,
   renderConfidenceChips: renderConfidenceChips,
   renderMediaPreview: renderMediaPreview,
