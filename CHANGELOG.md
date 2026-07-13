@@ -29,6 +29,21 @@ site's content or behavior.
   alongside anatomy/variants/motion/a11y/content, mapped the same way as `content`: `approved` →
   high, `draft`/`synthesized` → medium, absent → low. `src/pages/confidence.mdx` documents the new
   facet (table row, example chip, "Where the values come from" entry).
+- **Two foundations token sections that were vendored but never published: Heights and Trigger
+  Areas, and Focus Rings.** The knowledge substrate derives and vendors all foundations token
+  sections to `vendor/foundations/dist/tokens/`, but the docs page list under
+  `src/content/docs/foundations/` is composed from a hand-maintained manifest
+  (`src/data/composition/foundations.json`), and two sections never got an entry, so their tokens
+  (`--zen-size-height-*`, `--zen-size-trigger-*`, `--zen-focus-ring-*`) were correct in the vendor
+  snapshot but invisible on the site. Added `focus-rings.mdx` and
+  `heights-and-trigger-areas.mdx`, registered both in the composition manifest (alphabetical
+  position: after Elevation, before Icons), and renumbered the later pages' sidebar order.
+- A coverage gate (`tests/validation/foundations-token-coverage.test.cjs`) that fails, naming the
+  section, if a vendored foundations token section under `vendor/foundations/dist/tokens/` has no
+  matching docs page. This is the exact gap that let the two sections above go unpublished
+  silently. Section-to-page name differences (`global-color` -> `color`, `backgrounds` ->
+  `background`) are handled with an explicit, commented alias map, not fuzzy matching, so a
+  genuinely new unmapped section still fails loudly.
 
 ### Changed
 - **Knowledge v0.34.89: the `checkbox` alias is retired (upstream slug rename).**

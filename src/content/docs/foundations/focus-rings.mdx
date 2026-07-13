@@ -1,0 +1,24 @@
+---
+title: Focus Rings
+description: Focus ring tokens from the Actian foundations.
+sidebar:
+  order: 6
+---
+
+import TokenTable from "../../../components/TokenTable.astro";
+import PageMetadata from "../../../components/PageMetadata.astro";
+import focusRings from "../../../../vendor/foundations/dist/tokens/focus-rings.json";
+
+<PageMetadata
+  slug="foundations.focus-rings"
+  source="foundations/dist/tokens/focus-rings.json"
+  schema={1}
+/>
+
+{focusRings.body && <p>{focusRings.body}</p>}
+
+Focus ring tokens for the Actian DS — the only tokenized interactive state, applied to interactive elements to indicate keyboard focus.
+
+{(focusRings.blocks || []).filter((b) => b.type === "table").map((b) => (
+  <TokenTable headers={b.headers} rows={b.rows} />
+))}

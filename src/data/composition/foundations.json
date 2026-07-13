@@ -37,6 +37,16 @@
       "custom": "elevation.mdx"
     },
     {
+      "slug": "focus-rings",
+      "title": "Focus Rings",
+      "custom": "focus-rings.mdx"
+    },
+    {
+      "slug": "heights-and-trigger-areas",
+      "title": "Heights and Trigger Areas",
+      "custom": "heights-and-trigger-areas.mdx"
+    },
+    {
       "slug": "icons",
       "title": "Icons",
       "custom": "icons.mdx"
