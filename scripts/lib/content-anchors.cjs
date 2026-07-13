@@ -29,6 +29,16 @@
 
 var fs = require("fs");
 var path = require("path");
+// github-slugger is the exact library Astro's own heading-id plugin uses
+// (@astrojs/markdown-remark's rehype-heading-ids.js: `new Slugger()` per
+// file) — see slugifyHeading()/splitH2Sections() below for why we depend on
+// it directly instead of hand-rolling an approximation. v2 is ESM-only
+// ("type": "module", no "main"-compatible CJS export), but Node's stable
+// require(esm) support (unflagged since 22.12.0, which this repo's
+// engines.node already requires) lets a synchronous require() here resolve
+// it, so no caller needs to become async.
+var GithubSluggerModule = require("github-slugger");
+var GithubSlugger = GithubSluggerModule.default || GithubSluggerModule;
 
 // The content-family pages a `## Heading` can resolve to post-split. Keep in
 // sync with sync-vendored-md.cjs's PAGES table: those three (not the
@@ -45,27 +55,44 @@ var FAMILY_PAGES = [
 var H2_LINE = /^##[ \t]+(.+?)[ \t]*$/gm;
 
 /**
- * Slugify a heading the same way Starlight's default heading-id plugin does
- * for the plain ASCII, punctuation-light headings this content uses:
- * lowercase, spaces → hyphens, strip characters outside [a-z0-9 -], collapse
- * runs of hyphens, trim leading/trailing hyphens. Verified to match the
- * existing shipped anchors (e.g. "Object preview panels" → "object-preview-
- * panels", "Lineage-specific UI" → "lineage-specific-ui").
+ * Slugify ONE heading using github-slugger — the same library, same version,
+ * that Starlight's build actually uses for heading ids (Astro's
+ * @astrojs/markdown-remark rehype-heading-ids.js constructs `new Slugger()`
+ * and calls `.slug(text)` per heading). This is a genuine equivalence, not an
+ * approximation: it correctly handles cases a hand-rolled regex previously
+ * got wrong, e.g. slug("Do / Don't") === "do--dont" (a `/` becomes a bare
+ * removed character leaving TWO adjacent hyphens, which github-slugger does
+ * NOT collapse — a former version of this function incorrectly collapsed
+ * hyphen runs and returned "do-dont" instead).
+ *
+ * Scope note: this constructs a FRESH GithubSlugger instance per call, so it
+ * matches Starlight's output for a heading that is the first (or only)
+ * occurrence of its text in a document. github-slugger's slug() is stateful
+ * per instance — Starlight dedupes a REPEATED heading within the same file
+ * by appending "-1", "-2", etc. from a single slugger shared across that
+ * file's headings. This function cannot reproduce that cross-heading dedup
+ * because it has no notion of "the rest of the document". For a full
+ * document scan where repeats must dedupe exactly like Starlight,
+ * splitH2Sections() below shares ONE slugger instance across all of a
+ * document's H2 headings instead of calling this function.
  * @param {string} text
  * @returns {string}
  */
 function slugifyHeading(text) {
-  return String(text || "")
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-+|-+$/g, "");
+  var slugger = new GithubSlugger();
+  return slugger.slug(String(text || ""));
 }
 
 /**
  * Split a markdown document into its top-level (H2) sections.
+ *
+ * Uses ONE GithubSlugger instance for the whole document (constructed fresh
+ * per call, never shared across calls/files) — this mirrors Astro's
+ * rehype-heading-ids.js exactly, which builds `new Slugger()` once per file
+ * and slugs every heading against it in document order. That means a heading
+ * repeated within THIS document gets the same "-1", "-2", ... suffix
+ * Starlight's real build would produce, and slugging one file's headings can
+ * never pollute another file's (or another call's) results.
  * @param {string} markdown
  * @returns {Array<{heading: string, slug: string, body: string}>} body is the
  *   raw markdown from the "## Heading" line up to (not including) the next H2,
@@ -79,10 +106,11 @@ function splitH2Sections(markdown) {
   while ((m = H2_LINE.exec(text)) !== null) {
     headings.push({ heading: m[1].trim(), index: m.index });
   }
+  var slugger = new GithubSlugger();
   return headings.map(function (entry, i) {
     var end = i + 1 < headings.length ? headings[i + 1].index : text.length;
     var body = text.slice(entry.index, end).replace(/\s+$/, "");
-    return { heading: entry.heading, slug: slugifyHeading(entry.heading), body: body };
+    return { heading: entry.heading, slug: slugger.slug(entry.heading), body: body };
   });
 }
 

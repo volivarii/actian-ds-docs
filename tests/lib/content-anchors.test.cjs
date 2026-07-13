@@ -58,6 +58,36 @@ test("slugifyHeading matches the existing shipped anchor slugs", function () {
   assert.equal(contentAnchors.slugifyHeading("Lineage-specific UI"), "lineage-specific-ui");
 });
 
+// Regression coverage for the previously-false "same way Starlight's default
+// heading-id plugin does" claim: the old hand-rolled slugifier collapsed
+// runs of hyphens (`.replace(/-+/g, "-")`), which github-slugger (what
+// Starlight's rehype-heading-ids.js actually uses) does NOT do. These three
+// assert the REAL github-slugger output — verified independently against
+// `new (require("github-slugger").default)().slug(text)` — not the old
+// (wrong) collapsed-hyphen output.
+test("slugifyHeading matches real github-slugger output for punctuation Starlight does not collapse", function () {
+  // "/" is stripped entirely, leaving the space on either side of it as TWO
+  // adjacent hyphens — a naive hyphen-collapse would wrongly merge these.
+  assert.equal(contentAnchors.slugifyHeading("Do / Don't"), "do--dont");
+  // "&" is stripped the same way, again leaving a double hyphen.
+  assert.equal(contentAnchors.slugifyHeading("Foo & Bar"), "foo--bar");
+  // An em dash surrounded by spaces is stripped too, same double-hyphen shape.
+  assert.equal(contentAnchors.slugifyHeading("Foo — Bar"), "foo--bar");
+});
+
+test("splitH2Sections dedupes a heading repeated within one document the way Starlight does", function () {
+  // Astro's rehype-heading-ids.js shares ONE Slugger per file across all of
+  // its headings, so a second occurrence of the same heading text gets a
+  // "-1" suffix. splitH2Sections must reproduce that (it shares one slugger
+  // per call), not just slugifyHeading's per-call behavior (which has no way
+  // to know about earlier headings in the same document).
+  var md = ["## Overview", "", "first", "", "## Overview", "", "second"].join("\n");
+  var sections = contentAnchors.splitH2Sections(md);
+  assert.equal(sections.length, 2);
+  assert.equal(sections[0].slug, "overview");
+  assert.equal(sections[1].slug, "overview-1");
+});
+
 test("splitH2Sections splits on H2 only, not H3+, and captures each section's body", function () {
   var md = [
     "# Title",

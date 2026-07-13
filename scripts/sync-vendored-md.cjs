@@ -147,9 +147,27 @@ function loadSlugPaths() {
   renderMdx.setSlugToPathMap(JSON.parse(fs.readFileSync(SLUG_PATHS, "utf8")));
 }
 
+// Pre-split builds wrote a single src/content/docs/content.md file. .gitignore
+// only ignores the post-split src/content/docs/content/ directory now, so a
+// leftover content.md from an old working tree is untracked AND unignored —
+// left in place it sits alongside the content/ directory this script writes
+// below and Starlight logs a "Duplicate id \"content\"" warning at build time
+// (content/index.md still wins, so the build itself isn't broken, but it's a
+// stray file an unwary `git add -A` could pick up). Remove it defensively
+// before writing the new pages.
+var STALE_PRESPLIT_CONTENT_MD = path.join(OUT_DIR, "content.md");
+
+function removeStalePresplitContentMd() {
+  if (fs.existsSync(STALE_PRESPLIT_CONTENT_MD)) {
+    fs.unlinkSync(STALE_PRESPLIT_CONTENT_MD);
+    console.log("sync-vendored-md: removed stale pre-split src/content/docs/content.md");
+  }
+}
+
 function main() {
   fs.mkdirSync(OUT_DIR, { recursive: true });
   loadSlugPaths();
+  removeStalePresplitContentMd();
 
   var familyPages = PAGES.filter(function (p) { return !p.extractHeading; });
 
