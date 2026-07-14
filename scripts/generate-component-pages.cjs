@@ -30,6 +30,7 @@ var { computeImportPrefix } = require("./lib/import-prefix.cjs");
 var TABS = require(path.resolve(__dirname, "..", "src", "data", "component-tabs.config.json")).tabs;
 var renderMdx = require("./lib/render-mdx.cjs");
 var { buildSidebarManifest } = require("./lib/sidebar-manifest.cjs");
+var contentAnchors = require("./lib/content-anchors.cjs");
 
 // Aggregated warning counters — incremented by warning-emitting sites below;
 // summarized in one line at end of main(). Existing stderr writes preserved for
@@ -393,10 +394,10 @@ function main() {
     //     authoritative grid description; the registry's grid components
     //     (L/M/S/XL/XS grids) are Figma layout visualizations, not
     //     separately documentable.
-    //   - "Content guidelines": the top-level /content link in the
-    //     sidebar (sourced from content/dist/global.md) is the
-    //     canonical place; the registry's single auto-stub item
-    //     ("Content Checklist") was empty.
+    //   - "Content guidelines": the top-level "Content guidelines" sidebar
+    //     group (sourced from vendor/content/dist/{global,writing,patterns,
+    //     product}.md via sync-vendored-md.cjs) is the canonical place; the
+    //     registry's single auto-stub item ("Content Checklist") was empty.
     "Breakpoint, grid & structure",
     "Content guidelines",
   ]);
@@ -495,6 +496,12 @@ function main() {
   // rewriteComponentLinks() (called inside escapeMdxPlaceholders) can convert
   // bare-slug markdown links in guideline JSON content to absolute doc paths.
   renderMdx.buildSlugToPathMap(registry, groupCounts, SECTION_DIRS, DEFAULT_SECTION_DIR, slugifyCategory);
+
+  // Section→content-family-page map for renderRelatedPatterns (docs #content
+  // split). Derived directly from the vendored writing/patterns/product.md
+  // files — NOT from anything sync-vendored-md.cjs produces, since this
+  // script runs BEFORE it in the prebuild chain (package.json).
+  renderMdx.setSectionPageMap(contentAnchors.buildSectionPageMap(path.resolve(__dirname, "..")));
 
   // Load the media index sidecar (knowledge v0.17.0+). Components with media
   // but no guideline doc (e.g. avatar) appear here even though they have no
