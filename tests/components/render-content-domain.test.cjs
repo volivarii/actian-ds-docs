@@ -7,11 +7,24 @@ var renderMdx = require("../../scripts/lib/render-mdx.cjs");
 // Tests for renderContentDomain's "authored takes precedence" rule:
 // when a component has its OWN authored content (sections WITHOUT a
 // `source: "pattern:<slug>"` marker), render only those + a "Related patterns"
-// links block to the global /content page — do NOT inline the fanned patterns'
+// links block to the split content pages — do NOT inline the fanned patterns'
 // full content (which duplicates the authored guidance). When there is no
 // authored content (synthesized: pattern fan-out only), inline the patterns —
 // they ARE the content. Motivated by the drawer-side-panel duplication.
+//
+// renderRelatedPatterns resolves each pattern slug to its content-family page
+// via a section→page map (the /content page split); tests here inject a small
+// fixture map via setSectionPageMap rather than reading the real vendored
+// files, so this stays a pure unit test of renderContentDomain's branching.
+// object-preview-panels/related-content-panels are deliberately mapped to
+// "product" (not "patterns") — the real trap the split introduced.
 // ---------------------------------------------------------------------------
+
+renderMdx.setSectionPageMap({
+  "object-preview-panels": "product",
+  "related-content-panels": "product",
+  "forms": "patterns",
+});
 
 var WARN = { unknownContentShapes: 0 };
 
@@ -33,14 +46,15 @@ test("mixed authored + patterns → authored sections + Related patterns links; 
   // authored sections render
   assert.match(out, /### When to use/);
   assert.match(out, /### Style/);
-  // a Related patterns block with links to the global /content anchors
+  // a Related patterns block with links to the split content pages' anchors.
+  // Both slugs live on content/product (the trap: NOT content/patterns).
   assert.match(out, /### Related patterns/);
-  assert.match(out, /content\/#object-preview-panels/);
-  assert.match(out, /content\/#related-content-panels/);
+  assert.match(out, /content\/product\/#object-preview-panels/);
+  assert.match(out, /content\/product\/#related-content-panels/);
   assert.match(out, />Object preview panels</);
   assert.match(out, />Related content panels</);
   // each pattern linked once (deduped), even though it has multiple sections
-  assert.equal((out.match(/content\/#object-preview-panels/g) || []).length, 1);
+  assert.equal((out.match(/content\/product\/#object-preview-panels/g) || []).length, 1);
   // the patterns' own section content is NOT inlined
   assert.doesNotMatch(out, /OPP only heading/);
   assert.doesNotMatch(out, /Attribute label examples/);

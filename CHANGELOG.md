@@ -49,6 +49,28 @@ site's content or behavior.
   `src/data/composition/foundations.json` (reusing the same resolver the page generator uses, so
   the check can't drift from what actually gets published). This is now the exact gap that let
   the two sections above go unpublished silently, closed for real, at any depth.
+- **`/content` split into one page per content family.** The docs site used to publish all 22
+  content-guidance sections as one 39KB page generated from `vendor/content/dist/global.md`. The
+  knowledge substrate already ships the same guidance pre-split by family
+  (`vendor/content/dist/{writing,patterns,product}.md`); the site now mirrors that split instead
+  of ignoring it. `/content/` is now an index page carrying only "Global guidelines" (the one
+  section with no family — extracted at build time from `global.md`, not hand-copied) plus links
+  to the three family pages: `/content/writing/`, `/content/patterns/`, `/content/product/`. The
+  sidebar's flat "Content guidelines" link is now a group with all four entries.
+  `scripts/sync-vendored-md.cjs`'s `PAGES` table drives all four; the index is emitted to
+  `content/index.md` (never a sibling `content.md` alongside the `content/` directory — Starlight
+  renders both if they coexist).
+  - **New `scripts/lib/content-anchors.cjs`** derives a section-heading → family-page map from the
+    three split files' H2 headings (never hardcoded), so `renderRelatedPatterns`
+    (`scripts/lib/render-mdx.cjs`) can resolve each component's "Related patterns" link to the
+    correct page. This mattered because a naive "patterns fan out to `/content/patterns`" mapping
+    would have been wrong: `object-preview-panels` and `related-content-panels` (used by
+    drawer-side-panel, popover) actually live on `product.md`, not `patterns.md`. An unresolvable
+    pattern slug now throws by name at build time instead of shipping a dead anchor.
+  - Follow-up opportunity (not done here): `forms`, `validation-messages`, `wizards` in
+    `REMOVE_LINK_SLUGS` (`scripts/lib/render-mdx.cjs`) currently degrade bare-slug links to plain
+    text because no standalone component page exists for them. Now that they have a real anchor at
+    `/content/patterns/#<slug>`, they could become real links instead — left for a follow-up PR.
 
 ### Changed
 - **Knowledge v0.34.89: the `checkbox` alias is retired (upstream slug rename).**

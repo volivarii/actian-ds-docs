@@ -14,6 +14,7 @@
 var { escapeMdxIdentifiers } = require("./mdx-escape.cjs");
 var { KNOWLEDGE_REPO_URL } = require("./constants.cjs");
 var loader = require("./category-defaults-loader.cjs");
+var contentAnchors = require("./content-anchors.cjs");
 
 // ---------------------------------------------------------------------------
 // Private helpers shared across render functions
@@ -625,17 +626,38 @@ function isPatternSection(s) {
   return typeof s.source === "string" && s.source.indexOf("pattern:") === 0;
 }
 
-// Render a compact "Related patterns" reference linking to the global /content
-// page anchors, instead of inlining the patterns' full content. Used when a
+// Module-level section→page map (e.g. { "object-preview-panels": "product" }),
+// derived from vendor/content/dist/{writing,patterns,product}.md by
+// content-anchors.buildSectionPageMap() and injected once via
+// setSectionPageMap() (mirrors the setMediaIndex/setAnatomyIndex/
+// setSlugToPathMap pattern above — this module stays I/O-free itself).
+var _sectionPageMap = null;
+
+/** @param {Record<string,string>} map - from content-anchors.buildSectionPageMap() */
+function setSectionPageMap(map) {
+  _sectionPageMap = map || null;
+}
+
+// Render a compact "Related patterns" reference linking to the split content
+// pages' anchors, instead of inlining the patterns' full content. Used when a
 // component HAS its own authored content (so the patterns would otherwise
 // duplicate it). Mirrors renderGlobalA11yLink's BASE_URL link style.
+//
+// The /content page used to be one giant page, so every pattern anchor lived
+// at `content/#<slug>`. Post-split, each pattern slug resolves to whichever of
+// content/writing, content/patterns, or content/product its section actually
+// lives on — NOT necessarily "patterns" (e.g. object-preview-panels and
+// related-content-panels are on content/product). resolvePatternPage throws
+// (naming the slug) rather than let an unmapped slug silently ship a dead
+// anchor.
 function renderRelatedPatterns(slugs) {
   var base = "${import.meta.env.BASE_URL.replace(/\\/?$/, '/')}";
   var humanize = function (slug) {
     return slug.replace(/-/g, " ").replace(/^./, function (c) { return c.toUpperCase(); });
   };
   var links = slugs.map(function (slug) {
-    return "- <a href={`" + base + "content/#" + slug + "`}>" + humanize(slug) + "</a>";
+    var pageSlug = contentAnchors.resolvePatternPage(slug, _sectionPageMap);
+    return "- <a href={`" + base + "content/" + pageSlug + "/#" + slug + "`}>" + humanize(slug) + "</a>";
   }).join("\n");
   return "### Related patterns\n\nThis component follows shared content patterns. "
     + "See the full guidance on the Content guidelines page:\n\n" + links;
@@ -924,4 +946,5 @@ module.exports = {
   toCallout: toCallout,
   setAnatomyIndex: setAnatomyIndex,
   renderAnatomy: renderAnatomy,
+  setSectionPageMap: setSectionPageMap,
 };
