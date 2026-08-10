@@ -497,6 +497,30 @@ function main() {
   // bare-slug markdown links in guideline JSON content to absolute doc paths.
   renderMdx.buildSlugToPathMap(registry, groupCounts, SECTION_DIRS, DEFAULT_SECTION_DIR, slugifyCategory);
 
+  // Derive the stranded-guideline slugs: authored guidance whose component the
+  // registry no longer publishes, so no page exists to link to. Must run after
+  // buildSlugToPathMap (it asks that map what resolves). Replaces the
+  // hand-maintained tail of REMOVE_LINK_SLUGS, which drifted on every Figma
+  // retirement and took docs main down for 17 nights over `search-filters`.
+  var guidelinesDir = path.resolve(__dirname, "..", "vendor", "components", "dist", "guidelines");
+  var guidelineSlugs = fs.existsSync(guidelinesDir)
+    ? fs
+        .readdirSync(guidelinesDir)
+        // One file per slug, plus the roll-up `guidelines.bundle.json` and a
+        // coverage.md that are not slugs.
+        .filter(function (f) { return f.endsWith(".json") && !f.includes(".bundle."); })
+        .map(function (f) { return f.replace(/\.json$/, ""); })
+    : [];
+  var strandedSlugs = renderMdx.deriveStrandedGuidelineSlugs(guidelineSlugs);
+  renderMdx.setStrandedGuidelineSlugs(strandedSlugs);
+  // Named, not just counted: a slug appearing here is guidance going unread,
+  // which is a decision for the knowledge repo, not a docs detail to swallow.
+  console.log(
+    "generate-component-pages: " + strandedSlugs.length + " stranded guideline slug(s) " +
+      "(guidance with no published component; inbound links degrade to plain text)" +
+      (strandedSlugs.length ? ": " + strandedSlugs.join(", ") : ""),
+  );
+
   // Section→content-family-page map for renderRelatedPatterns (docs #content
   // split). Derived directly from the vendored writing/patterns/product.md
   // files — NOT from anything sync-vendored-md.cjs produces, since this
@@ -660,6 +684,17 @@ function main() {
     "generate-component-pages: wrote slug→path map → src/data/slug-paths.json (" +
       Object.keys(slugPaths).length +
       " slugs)",
+  );
+
+  // Same cross-process handoff for the derived stranded-guideline slugs: the
+  // vendored content page carries the same bare-slug cross-references, and
+  // sync-vendored-md.cjs cannot recompute the set (it never loads the registry).
+  var strandedPath = path.join(__dirname, "..", "src", "data", "stranded-guideline-slugs.json");
+  var stranded = renderMdx.getStrandedGuidelineSlugs();
+  fs.writeFileSync(strandedPath, JSON.stringify(stranded, null, 2) + "\n");
+  console.log(
+    "generate-component-pages: wrote stranded-guideline slugs → " +
+      "src/data/stranded-guideline-slugs.json (" + stranded.length + " slugs)",
   );
 
   // Emit redirects manifest — preserves deep links from the legacy
