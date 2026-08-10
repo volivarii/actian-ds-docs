@@ -52,44 +52,54 @@ var SLUG_ALIASES = {
 // removed entirely, leaving just the link text. This prevents both broken
 // links and relative-link validator errors.
 //
-// `forms`, `validation-messages`, `wizards` are concept-level slugs in
-// vendor/content/dist/global.md + pattern-fanout content that don't have
-// dedicated component pages. The astro.config.mjs links-validator exclude
-// covers the global /content.md page; this set covers per-component
-// content.mdx files (e.g. components/form-input-selection/*/content.mdx)
-// where pattern fanout injects the same cross-references.
+// This set holds ONLY concept-level slugs. `forms`, `validation-messages` and
+// `wizards` name guidance in vendor/content/dist/global.md + pattern-fanout
+// content, not components, so no component page can ever exist for them and
+// nothing upstream can tell us they are gone. The astro.config.mjs
+// links-validator exclude covers the global /content.md page; this set covers
+// per-component content.mdx files (e.g.
+// components/form-input-selection/*/content.mdx) where pattern fanout injects
+// the same cross-references.
 //
-// `inline-toast`, `multi-select`, `combo-box`, `success-state` are guideline
-// slugs from the Usage wave (knowledge #403) whose components are absent from
-// dskit.json, so no page is generated. Drop the link syntax (keep the label)
-// until those components reach the registry.
+// Component slugs whose GUIDANCE OUTLIVED THEIR COMPONENT used to be listed
+// here too (`inline-toast`, `multi-select`, `combo-box`, `success-state`,
+// `upload-file`). They are now derived from the vendored data at build time by
+// generate-component-pages.cjs — see setStrandedGuidelineSlugs below — because
+// hand-listing them restated a fact the knowledge repo already owns, and it
+// drifted every single time Figma retired a component:
 //
-// `upload-file` is NOT the same case, and the difference is worth recording.
-// It WAS a real registry component (present through knowledge #378, 2026-07-08)
-// and was removed on 2026-07-13 by the breaking Figma sync that knowledge #410
-// replayed — the one whose PR subject advertised only the checkbox/breadcrumb
-// rename while actually carrying the whole payload. It was swept out alongside
-// `view-card` and 34 icons, and no successor component was added to take its
-// place. Its guidance (557 authored words in
-// vendor/components/dist/guidelines/upload-file.json) is therefore stranded,
-// and `progress-bar-small`'s usage guidance still links to it.
+//   - 2026-07-13: `upload-file` was swept out of the registry alongside
+//     `view-card` and 34 icons by the breaking sync knowledge #410 replayed
+//     (the one whose PR subject advertised only the checkbox/breadcrumb rename
+//     while carrying the whole payload). 557 authored words in
+//     vendor/components/dist/guidelines/upload-file.json were stranded, and
+//     `progress-bar-small` still links to them.
+//   - 2026-07-23: `search-filters` left the registry in a breaking sync, which
+//     the knowledge repo recorded in its own UNREACHABLE allowlist
+//     (tests/guideline-reachability.test.js) and nobody mirrored here. 13
+//     sibling guidelines still cross-reference it, so the links validator
+//     found 15 invalid links and docs main went red for 17 consecutive nights:
+//     17 skipped deploys, the live site frozen on 2026-07-24 content.
 //
-// Removing the link syntax here is a deliberate, named decision, NOT a widened
-// tolerance: the label "file uploads" still reads correctly in the sentence,
-// and this entry is the record that we know the component is gone. If Figma
-// republishes upload-file, delete this entry and the link resolves again.
-//
-// This is NOT yet tracked upstream in the knowledge repo: the 557 stranded
-// words of authored guidance in
-// vendor/components/dist/guidelines/upload-file.json have no open issue
-// against them as of this writing. This comment is the only record. Removing
-// this entry restores the link the moment Figma republishes the component;
-// until then, this is the fix.
+// Both were knowledge-repo facts before they were docs problems. Deriving them
+// keeps one owner, and a retired component now degrades its own inbound links
+// on the next vendor refresh instead of taking the build down.
 var REMOVE_LINK_SLUGS = new Set([
   "forms", "validation-messages", "wizards",
-  "inline-toast", "multi-select", "combo-box", "success-state",
-  "upload-file",
 ]);
+
+// Component slugs that have authored guidance in the vendored tree but no
+// component in any registry, so no page is generated for them. Injected by
+// generate-component-pages.cjs (and, cross-process, by sync-vendored-md.cjs
+// from the sidecar it emits) — this module stays I/O free.
+//
+// Checked only AFTER the slug fails to resolve through SLUG_ALIASES + the
+// slug→path map, which is what keeps this from swallowing the signal it
+// replaces: `tag` and `global-toast` are also guidance-without-a-registry-entry
+// but they alias onto real pages, so they resolve first and never reach here.
+// A slug with no guidance doc at all (a typo, or a rename that needs a new
+// alias) still falls through to "keep" so the links validator flags it.
+var _strandedGuidelineSlugs = new Set();
 
 // Base-URL prefix expression, shared with renderGlobalA11yLink /
 // renderRelatedPatterns. Resolved by Astro per-build (/actian-ds-docs in
@@ -116,8 +126,58 @@ function resolveSlugLink(slug) {
   if (REMOVE_LINK_SLUGS.has(slug)) return { action: "remove" };
   var canonical = SLUG_ALIASES[slug] || slug;
   var abs = _slugToPath[canonical];
-  if (!abs) return { action: "keep" };
-  return { action: "link", path: abs };
+  if (abs) return { action: "link", path: abs };
+  // Guidance whose component left the registry: degrade to the label. Ordered
+  // after the map lookup on purpose (see _strandedGuidelineSlugs) so an aliased
+  // slug still resolves and an unknown one still reaches the validator.
+  if (_strandedGuidelineSlugs.has(canonical)) return { action: "remove" };
+  return { action: "keep" };
+}
+
+/**
+ * Inject the derived stranded-guideline slug set. Same cross-process handoff as
+ * setSlugToPathMap: generate-component-pages.cjs computes it from the vendored
+ * registry + guidelines dir and emits src/data/stranded-guideline-slugs.json,
+ * which sync-vendored-md.cjs reads back in its own Node process.
+ * @param {Iterable<string>} slugs
+ */
+function setStrandedGuidelineSlugs(slugs) {
+  _strandedGuidelineSlugs = new Set(slugs || []);
+}
+
+/** @returns {string[]} the injected stranded slugs, sorted (for emit + tests). */
+function getStrandedGuidelineSlugs() {
+  return Array.from(_strandedGuidelineSlugs).sort();
+}
+
+/**
+ * Derive which authored guidelines have no page to link to.
+ *
+ * A slug is stranded when it has a guideline doc in the vendored tree but does
+ * not resolve to a page through SLUG_ALIASES + the slug→path map — i.e. the
+ * guidance survived a component the registry no longer publishes. Pure: the
+ * caller does the directory read and passes the slugs in, so this module keeps
+ * its no-I/O contract. Call AFTER buildSlugToPathMap.
+ * @param {string[]} guidelineSlugs - slugs with a vendored guideline doc
+ * @returns {string[]} sorted stranded slugs, ready for setStrandedGuidelineSlugs
+ */
+function deriveStrandedGuidelineSlugs(guidelineSlugs) {
+  // Called before buildSlugToPathMap, EVERY slug would look unresolvable and the
+  // whole site would quietly lose its component cross-links: the exact silent
+  // failure this derive replaces, inverted. Cheap to make impossible.
+  if (Object.keys(_slugToPath).length === 0) {
+    throw new Error(
+      "deriveStrandedGuidelineSlugs: the slug→path map is empty. Call " +
+        "buildSlugToPathMap (or setSlugToPathMap) first, or every guideline slug " +
+        "will be classified as stranded and every cross-link silently dropped.",
+    );
+  }
+  return (guidelineSlugs || [])
+    .filter(function (slug) {
+      if (REMOVE_LINK_SLUGS.has(slug)) return false;
+      return !_slugToPath[SLUG_ALIASES[slug] || slug];
+    })
+    .sort();
 }
 
 /**
@@ -930,6 +990,9 @@ module.exports = {
   rewriteComponentLinksMarkdown: rewriteComponentLinksMarkdown,
   setSlugToPathMap: setSlugToPathMap,
   getSlugToPathMap: getSlugToPathMap,
+  setStrandedGuidelineSlugs: setStrandedGuidelineSlugs,
+  getStrandedGuidelineSlugs: getStrandedGuidelineSlugs,
+  deriveStrandedGuidelineSlugs: deriveStrandedGuidelineSlugs,
   renderMarkdownTable: renderMarkdownTable,
   renderOverview: renderOverview,
   renderDesignSections: renderDesignSections,
