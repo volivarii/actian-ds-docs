@@ -34,6 +34,7 @@ var contentAnchors = require("./lib/content-anchors.cjs");
 var REPO_ROOT = path.resolve(__dirname, "..");
 var OUT_DIR = path.join(REPO_ROOT, "src", "content", "docs");
 var SLUG_PATHS = path.join(REPO_ROOT, "src", "data", "slug-paths.json");
+var STRANDED_SLUGS = path.join(REPO_ROOT, "src", "data", "stranded-guideline-slugs.json");
 
 // Resolve vendored.json once for version + timestamp metadata.
 var vendored = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, "vendored.json"), "utf8"));
@@ -145,6 +146,18 @@ function loadSlugPaths() {
     );
   }
   renderMdx.setSlugToPathMap(JSON.parse(fs.readFileSync(SLUG_PATHS, "utf8")));
+
+  // Same handoff for the derived stranded-guideline slugs (guidance whose
+  // component left the registry). Emitted by the same generator, in the same
+  // step, so its absence means the same out-of-order prebuild.
+  if (!fs.existsSync(STRANDED_SLUGS)) {
+    throw new Error(
+      "sync-vendored-md: " + STRANDED_SLUGS + " not found. It is emitted by " +
+        "generate-component-pages.cjs, which must run BEFORE this script " +
+        "(see the prebuild chain in package.json).",
+    );
+  }
+  renderMdx.setStrandedGuidelineSlugs(JSON.parse(fs.readFileSync(STRANDED_SLUGS, "utf8")));
 }
 
 // Pre-split builds wrote a single src/content/docs/content.md file. .gitignore

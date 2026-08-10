@@ -89,10 +89,86 @@ test("rewriteComponentLinks: global-toast alias resolves to the notification pag
 
 test("rewriteComponentLinks: registry-less usage-wave slugs reduce to plain text", function () {
   buildUsageWaveMap();
+  // These four are no longer hand-listed: they arrive through the derived
+  // stranded set, exactly as the real build supplies them.
+  renderMdx.setStrandedGuidelineSlugs(
+    renderMdx.deriveStrandedGuidelineSlugs(["inline-toast", "multi-select", "combo-box", "success-state"]),
+  );
   ["inline-toast", "multi-select", "combo-box", "success-state"].forEach(function (slug) {
     var out = renderMdx.escapeMdxPlaceholders("see [the label](" + slug + ") here");
     assert.equal(out, "see the label here", slug + " must drop link syntax, keep label");
   });
+  renderMdx.setStrandedGuidelineSlugs([]);
+});
+
+// ---------------------------------------------------------------------------
+// Derived stranded-guideline slugs. Replaces the hand-maintained tail of
+// REMOVE_LINK_SLUGS, which drifted on every Figma retirement: `search-filters`
+// left the registry on 2026-07-23 and docs main stayed red for 17 nights (17
+// skipped deploys) because the removal was recorded in the knowledge repo's own
+// allowlist and never mirrored here.
+//
+// The pair of tests below is the whole contract: guidance with no page degrades
+// silently, and everything else still reaches the links validator. The second
+// is the one that matters — a derive that swallowed unknown slugs too would
+// trade a loud 17-day outage for a quiet permanent one.
+// ---------------------------------------------------------------------------
+
+test("deriveStrandedGuidelineSlugs: guidance with no page is stranded; a published or aliased one is not", function () {
+  // Both alias targets must exist for the aliased cases to be meaningful:
+  // `global-toast` → notification, `tag` → tag-interactive.
+  renderMdx.buildSlugToPathMap(
+    {
+      components: {
+        checkbox: { category: "Form input selection", section: "Components", name: "Checkbox" },
+        notification: { category: "Feedback", section: "Components", name: "Notification" },
+        "tag-interactive": { category: "Data display", section: "Components", name: "Tag, interactive" },
+      },
+    },
+    {},
+    { Components: "components" },
+    "components",
+    slugifyCategory,
+  );
+  var stranded = renderMdx.deriveStrandedGuidelineSlugs([
+    "search-filters",   // guidance kept, component gone from every registry
+    "upload-file",      // same, swept out 2026-07-13
+    "checkbox",         // published: resolves directly
+    "global-toast",     // no registry entry, but aliased onto `notification`
+    "tag",              // no registry entry, but aliased onto tag-interactive
+    "forms",            // concept slug: already in REMOVE_LINK_SLUGS
+  ]);
+  assert.deepEqual(stranded, ["search-filters", "upload-file"]);
+});
+
+test("rewriteComponentLinks: a derived stranded slug degrades, an unknown slug still reaches the validator", function () {
+  buildUsageWaveMap();
+  renderMdx.setStrandedGuidelineSlugs(["search-filters"]);
+
+  var degraded = renderMdx.escapeMdxPlaceholders("pair it with [search filters](search-filters) above");
+  assert.equal(degraded, "pair it with search filters above", "label kept, dead link syntax dropped");
+
+  // A slug with no guidance doc is a typo or a rename needing an alias. It must
+  // stay authored so the links validator fails the build and a human decides.
+  var flagged = renderMdx.escapeMdxPlaceholders("see [mystery](serach-filters) here");
+  assert.match(flagged, /\[mystery\]\(serach-filters\)/, "unknown slugs must still be flagged");
+
+  renderMdx.setStrandedGuidelineSlugs([]);
+});
+
+test("rewriteComponentLinksMarkdown: the derived set applies to the .md emitter too", function () {
+  buildUsageWaveMap();
+  renderMdx.setStrandedGuidelineSlugs(["search-filters"]);
+  var out = renderMdx.rewriteComponentLinksMarkdown("Narrow the list with [search filters](search-filters).");
+  assert.equal(out, "Narrow the list with search filters.");
+  renderMdx.setStrandedGuidelineSlugs([]);
+});
+
+test("setStrandedGuidelineSlugs / getStrandedGuidelineSlugs round-trip sorted (the cross-process handoff)", function () {
+  renderMdx.setStrandedGuidelineSlugs(["upload-file", "search-filters"]);
+  assert.deepEqual(renderMdx.getStrandedGuidelineSlugs(), ["search-filters", "upload-file"]);
+  renderMdx.setStrandedGuidelineSlugs([]);
+  assert.deepEqual(renderMdx.getStrandedGuidelineSlugs(), []);
 });
 
 test("rewriteComponentLinks: card family slug resolves to the card-for-items page", function () {
@@ -125,6 +201,9 @@ var CONTENT_PAGE_REGISTRY = {
 
 function buildContentPageMap() {
   renderMdx.buildSlugToPathMap(CONTENT_PAGE_REGISTRY, {}, { Components: "components" }, "components", slugifyCategory);
+  // `multi-select` has authored guidance and no registry component, so in a real
+  // build the derive supplies it. It used to sit in REMOVE_LINK_SLUGS by hand.
+  renderMdx.setStrandedGuidelineSlugs(renderMdx.deriveStrandedGuidelineSlugs(["multi-select"]));
 }
 
 test("rewriteComponentLinksMarkdown: known slug → root-absolute markdown link (not JSX)", function () {
@@ -178,4 +257,18 @@ test("setSlugToPathMap / getSlugToPathMap round-trip (the cross-process handoff)
   assert.deepEqual(renderMdx.getSlugToPathMap(), { tabs: "/components/navigation/tabs/" });
   var out = renderMdx.rewriteComponentLinksMarkdown("[tabs](tabs)");
   assert.equal(out, "[tabs](/components/navigation/tabs/)");
+});
+
+test("deriveStrandedGuidelineSlugs refuses to run before the slug→path map is built", function () {
+  // Inverted silent failure: with an empty map every slug looks unresolvable, so
+  // every component cross-link on the site would quietly degrade to plain text.
+  renderMdx.setSlugToPathMap({});
+  assert.throws(
+    function () {
+      renderMdx.deriveStrandedGuidelineSlugs(["search-filters"]);
+    },
+    /slug→path map is empty/,
+    "must refuse rather than classify everything as stranded",
+  );
+  buildUsageWaveMap(); // restore state for any later test
 });

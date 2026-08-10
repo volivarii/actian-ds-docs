@@ -85,6 +85,29 @@ site's content or behavior.
   alias deletion are only correct together.
 
 ### Fixed
+- **The site deploys again, and the class of drift that stopped it can no longer stop it.** `main`
+  had been red since 2026-07-25, and `deploy` is gated on `links`, so nothing shipped for 17
+  consecutive nights and the live site served 2026-07-24 content. Cause: the 2026-07-23 breaking
+  Figma sync removed `search-filters` from every registry, so no page is generated for it, while 13
+  sibling guidelines (`search`, `segmented-control`, `empty-state`, `search-result-card`, the
+  `tag-*` family) still cross-reference it. That produced 15 invalid relative links and
+  `starlight-links-validator` failed the build, correctly.
+  The knowledge repo had already recorded the removal in its own `UNREACHABLE` allowlist
+  (`tests/guideline-reachability.test.js`); the docs side kept the same fact a second time, by hand,
+  in `REMOVE_LINK_SLUGS`, and nobody mirrored it. That list had already drifted the same way for
+  `upload-file` on 2026-07-13. So rather than adding a seventh entry, the component cases are now
+  **derived** from the vendored data at build time: a slug with authored guidance in
+  `vendor/components/dist/guidelines/` that resolves to no page (after aliases) is stranded, and its
+  inbound links degrade to plain text. The derive reproduces the previous hand-list exactly and adds
+  the missing `search-filters`. `REMOVE_LINK_SLUGS` keeps only the three concept-level slugs
+  (`forms`, `validation-messages`, `wizards`), which name no component and so cannot be derived.
+  The alarm is deliberately preserved: the stranded check runs only **after** alias and map
+  resolution fail, so an unaliased rename or a typo'd slug still reaches the links validator and
+  still fails the build. A derive that swallowed those too would have traded a loud 17-day outage
+  for a quiet permanent one. `generate-component-pages.cjs` logs the stranded slugs by name (they
+  are guidance going unread, which is a knowledge-repo decision, not a docs detail) and emits
+  `src/data/stranded-guideline-slugs.json` for `sync-vendored-md.cjs`, mirroring the existing
+  `slug-paths.json` handoff.
 - **`foundations/color` contradicted the substrate's theme list.** The page never imported
   `global-color/theme-palettes.json` and instead rendered an unrelated JSON
   (`vendor/tokens/tokens.json`) plus hand-written prose claiming "three theme rails (Actian, FM,
