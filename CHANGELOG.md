@@ -15,7 +15,7 @@ site's content or behavior.
 ### Fixed
 
 - **Deprecated components no longer solicit use from the sidebar.**
-  ([#PR](_PR link added at open_)) The knowledge layer marks a component `status: "deprecated"` when
+  ([#200](https://github.com/volivarii/actian-ds-docs/pull/200)) The knowledge layer marks a component `status: "deprecated"` when
   its Figma page carries the deprecated status emoji, and the sidebar ignored the field, so
   `Popover` and the two `WIP data visualization` charts (`bar-graph`, `line-graph`) were advertised
   in the public navigation, work-in-progress charts included. `buildSidebarManifest()` now skips
