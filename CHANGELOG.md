@@ -12,6 +12,19 @@ site's content or behavior.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Deprecated components no longer solicit use from the sidebar.**
+  ([#200](https://github.com/volivarii/actian-ds-docs/pull/200)) The knowledge layer marks a component `status: "deprecated"` when
+  its Figma page carries the deprecated status emoji, and the sidebar ignored the field, so
+  `Popover` and the two `WIP data visualization` charts (`bar-graph`, `line-graph`) were advertised
+  in the public navigation, work-in-progress charts included. `buildSidebarManifest()` now skips
+  them, both as leaves and when counting group members, so no `WIP data visualization` group node is
+  created either. **Their pages are still generated**: an existing link still resolves and the
+  deprecation stays readable, it is only the navigation that stops promoting them. Driven off the
+  published status rather than a list of slugs, so a component retiring in Figma leaves the nav
+  without a code change here.
+
 ### Added
 - **Component pages now render the substrate's authored Usage guidance.** The knowledge repo's
   Usage domain (when to use / when not to use / variant selection / do-don't) renders on the
