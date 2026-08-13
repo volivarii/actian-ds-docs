@@ -55,11 +55,23 @@ function buildSidebarManifest(registry, opts) {
       .replace(/(^-|-$)/g, "");
   };
 
+  // The knowledge layer marks a component `deprecated` when its Figma page
+  // carries the deprecated status emoji. The nav must not advertise those:
+  // `WIP data visualization` (bar-graph, line-graph) and `Popover` were
+  // soliciting use from the public sidebar, WIP charts included. Their PAGES
+  // are still generated, so an existing link still resolves and the deprecation
+  // stays readable; it is only the navigation that stops promoting them.
+  // Driven off the published status, never a list of slugs.
+  function isDeprecated(entry) {
+    return !!entry && entry.status === "deprecated";
+  }
+
   // Pre-compute groupCounts so we can reproduce the nesting logic.
   var groupCounts = {};
   Object.entries(registry.components).forEach(function (pair) {
     var e = pair[1];
     if (!e.category || !e.group) return;
+    if (isDeprecated(e)) return;
     if (excludedCategories.has(e.category)) return;
     if (collectionCategories.has(e.category)) return;
     var sd = sectionDirs[e.section] || defaultSectionDir;
@@ -79,6 +91,7 @@ function buildSidebarManifest(registry, opts) {
     var slug = pair[0];
     var entry = pair[1];
     if (!entry.category) return;
+    if (isDeprecated(entry)) return;
     if (excludedCategories.has(entry.category)) return;
     if (collectionCategories.has(entry.category)) return;
     var sd = sectionDirs[entry.section] || defaultSectionDir;
