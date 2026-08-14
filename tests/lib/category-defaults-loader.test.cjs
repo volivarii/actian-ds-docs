@@ -21,10 +21,14 @@ test.beforeEach(function () {
 
 test("normalizeCategorySlug — known labels map correctly", function () {
   assert.equal(loader.normalizeCategorySlug("Action"), "action");
+  // A retired label, kept deliberately: it is the case that exercises the `&`
+  // and parenthesis handling, and this test touches no dist so it cannot go
+  // stale. The dist-backed tests below take their category from the dist.
   assert.equal(
     loader.normalizeCategorySlug("Form (input & selection)"),
     "form-input-selection",
   );
+  assert.equal(loader.normalizeCategorySlug("Form"), "form");
   assert.equal(loader.normalizeCategorySlug("Navigation"), "navigation");
   assert.equal(loader.normalizeCategorySlug("Data Display"), "data-display");
   assert.equal(loader.normalizeCategorySlug("Feedback"), "feedback");
@@ -47,10 +51,42 @@ test("normalizeCategorySlug — null/empty returns null", function () {
 
 // --- loadDefaultsForCategory ---
 
+// These two read the REAL vendored dist, so a hand-written category name strands
+// them on the next rename. That is what happened: they named
+// `form-input-selection`, which knowledge #541 renamed to `form` after the Figma
+// page was retitled, and because this repo has no PR checks they would have gone
+// red silently on the nightly vendor refresh. The category under test is now
+// taken from the dist itself.
+function aLiveCategory() {
+  var fs = require("fs");
+  var path = require("path");
+  var PATHS = require("../../scripts/lib/paths.cjs");
+  var dir = path.dirname(PATHS.components.categoryDefaults.byKey("action"));
+  var all = fs
+    .readdirSync(dir)
+    .filter(function (f) {
+      return /-defaults\.json$/.test(f);
+    })
+    .map(function (f) {
+      return JSON.parse(fs.readFileSync(path.join(dir, f), "utf8"));
+    });
+  assert.ok(all.length, "the vendored dist ships at least one category defaults file");
+  // Prefer a category whose label is NOT just its slug re-cased. Picking the
+  // first alphabetically gives "Action" -> "action", where the join under test
+  // is satisfied by toLowerCase alone and exercises none of the separator,
+  // paren or ampersand handling normalizeCategorySlug exists for. "Data
+  // Display" -> "data-display" does.
+  var interesting = all.filter(function (c) {
+    return c.label && c.slug && c.label.toLowerCase() !== c.slug;
+  });
+  return interesting[0] || all[0];
+}
+
 test("loadDefaultsForCategory — known category returns parsed dist JSON", function () {
-  var defaults = loader.loadDefaultsForCategory("form-input-selection");
+  var live = aLiveCategory();
+  var defaults = loader.loadDefaultsForCategory(live.slug);
   assert.ok(defaults, "must return a defaults object");
-  assert.equal(defaults.slug, "form-input-selection");
+  assert.equal(defaults.slug, live.slug);
   assert.equal(defaults._schema_version, 2);
   assert.ok(defaults.anatomy);
   assert.ok(defaults.variants);
@@ -59,9 +95,19 @@ test("loadDefaultsForCategory — known category returns parsed dist JSON", func
 });
 
 test("loadDefaultsForCategory — accepts label, normalizes to slug", function () {
-  var defaults = loader.loadDefaultsForCategory("Form (input & selection)");
-  assert.ok(defaults);
-  assert.equal(defaults.slug, "form-input-selection");
+  // The join every consumer actually makes: the registry publishes a display
+  // label, and the loader has to reach the file from it. This is the assertion
+  // that was missing everywhere, and its absence is why a rename could leave 19
+  // components resolving to nothing while every suite stayed green.
+  var live = aLiveCategory();
+  var defaults = loader.loadDefaultsForCategory(live.label);
+  assert.ok(
+    defaults,
+    "the live label " +
+      JSON.stringify(live.label) +
+      " must resolve to its own defaults file",
+  );
+  assert.equal(defaults.slug, live.slug);
 });
 
 test("loadDefaultsForCategory — unknown slug returns null", function () {
