@@ -62,14 +62,24 @@ function aLiveCategory() {
   var path = require("path");
   var PATHS = require("../../scripts/lib/paths.cjs");
   var dir = path.dirname(PATHS.components.categoryDefaults.byKey("action"));
-  var file = fs
+  var all = fs
     .readdirSync(dir)
     .filter(function (f) {
       return /-defaults\.json$/.test(f);
     })
-    .sort()[0];
-  assert.ok(file, "the vendored dist ships at least one category defaults file");
-  return JSON.parse(fs.readFileSync(path.join(dir, file), "utf8"));
+    .map(function (f) {
+      return JSON.parse(fs.readFileSync(path.join(dir, f), "utf8"));
+    });
+  assert.ok(all.length, "the vendored dist ships at least one category defaults file");
+  // Prefer a category whose label is NOT just its slug re-cased. Picking the
+  // first alphabetically gives "Action" -> "action", where the join under test
+  // is satisfied by toLowerCase alone and exercises none of the separator,
+  // paren or ampersand handling normalizeCategorySlug exists for. "Data
+  // Display" -> "data-display" does.
+  var interesting = all.filter(function (c) {
+    return c.label && c.slug && c.label.toLowerCase() !== c.slug;
+  });
+  return interesting[0] || all[0];
 }
 
 test("loadDefaultsForCategory — known category returns parsed dist JSON", function () {
