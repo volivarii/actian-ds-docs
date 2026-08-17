@@ -1,6 +1,6 @@
 {
   "knowledge_repo": "volivarii/actian-ds-knowledge",
-  "knowledge_repo_version_range": "0.34.132",
+  "knowledge_repo_version_range": "<1.0.0",
   "knowledge_repo_resolved_version": "v0.34.132",
   "knowledge_repo_resolved_sha": "f2a54ba61ecc1b11d32e7fd78099f80ab639d70e",
   "vendored_at": "2026-08-16T11:09:55.302Z",
