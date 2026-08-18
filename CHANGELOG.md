@@ -12,6 +12,22 @@ site's content or behavior.
 
 ## [Unreleased]
 
+### Changed
+
+- **The Usage sections lose their "pending design lead review" note, and usage confidence reads high
+  everywhere.** Knowledge promoted all 54 usage domains from `draft` to `approved` as a baseline to be
+  reviewed against rather than a sign-off. **No code changed here**: `renderUsageDomain` keys the note on
+  `status === "draft"` and the chip mapping already reads `approved`, so the generated component pages
+  drop the note and move from medium to high on the next vendor refresh and build. The page count is
+  deliberately not restated here, because it follows the substrate and a hand-copied count is the bug
+  in #210.
+
+  `src/pages/confidence.mdx` is the correction that was needed. It stated that medium "is the level
+  you'll see on every page today" and that "all authored usage guidance is `draft`", which the promotion
+  makes false. It now says no component sits at medium today, and keeps the level documented because a
+  newly authored domain still starts at `draft`. The "Improving a chip" step also stopped calling the
+  `draft` to `approved` move a design-lead sign-off, because in this instance it was not one.
+
 ### Fixed
 
 - **Deprecated components no longer solicit use from the sidebar.**
