@@ -79,7 +79,7 @@ import ConfidenceChip from "../components/ConfidenceChip.astro";
   Synthesized per-component at page-generation time, same mapping as content:
 
   - <span style="vertical-align: middle;"><ConfidenceChip variant="high" field="high" /></span> when the component's usage domain (`domains.usage` in the knowledge guideline) is `approved`.
-  - <span style="vertical-align: middle;"><ConfidenceChip variant="medium" field="medium" /></span> when the usage domain is `draft` or `synthesized`. No component is at this level today: all 54 usage domains were promoted to `approved` in knowledge as a baseline to be reviewed against, so usage reads high on every page and the "pending design lead review" note no longer appears. The level stays documented because a newly authored domain still starts at `draft`.
+  - <span style="vertical-align: middle;"><ConfidenceChip variant="medium" field="medium" /></span> when the usage domain is `draft` or `synthesized`. No component that has usage guidance is at this level today: all 54 usage domains were promoted to `approved` in knowledge as a baseline to be reviewed against, so those pages read high and the "pending design lead review" note no longer appears. A component with no usage domain at all still reads low, and this level stays documented because a newly authored domain starts at `draft`.
   - <span style="vertical-align: middle;"><ConfidenceChip variant="low" field="low" /></span> when the component has no usage domain at all.
 
   ## When to trust a page
