@@ -79,7 +79,7 @@ import ConfidenceChip from "../components/ConfidenceChip.astro";
   Synthesized per-component at page-generation time, same mapping as content:
 
   - <span style="vertical-align: middle;"><ConfidenceChip variant="high" field="high" /></span> when the component's usage domain (`domains.usage` in the knowledge guideline) is `approved`.
-  - <span style="vertical-align: middle;"><ConfidenceChip variant="medium" field="medium" /></span> when the usage domain is `draft` or `synthesized` — this is the level you'll see on every page today: all authored usage guidance is `draft`, finished writing but not yet reviewed by a design lead, and the page says so with a "pending design lead review" note directly in the Usage section.
+  - <span style="vertical-align: middle;"><ConfidenceChip variant="medium" field="medium" /></span> when the usage domain is `draft` or `synthesized`. No component is at this level today: all 54 usage domains were promoted to `approved` in knowledge as a baseline to be reviewed against, so usage reads high on every page and the "pending design lead review" note no longer appears. The level stays documented because a newly authored domain still starts at `draft`.
   - <span style="vertical-align: middle;"><ConfidenceChip variant="low" field="low" /></span> when the component has no usage domain at all.
 
   ## When to trust a page
@@ -96,7 +96,7 @@ import ConfidenceChip from "../components/ConfidenceChip.astro";
 
   1. **anatomy / variants / motion / a11y:** bump by editing the category-defaults file in knowledge, then resync. Bumps lift every component in that category simultaneously.
   2. **content:** bump by curating the component's guideline JSON to include a `content_guidelines.sections` block. Bumps just that one component.
-  3. **usage:** bump by moving the component's `domains.usage` status from `draft` to `approved` in knowledge (a design-lead review sign-off) — the same move that also drops the in-page "pending design lead review" note. Bumps just that one component.
+  3. **usage:** bump by moving the component's `domains.usage` status from `draft` to `approved` in knowledge, which also drops the in-page "pending design lead review" note. Bumps just that one component.
 
   The chip update reaches docs on the next vendor refresh (nightly cron, or manually via `vendor-snapshot.yml`).
 
