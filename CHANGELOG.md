@@ -15,7 +15,7 @@ site's content or behavior.
 ### Changed
 
 - **The Usage sections lose their "pending design lead review" note, and usage confidence reads high
-  everywhere.** Knowledge promoted all 54 usage domains from `draft` to `approved` as a baseline to be
+  everywhere.** ([#212](https://github.com/volivarii/actian-ds-docs/pull/212)) Knowledge promoted all 54 usage domains from `draft` to `approved` as a baseline to be
   reviewed against rather than a sign-off. **No code changed here**: `renderUsageDomain` keys the note on
   `status === "draft"` and the chip mapping already reads `approved`, so the generated component pages
   drop the note and move from medium to high on the next vendor refresh and build. The page count is
