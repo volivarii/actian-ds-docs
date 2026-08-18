@@ -14,6 +14,11 @@ site's content or behavior.
 
 ### Changed
 
+- **Correct an overstated claim shipped in #212.** The confidence page said usage "reads high on every
+  page". It reads high on every page that HAS usage guidance; a component page generated from a registry
+  entry with no usage domain still reads low, which the very next bullet on that page says. Caught
+  reviewing the merged change rather than before merging it.
+
 - **The Usage sections lose their "pending design lead review" note, and usage confidence reads high
   everywhere.** ([#212](https://github.com/volivarii/actian-ds-docs/pull/212)) Knowledge promoted all 54 usage domains from `draft` to `approved` as a baseline to be
   reviewed against rather than a sign-off. **No code changed here**: `renderUsageDomain` keys the note on
