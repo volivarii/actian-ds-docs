@@ -35,6 +35,26 @@ site's content or behavior.
 
 ### Fixed
 
+- **A component link is never redirected by a stale alias, and the site deploys again on knowledge
+  v0.34.150.** Knowledge [#588](https://github.com/volivarii/actian-ds-knowledge/pull/588) publishes
+  a base `card` component and retires `card-for-items` in the same refresh. The link rewriter in
+  `scripts/lib/render-mdx.cjs` carried a hand-written alias `card → card-for-items` from the time
+  `card` was only a family name, and applied it BEFORE checking whether the slug had a page of its
+  own. So the real `card` page was generated, yet every `[card](card)` cross-reference on Badge,
+  Table, Search result card, Checkbox and Radio was sent to the retired target, fell through as a
+  bare relative link, and the links validator failed the build: five invalid links, `deploy`
+  skipped, the site frozen on v0.34.145.
+
+  The rule is now that a slug the registry publishes always resolves to its own page and its alias
+  entry is never consulted; an alias is only a fallback for a name that is not a slug. The stranded
+  guideline derive follows the same precedence, so `card` drops out of the stranded-guidance list the
+  prebuild prints. The two dead entries are removed: `card → card-for-items` (target retired) and
+  `text-input → input` (`text-input` is a published slug, and `input` is an icon; no emitted link
+  went through it). A new test, `tests/validation/slug-aliases.test.cjs`, joins the alias table
+  against the generator's own emitted slug-to-page map and page files, so an alias whose target loses
+  its page, or whose key becomes a real slug, fails `npm test` naming the entry instead of failing
+  the nightly build. No slug is special-cased by name.
+
 - **Deprecated components no longer solicit use from the sidebar.**
   ([#200](https://github.com/volivarii/actian-ds-docs/pull/200)) The knowledge layer marks a component `status: "deprecated"` when
   its Figma page carries the deprecated status emoji, and the sidebar ignored the field, so

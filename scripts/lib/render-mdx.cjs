@@ -38,14 +38,24 @@ var _slugToPath = {};
 // canonical dskit.json slug so rewriteComponentLinks() can resolve the path.
 // "forms" is intentionally absent: no standalone component page exists, so
 // the link is removed entirely (see the REMOVE_LINK_SLUGS set below).
+//
+// An alias is a fallback for a name that is NOT a registry slug. A slug the
+// registry publishes always resolves to its own page and its alias entry, if
+// one exists, is never consulted (resolveSlugLink below). Each entry restates
+// two facts the vendored registry owns, that the target has a page and that
+// the key has none, and both went false on one vendor refresh: knowledge
+// v0.34.150 retired `card-for-items` and published a base `card` while this
+// table still read `card → card-for-items`, so the alias hijacked a real slug,
+// five pages kept a bare `[card](card)` link and docs main went red.
+// tests/validation/slug-aliases.test.cjs joins the table against the slug→page
+// map this generator emits, so a dead or shadowing entry fails `npm test`,
+// naming the entry.
 var SLUG_ALIASES = {
   "notification-toast": "notification",  // alert-banner.json references old name
   "tag": "tag-interactive",              // tag-default.json links to generic "tag"
   "toggle-control": "toggle",            // segmented-control content; registry group is "Toggle control"
-  "text-input": "input",                 // rich-text content; registry group is "Text input"
   "dropdown-select": "dropdown-select-default",  // radio-button content; registry name "Dropdown, Select, default"
   "global-toast": "notification",        // usage.md wave; the registry's `notification` is what the guidelines call global toast
-  "card": "card-for-items",              // usage.md wave links the family slug; card-for-items is the browse/grid card those links mean
 };
 
 // Slugs with no component page that should have their markdown link syntax
@@ -124,7 +134,10 @@ var BARE_SLUG_LINK = /\[([^\]]+)\]\(([a-z][a-z0-9-]*)\)/g;
  */
 function resolveSlugLink(slug) {
   if (REMOVE_LINK_SLUGS.has(slug)) return { action: "remove" };
-  var canonical = SLUG_ALIASES[slug] || slug;
+  // The registry slug wins. The alias is a fallback for a name with no page of
+  // its own, so it is consulted only when the slug itself does not resolve; a
+  // stale alias can then never redirect a real component's inbound links.
+  var canonical = _slugToPath[slug] ? slug : (SLUG_ALIASES[slug] || slug);
   var abs = _slugToPath[canonical];
   if (abs) return { action: "link", path: abs };
   // Guidance whose component left the registry: degrade to the label. Ordered
@@ -175,7 +188,9 @@ function deriveStrandedGuidelineSlugs(guidelineSlugs) {
   return (guidelineSlugs || [])
     .filter(function (slug) {
       if (REMOVE_LINK_SLUGS.has(slug)) return false;
-      return !_slugToPath[SLUG_ALIASES[slug] || slug];
+      // Same precedence as resolveSlugLink: a published slug is never stranded,
+      // whatever its alias entry says.
+      return !(_slugToPath[slug] || _slugToPath[SLUG_ALIASES[slug]]);
     })
     .sort();
 }
@@ -987,6 +1002,7 @@ function toCallout(anatomy) {
 
 module.exports = {
   escapeMdxPlaceholders: escapeMdxPlaceholders,
+  SLUG_ALIASES: SLUG_ALIASES,
   rewriteComponentLinksMarkdown: rewriteComponentLinksMarkdown,
   setSlugToPathMap: setSlugToPathMap,
   getSlugToPathMap: getSlugToPathMap,

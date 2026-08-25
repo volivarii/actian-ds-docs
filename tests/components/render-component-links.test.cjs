@@ -171,11 +171,34 @@ test("setStrandedGuidelineSlugs / getStrandedGuidelineSlugs round-trip sorted (t
   assert.deepEqual(renderMdx.getStrandedGuidelineSlugs(), []);
 });
 
-test("rewriteComponentLinks: card family slug resolves to the card-for-items page", function () {
-  buildUsageWaveMap();
-  var out = renderMdx.escapeMdxPlaceholders("use a [card](card) grid");
-  assert.match(out, /components\/data-display\/card-for-items\//);
-  assert.match(out, />card<\/a>/);
+// A registry slug is never shadowed by its alias entry. This is the shape of the
+// 2026-08-25 outage: the family name `card` was aliased onto `card-for-items`
+// while it was only a name, then knowledge v0.34.150 published `card` as a
+// component and retired the alias target in the same refresh. The alias kept
+// winning, so five pages linked a bare `[card](card)` to a page that existed.
+// `tag` stands in here: it is aliased onto `tag-interactive` today, and the
+// registry below publishes both, as a future refresh could.
+test("rewriteComponentLinks: a published slug resolves to its own page even when an alias entry exists for it", function () {
+  renderMdx.buildSlugToPathMap(
+    {
+      components: {
+        tag: { category: "Data display", section: "Components", name: "Tag" },
+        "tag-interactive": { category: "Data display", section: "Components", name: "Tag, interactive" },
+      },
+    },
+    {},
+    { Components: "components" },
+    "components",
+    slugifyCategory,
+  );
+  var out = renderMdx.escapeMdxPlaceholders("label it with a [tag](tag)");
+  assert.match(out, /components\/data-display\/tag\//, "the slug's own page, not the alias target's");
+  assert.doesNotMatch(out, /tag-interactive/, "the alias must not be consulted for a published slug");
+  // The alias still serves a name with no page of its own.
+  var aliased = renderMdx.escapeMdxPlaceholders("see [toast](global-toast)");
+  assert.match(aliased, /\[toast\]\(global-toast\)/, "notification is not in this registry, so the alias falls through to the validator");
+  // And the derive agrees: published guidance is not stranded, whatever its alias says.
+  assert.deepEqual(renderMdx.deriveStrandedGuidelineSlugs(["tag", "tag-interactive"]), []);
 });
 
 // ---------------------------------------------------------------------------
