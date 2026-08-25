@@ -15,6 +15,18 @@ function slugifyCategory(label) {
   return String(label).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 }
 
+// The generator's rule for which registry entries get a page, in the shape
+// generate-component-pages.cjs passes to buildSlugToPathMap. Icons render as
+// one collection page, so an icon slug is a registry entry with NO page.
+var COLLECTION_CATEGORIES = new Set(["Icons"]);
+function writesPage(entry) {
+  return Boolean(entry.category) && !COLLECTION_CATEGORIES.has(entry.category);
+}
+
+function build(registry) {
+  renderMdx.buildSlugToPathMap(registry, {}, { Components: "components" }, "components", slugifyCategory, writesPage);
+}
+
 var REGISTRY = {
   components: {
     popover: { category: "Overlays", section: "Components", name: "Popover" },
@@ -22,7 +34,7 @@ var REGISTRY = {
 };
 
 function buildMap() {
-  renderMdx.buildSlugToPathMap(REGISTRY, {}, { Components: "components" }, "components", slugifyCategory);
+  build(REGISTRY);
 }
 
 test("rewriteComponentLinks: bare-slug link → base-aware JSX <a>, never a bare root-absolute markdown link", function () {
@@ -59,14 +71,13 @@ test("rewriteComponentLinks: REMOVE_LINK_SLUGS reduced to plain text (no broken 
 
 var USAGE_WAVE_REGISTRY = {
   components: {
-    "card-for-items": { category: "Data display", section: "Components", name: "Card for items" },
     "checkbox": { category: "Form input selection", section: "Components", name: "Checkbox" },
     "notification": { category: "Feedback", section: "Components", name: "Notification" },
   },
 };
 
 function buildUsageWaveMap() {
-  renderMdx.buildSlugToPathMap(USAGE_WAVE_REGISTRY, {}, { Components: "components" }, "components", slugifyCategory);
+  build(USAGE_WAVE_REGISTRY);
 }
 
 // Figma renamed "Checkbox with label" to "Checkbox" (knowledge v0.34.89), so the
@@ -117,19 +128,13 @@ test("rewriteComponentLinks: registry-less usage-wave slugs reduce to plain text
 test("deriveStrandedGuidelineSlugs: guidance with no page is stranded; a published or aliased one is not", function () {
   // Both alias targets must exist for the aliased cases to be meaningful:
   // `global-toast` → notification, `tag` → tag-interactive.
-  renderMdx.buildSlugToPathMap(
-    {
-      components: {
-        checkbox: { category: "Form input selection", section: "Components", name: "Checkbox" },
-        notification: { category: "Feedback", section: "Components", name: "Notification" },
-        "tag-interactive": { category: "Data display", section: "Components", name: "Tag, interactive" },
-      },
+  build({
+    components: {
+      checkbox: { category: "Form input selection", section: "Components", name: "Checkbox" },
+      notification: { category: "Feedback", section: "Components", name: "Notification" },
+      "tag-interactive": { category: "Data display", section: "Components", name: "Tag, interactive" },
     },
-    {},
-    { Components: "components" },
-    "components",
-    slugifyCategory,
-  );
+  });
   var stranded = renderMdx.deriveStrandedGuidelineSlugs([
     "search-filters",   // guidance kept, component gone from every registry
     "upload-file",      // same, swept out 2026-07-13
@@ -179,26 +184,137 @@ test("setStrandedGuidelineSlugs / getStrandedGuidelineSlugs round-trip sorted (t
 // `tag` stands in here: it is aliased onto `tag-interactive` today, and the
 // registry below publishes both, as a future refresh could.
 test("rewriteComponentLinks: a published slug resolves to its own page even when an alias entry exists for it", function () {
-  renderMdx.buildSlugToPathMap(
-    {
-      components: {
-        tag: { category: "Data display", section: "Components", name: "Tag" },
-        "tag-interactive": { category: "Data display", section: "Components", name: "Tag, interactive" },
-      },
+  build({
+    components: {
+      tag: { category: "Data display", section: "Components", name: "Tag" },
+      "tag-interactive": { category: "Data display", section: "Components", name: "Tag, interactive" },
+      notification: { category: "Feedback", section: "Components", name: "Notification" },
     },
-    {},
-    { Components: "components" },
-    "components",
-    slugifyCategory,
-  );
+  });
   var out = renderMdx.escapeMdxPlaceholders("label it with a [tag](tag)");
   assert.match(out, /components\/data-display\/tag\//, "the slug's own page, not the alias target's");
   assert.doesNotMatch(out, /tag-interactive/, "the alias must not be consulted for a published slug");
   // The alias still serves a name with no page of its own.
   var aliased = renderMdx.escapeMdxPlaceholders("see [toast](global-toast)");
-  assert.match(aliased, /\[toast\]\(global-toast\)/, "notification is not in this registry, so the alias falls through to the validator");
+  assert.match(aliased, /components\/feedback\/notification\//, "global-toast has no page, so its alias target's page is the link");
+  assert.match(aliased, />toast<\/a>/, "label preserved");
   // And the derive agrees: published guidance is not stranded, whatever its alias says.
   assert.deepEqual(renderMdx.deriveStrandedGuidelineSlugs(["tag", "tag-interactive"]), []);
+  buildUsageWaveMap();
+});
+
+// The derive side of the same precedence, on the fixture that separates the
+// two orders: `tag` published, its alias target `tag-interactive` absent. An
+// alias-first derive strands `tag` here, and the resolver then drops every
+// `[tag](tag)` link to a page that exists.
+test("deriveStrandedGuidelineSlugs: a published slug is not stranded when its alias target is absent", function () {
+  build({ components: { tag: { category: "Data display", section: "Components", name: "Tag" } } });
+  assert.deepEqual(renderMdx.deriveStrandedGuidelineSlugs(["tag"]), []);
+  buildUsageWaveMap();
+});
+
+// The derive strands the name that carries the doc. Through an alias that can
+// be the KEY (target gone doc-and-all) or the TARGET (retired with its doc
+// kept); the resolver asks both, so neither shape leaves a bare link.
+test("rewriteComponentLinks: a link through an alias degrades when the key or the target is stranded", function () {
+  build(USAGE_WAVE_REGISTRY); // neither `toggle-control` nor its target `toggle` has a page
+  // The key carries the doc.
+  renderMdx.setStrandedGuidelineSlugs(renderMdx.deriveStrandedGuidelineSlugs(["toggle-control"]));
+  assert.deepEqual(renderMdx.getStrandedGuidelineSlugs(), ["toggle-control"]);
+  assert.equal(renderMdx.escapeMdxPlaceholders("use a [toggle](toggle-control)"), "use a toggle");
+  // The target carries the doc.
+  renderMdx.setStrandedGuidelineSlugs(renderMdx.deriveStrandedGuidelineSlugs(["toggle"]));
+  assert.deepEqual(renderMdx.getStrandedGuidelineSlugs(), ["toggle"]);
+  assert.equal(renderMdx.escapeMdxPlaceholders("use a [toggle](toggle-control)"), "use a toggle");
+  // Neither has a doc: nothing says this is dead guidance, so the validator sees it.
+  renderMdx.setStrandedGuidelineSlugs([]);
+  assert.match(renderMdx.escapeMdxPlaceholders("use a [toggle](toggle-control)"), /\[toggle\]\(toggle-control\)/);
+});
+
+// A registry entry the generator writes no page for (an icon) is not a link
+// target, and it cannot hijack an alias that shares its name: `text-input ->
+// input` sent 16 links to /foundations/icons/input/, a 404 the links validator
+// cannot see because the href is emitted as JSX.
+test("rewriteComponentLinks: a pageless registry entry is not a page and cannot shadow an alias", function () {
+  build({
+    components: {
+      input: { category: "Icons", section: "Foundations", name: "Input" },
+      tag: { category: "Icons", section: "Foundations", name: "Tag" },
+      "tag-interactive": { category: "Data display", section: "Components", name: "Tag, interactive" },
+    },
+  });
+  assert.equal(renderMdx.hasPage("input"), false);
+  assert.match(renderMdx.escapeMdxPlaceholders("see [input](input)"), /\[input\]\(input\)/, "no page: left for the validator, not a 404 href");
+  assert.match(renderMdx.escapeMdxPlaceholders("a [tag](tag)"), /components\/data-display\/tag-interactive\//, "the alias serves the name; the icon does not");
+  assert.deepEqual(renderMdx.deriveStrandedGuidelineSlugs(["input"]), ["input"], "guidance for a pageless entry is stranded");
+  buildUsageWaveMap();
+});
+
+// hasPage is an own-property lookup. `constructor` is a word that can appear
+// as a link target in prose; a prototype-chain read returned Object's
+// constructor as the "path" and the rewriter threw on `.replace`.
+test("rewriteComponentLinks: a slug that is a JavaScript property name is prose, not a page", function () {
+  buildUsageWaveMap();
+  var s = "see [the constructor](constructor) here";
+  assert.equal(renderMdx.escapeMdxPlaceholders(s), s, "must be left as authored, and must not throw");
+  ["constructor", "hasOwnProperty", "toString"].forEach(function (slug) {
+    assert.equal(renderMdx.hasPage(slug), false, slug);
+  });
+  assert.deepEqual(renderMdx.deriveStrandedGuidelineSlugs(["constructor"]), ["constructor"]);
+});
+
+// A page wins over the concept-slug removals too: should knowledge publish a
+// component under one of those names, its cross-references link to it.
+test("rewriteComponentLinks: a REMOVE_LINK_SLUGS slug with a page links to it", function () {
+  var concept = renderMdx.getRemoveLinkSlugs()[0];
+  var components = {};
+  components[concept] = { category: "Patterns", section: "Components", name: concept };
+  build({ components: components });
+  var out = renderMdx.escapeMdxPlaceholders("see [it](" + concept + ")");
+  assert.match(out, new RegExp("components/patterns/" + concept + "/"), "the page, not the removal");
+  assert.deepEqual(renderMdx.deriveStrandedGuidelineSlugs([concept]), []);
+  buildUsageWaveMap();
+});
+
+// The prebuild report for aliases whose target has no page. The remedy follows
+// the key: with authored guidance of its own the key is stranded once the alias
+// goes and its links degrade, so removing is safe; without it the links would
+// reach the validator bare, so the only safe remedy is to repoint.
+test("deriveDeadAliases: names each alias whose target has no page, with the remedy the key allows", function () {
+  build(REGISTRY); // publishes no alias target, so every entry is dead
+  var aliases = renderMdx.getSlugAliases();
+  var keys = Object.keys(aliases).sort();
+  var withDoc = keys[0];
+  var lines = renderMdx.deriveDeadAliases([withDoc]);
+  assert.deepEqual(
+    lines.map(function (l) { return l.split(":")[0]; }),
+    keys.map(function (k) { return k + " -> " + aliases[k]; }),
+    "one line per dead entry, sorted by key",
+  );
+  lines.forEach(function (line) {
+    var key = line.split(" -> ")[0];
+    assert.match(line, /repoint it/, key);
+    if (key === withDoc) assert.match(line, /remove it/, key + " has a doc, so removal is offered");
+    else assert.doesNotMatch(line, /remove it/, key + " has no doc, so removal is not offered");
+  });
+  buildUsageWaveMap();
+  assert.deepEqual(renderMdx.deriveDeadAliases([]).filter(function (l) { return /-> notification:/.test(l); }), [], "a target with a page is not dead");
+});
+
+test("getSlugAliases returns a frozen copy: the table is read-only to callers", function () {
+  var a = renderMdx.getSlugAliases();
+  assert.ok(Object.isFrozen(a));
+  assert.notEqual(a, renderMdx.getSlugAliases(), "a fresh copy each call, never the live table");
+});
+
+test("buildSlugToPathMap refuses to run without the generator's writesPage rule", function () {
+  assert.throws(
+    function () {
+      renderMdx.buildSlugToPathMap(REGISTRY, {}, { Components: "components" }, "components", slugifyCategory);
+    },
+    /writesPage\(entry\) is required/,
+  );
+  buildUsageWaveMap();
 });
 
 // ---------------------------------------------------------------------------
@@ -223,7 +339,7 @@ var CONTENT_PAGE_REGISTRY = {
 };
 
 function buildContentPageMap() {
-  renderMdx.buildSlugToPathMap(CONTENT_PAGE_REGISTRY, {}, { Components: "components" }, "components", slugifyCategory);
+  build(CONTENT_PAGE_REGISTRY);
   // `multi-select` has authored guidance and no registry component, so in a real
   // build the derive supplies it. It used to sit in REMOVE_LINK_SLUGS by hand.
   renderMdx.setStrandedGuidelineSlugs(renderMdx.deriveStrandedGuidelineSlugs(["multi-select"]));

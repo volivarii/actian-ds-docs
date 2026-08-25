@@ -31,6 +31,13 @@ function jsLit(value) {
 // Populated once in main() via buildSlugToPathMap() before any pages are written.
 // Used by rewriteComponentLinks() to fix bare-slug markdown links that come
 // from the knowledge-repo guideline JSONs (e.g. `[ghost buttons](button)`).
+//
+// Holds ONLY the slugs generate-component-pages.cjs writes a page for. The
+// registry also carries icons, grids and private categories that get no page,
+// and when those sat in this map a link to them read as published and reached
+// the HTML as a 404 the links validator cannot see (`text-input → input` sent
+// 16 links to /foundations/icons/input/, an icon with no page). Membership here
+// IS the definition of "has a page": see hasPage below.
 var _slugToPath = {};
 
 // Slug aliases: knowledge-repo content uses legacy or shorthand names that
@@ -39,17 +46,21 @@ var _slugToPath = {};
 // "forms" is intentionally absent: no standalone component page exists, so
 // the link is removed entirely (see the REMOVE_LINK_SLUGS set below).
 //
-// An alias is a fallback for a name that is NOT a registry slug. A slug the
-// registry publishes always resolves to its own page and its alias entry, if
-// one exists, is never consulted (resolveSlugLink below). Each entry restates
-// two facts the vendored registry owns, that the target has a page and that
-// the key has none, and both went false on one vendor refresh: knowledge
-// v0.34.150 retired `card-for-items` and published a base `card` while this
-// table still read `card → card-for-items`, so the alias hijacked a real slug,
-// five pages kept a bare `[card](card)` link and docs main went red.
+// An alias is a fallback for a name that has NO page of its own. A slug with a
+// page always resolves to that page and its alias entry, if one exists, is
+// never consulted (resolvedPath below). Each entry restates two facts the
+// vendored registry owns, that the target has a page and that the key has
+// none, and both went false on one vendor refresh: knowledge v0.34.150 retired
+// `card-for-items` and published a base `card` while this table still read
+// `card → card-for-items`, so the alias hijacked a real slug, five pages kept a
+// bare `[card](card)` link and docs main went red.
+//
 // tests/validation/slug-aliases.test.cjs joins the table against the slug→page
-// map this generator emits, so a dead or shadowing entry fails `npm test`,
-// naming the entry.
+// map this generator emits: a key that has a page is a dead entry and fails
+// `npm test` naming it. A TARGET with no page is reported by the prebuild next
+// to the stranded list (deriveDeadAliases below), not failed: the resolver
+// already degrades or flags the links that go through it, and failing the
+// build for it froze the site on every target retirement.
 var SLUG_ALIASES = {
   "notification-toast": "notification",  // alert-banner.json references old name
   "tag": "tag-interactive",              // tag-default.json links to generic "tag"
@@ -94,6 +105,10 @@ var SLUG_ALIASES = {
 // Both were knowledge-repo facts before they were docs problems. Deriving them
 // keeps one owner, and a retired component now degrades its own inbound links
 // on the next vendor refresh instead of taking the build down.
+//
+// Consulted only for a slug with no page (resolveSlugLink). Should knowledge
+// publish a component under one of these names, its page links first and the
+// entry is dead; tests/validation/slug-aliases.test.cjs fails naming it.
 var REMOVE_LINK_SLUGS = new Set([
   "forms", "validation-messages", "wizards",
 ]);
@@ -121,11 +136,48 @@ var BASE_URL_EXPR = "${import.meta.env.BASE_URL.replace(/\\/?$/, '/')}";
 // anchor; must close with ) . Shared by both rewriters below.
 var BARE_SLUG_LINK = /\[([^\]]+)\]\(([a-z][a-z0-9-]*)\)/g;
 
+function own(obj, key) {
+  return Object.prototype.hasOwnProperty.call(obj, key);
+}
+
 /**
- * Resolve one bare slug against the link policy (aliases, removals, the
- * slug→path map). Single source of truth for BOTH emitters below, so the MDX
- * component pages and the Markdown content page can never disagree about what
- * a given slug means.
+ * The one definition of "this slug has a page": an own entry in the slug→path
+ * map, which buildSlugToPathMap fills only with the slugs the generator writes
+ * a page for. Own-property on purpose: `constructor` is a word that can appear
+ * in prose as a link target, and a plain `_slugToPath[slug]` read it as a
+ * published slug whose path was a function.
+ * @param {string} slug
+ * @returns {boolean}
+ */
+function hasPage(slug) {
+  return own(_slugToPath, slug);
+}
+
+/** @returns {string|null} the alias target for `slug`, or null when it has none */
+function aliasOf(slug) {
+  return own(SLUG_ALIASES, slug) ? SLUG_ALIASES[slug] : null;
+}
+
+/**
+ * The page a bare slug links to, or null. The slug's own page comes first; the
+ * alias is a fallback for a name with no page of its own, so a stale alias can
+ * never redirect a real component's inbound links. Both emitters, the stranded
+ * derive and the dead-alias report go through here, so none of them can hold a
+ * second copy of this precedence.
+ * @param {string} slug
+ * @returns {string|null} root-absolute, trailing-slashed path
+ */
+function resolvedPath(slug) {
+  if (hasPage(slug)) return _slugToPath[slug];
+  var alias = aliasOf(slug);
+  return alias !== null && hasPage(alias) ? _slugToPath[alias] : null;
+}
+
+/**
+ * Resolve one bare slug against the link policy (the slug→path map, aliases,
+ * removals, stranded guidance). Single source of truth for BOTH emitters below,
+ * so the MDX component pages and the Markdown content page can never disagree
+ * about what a given slug means.
  * @param {string} slug
  * @returns {{action: "remove"} | {action: "link", path: string} | {action: "keep"}}
  *   remove → drop link syntax, keep the label (no page exists)
@@ -133,17 +185,19 @@ var BARE_SLUG_LINK = /\[([^\]]+)\]\(([a-z][a-z0-9-]*)\)/g;
  *   keep   → leave untouched, so the links validator still flags it
  */
 function resolveSlugLink(slug) {
-  if (REMOVE_LINK_SLUGS.has(slug)) return { action: "remove" };
-  // The registry slug wins. The alias is a fallback for a name with no page of
-  // its own, so it is consulted only when the slug itself does not resolve; a
-  // stale alias can then never redirect a real component's inbound links.
-  var canonical = _slugToPath[slug] ? slug : (SLUG_ALIASES[slug] || slug);
-  var abs = _slugToPath[canonical];
+  // A page wins over everything, including the concept-slug removals: should
+  // knowledge publish `validation-messages`, its cross-references link to it.
+  var abs = resolvedPath(slug);
   if (abs) return { action: "link", path: abs };
-  // Guidance whose component left the registry: degrade to the label. Ordered
-  // after the map lookup on purpose (see _strandedGuidelineSlugs) so an aliased
-  // slug still resolves and an unknown one still reaches the validator.
-  if (_strandedGuidelineSlugs.has(canonical)) return { action: "remove" };
+  if (REMOVE_LINK_SLUGS.has(slug)) return { action: "remove" };
+  // Guidance whose component left the registry: degrade to the label. The
+  // derive strands the name that carries the doc, which is the slug itself or
+  // its alias target, so both are asked. Ordered after the page lookup on
+  // purpose (see _strandedGuidelineSlugs) so an unknown slug still reaches the
+  // validator.
+  if (_strandedGuidelineSlugs.has(slug) || _strandedGuidelineSlugs.has(aliasOf(slug))) {
+    return { action: "remove" };
+  }
   return { action: "keep" };
 }
 
@@ -187,12 +241,39 @@ function deriveStrandedGuidelineSlugs(guidelineSlugs) {
   }
   return (guidelineSlugs || [])
     .filter(function (slug) {
-      if (REMOVE_LINK_SLUGS.has(slug)) return false;
-      // Same precedence as resolveSlugLink: a published slug is never stranded,
-      // whatever its alias entry says.
-      return !(_slugToPath[slug] || _slugToPath[SLUG_ALIASES[slug]]);
+      // The resolver's own answer: a slug that links to a page (its own, or its
+      // alias target's) is not stranded, and a concept slug is already removed.
+      return resolvedPath(slug) === null && !REMOVE_LINK_SLUGS.has(slug);
     })
     .sort();
+}
+
+/**
+ * SLUG_ALIASES entries whose target has no page, each with its remedy. Not a
+ * build failure: the resolver degrades or flags the links that go through such
+ * an entry, and a hard check froze the site on every target retirement even
+ * when the links were fine. The generator prints these next to the stranded
+ * list so the entry is named while it is cheap to fix. Call AFTER
+ * buildSlugToPathMap.
+ * @param {string[]} guidelineSlugs - slugs with a vendored guideline doc. An
+ *   alias key with a doc of its own is stranded once the alias is gone, so its
+ *   links degrade; a key without one would reach the validator bare, so the
+ *   only safe remedy is to repoint.
+ * @returns {string[]} "key -> target: remedy" lines, sorted by key
+ */
+function deriveDeadAliases(guidelineSlugs) {
+  var docs = new Set(guidelineSlugs || []);
+  return Object.keys(SLUG_ALIASES)
+    .sort()
+    .filter(function (key) { return !hasPage(SLUG_ALIASES[key]); })
+    .map(function (key) {
+      var remedy = docs.has(key)
+        ? "repoint it if the component was renamed, or remove it; the key has authored " +
+          "guidance of its own, so its inbound links then degrade through the stranded set"
+        : "repoint it; the key has no authored guidance of its own, so removing the entry " +
+          "leaves its inbound links bare for the links validator";
+      return key + " -> " + SLUG_ALIASES[key] + ": " + remedy;
+    });
 }
 
 /**
@@ -895,13 +976,23 @@ function renderStubFooter(categorySlug) {
  * @param {Object} sectionDirs - { [sectionLabel]: dirName } mapping
  * @param {string} defaultSectionDir - fallback dir name
  * @param {Function} slugifyCategory - normalization function
+ * @param {(entry: Object) => boolean} writesPage - the generator's own rule for
+ *   which registry entries get a page. Required, not defaulted: the map is the
+ *   definition of "has a page" (hasPage), and only the generator knows which
+ *   categories it excludes or renders as one collection page.
  */
-function buildSlugToPathMap(registry, groupCounts, sectionDirs, defaultSectionDir, slugifyCategory) {
+function buildSlugToPathMap(registry, groupCounts, sectionDirs, defaultSectionDir, slugifyCategory, writesPage) {
+  if (typeof writesPage !== "function") {
+    throw new Error(
+      "buildSlugToPathMap: writesPage(entry) is required. The map must hold only " +
+        "the slugs the generator writes a page for, and the generator owns that rule.",
+    );
+  }
   var map = {};
   Object.entries(registry.components).forEach(function (pair) {
     var slug = pair[0];
     var entry = pair[1];
-    if (!entry.category) return;
+    if (!writesPage(entry)) return;
     var sd = sectionDirs[entry.section] || defaultSectionDir;
     var catSlug = slugifyCategory(entry.category);
     var parts = [sd, catSlug];
@@ -1000,15 +1091,28 @@ function toCallout(anatomy) {
   return { parts: parts, layout: root.layout || null };
 }
 
+/** @returns {Readonly<Record<string,string>>} a frozen copy of the alias table (for tests and reports) */
+function getSlugAliases() {
+  return Object.freeze(Object.assign({}, SLUG_ALIASES));
+}
+
+/** @returns {string[]} the concept slugs whose link syntax is dropped, sorted */
+function getRemoveLinkSlugs() {
+  return Array.from(REMOVE_LINK_SLUGS).sort();
+}
+
 module.exports = {
   escapeMdxPlaceholders: escapeMdxPlaceholders,
-  SLUG_ALIASES: SLUG_ALIASES,
+  getSlugAliases: getSlugAliases,
+  getRemoveLinkSlugs: getRemoveLinkSlugs,
+  hasPage: hasPage,
   rewriteComponentLinksMarkdown: rewriteComponentLinksMarkdown,
   setSlugToPathMap: setSlugToPathMap,
   getSlugToPathMap: getSlugToPathMap,
   setStrandedGuidelineSlugs: setStrandedGuidelineSlugs,
   getStrandedGuidelineSlugs: getStrandedGuidelineSlugs,
   deriveStrandedGuidelineSlugs: deriveStrandedGuidelineSlugs,
+  deriveDeadAliases: deriveDeadAliases,
   renderMarkdownTable: renderMarkdownTable,
   renderOverview: renderOverview,
   renderDesignSections: renderDesignSections,
