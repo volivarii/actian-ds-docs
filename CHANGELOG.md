@@ -36,7 +36,7 @@ site's content or behavior.
 ### Fixed
 
 - **A component link resolves to the slug's own page before any alias, and the site deploys again on
-  knowledge v0.34.150.** ([#N](https://github.com/volivarii/actian-ds-docs/pull/N)) Knowledge
+  knowledge v0.34.150.** ([#222](https://github.com/volivarii/actian-ds-docs/pull/222)) Knowledge
   [#588](https://github.com/volivarii/actian-ds-knowledge/pull/588) publishes a base `card` component
   and retires `card-for-items` in the same refresh. The link rewriter in `scripts/lib/render-mdx.cjs`
   carried a hand-written alias `card → card-for-items` from the time `card` was only a family name,
