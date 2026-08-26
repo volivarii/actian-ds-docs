@@ -35,6 +35,39 @@ site's content or behavior.
 
 ### Fixed
 
+- **A component link resolves to the slug's own page before any alias, and the site deploys again on
+  knowledge v0.34.150.** ([#222](https://github.com/volivarii/actian-ds-docs/pull/222)) Knowledge
+  [#588](https://github.com/volivarii/actian-ds-knowledge/pull/588) publishes a base `card` component
+  and retires `card-for-items` in the same refresh. The link rewriter in `scripts/lib/render-mdx.cjs`
+  carried a hand-written alias `card → card-for-items` from the time `card` was only a family name,
+  and applied it before asking whether the slug had a page of its own. So the real `card` page was
+  generated, yet every `[card](card)` cross-reference on Badge, Table, Search result card, Checkbox
+  and Radio was sent to the retired target, fell through as a bare relative link, and the links
+  validator failed the build: five invalid links, `deploy` skipped, the site frozen on v0.34.145.
+
+  One predicate answers "does this slug have a page": an own entry in the slug-to-path map, which
+  `buildSlugToPathMap` fills only with the slugs `generate-component-pages.cjs` writes a page for
+  (the generator passes its own `writesPage` rule, so icons, grids and the private categories, which
+  are registry entries with no page, stay out of the map). A slug with a page links to it first,
+  before any alias and before the concept-slug removals; an alias is a fallback for a name with no
+  page of its own; a link whose name or alias target is stranded guidance degrades to its label; a
+  slug that is a JavaScript property name (`constructor`) is prose, not a page. Both emitters, the
+  stranded-guideline derive and the redirects manifest read that one map, so none of them holds a
+  second copy of the precedence.
+
+  The two dead aliases are removed. `card → card-for-items` pointed at a retired target.
+  `text-input → input` sent the 16 `[label](text-input)` links on Rich text, Input date, Search,
+  Alert banner and Error state to `/foundations/icons/input/`, an icon with no page, as a JSX href
+  the links validator cannot see; those 16 links resolve to the Text input page.
+  `tests/validation/slug-aliases.test.cjs` joins the alias table and the removal set against the
+  generator's emitted map and the page files: an alias key or a removal-set slug that has a page, or
+  a map entry with no page file, fails `npm test` naming the entry. An alias whose target has no
+  page is a prebuild warning next to the stranded list, with the remedy per entry (repoint, or
+  remove when the key has authored guidance of its own), because the resolver already degrades or
+  flags those links and a hard failure there would freeze the site on every target retirement.
+  `npm test` runs every `tests/**/*.test.{cjs,mjs}` file instead of a hand-kept list, which picks up
+  three files the list left out. No slug is special-cased by name.
+
 - **Deprecated components no longer solicit use from the sidebar.**
   ([#200](https://github.com/volivarii/actian-ds-docs/pull/200)) The knowledge layer marks a component `status: "deprecated"` when
   its Figma page carries the deprecated status emoji, and the sidebar ignored the field, so
