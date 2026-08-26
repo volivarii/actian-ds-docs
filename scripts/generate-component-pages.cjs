@@ -413,6 +413,16 @@ function main() {
   // candidates: Product logos, Illustrations, Color/spacing tokens.
   var COLLECTION_CATEGORIES = new Set(["Icons"]);
 
+  // The one rule for "this registry entry gets a page". Every pass below
+  // (expected dirs, group nesting, the slug→path map, the write loop, the
+  // redirects) asks this, and the map it feeds is what the link resolver and
+  // the tests mean by "has a page" (render-mdx.cjs hasPage).
+  function writesPage(entry) {
+    return Boolean(entry.category) &&
+      !EXCLUDED_CATEGORIES.has(entry.category) &&
+      !COLLECTION_CATEGORIES.has(entry.category);
+  }
+
   // ζ.5 follow-up: pre-pass to compute the set of <section>/<category>
   // dirs we'll write to in this run, keyed by absolute path. Used for
   // two cleanup behaviors:
@@ -425,9 +435,7 @@ function main() {
   var expectedCategoryDirs = new Set();
   Object.entries(registry.components).forEach(function (pair) {
     var e = pair[1];
-    if (!e.category) return;
-    if (EXCLUDED_CATEGORIES.has(e.category)) return;
-    if (COLLECTION_CATEGORIES.has(e.category)) return;
+    if (!writesPage(e)) return;
     var sd = SECTION_DIRS[e.section] || DEFAULT_SECTION_DIR;
     var cd = path.join(DOCS_ROOT, sd, slugifyCategory(e.category));
     expectedCategoryDirs.add(cd);
@@ -482,9 +490,7 @@ function main() {
   var groupCounts = {};
   Object.entries(registry.components).forEach(function (pair) {
     var e = pair[1];
-    if (!e.category || !e.group) return;
-    if (EXCLUDED_CATEGORIES.has(e.category)) return;
-    if (COLLECTION_CATEGORIES.has(e.category)) return;
+    if (!writesPage(e) || !e.group) return;
     var cs = slugifyCategory(e.category);
     var gs = slugifyCategory(e.group);
     if (!cs || !gs) return;
@@ -495,7 +501,7 @@ function main() {
   // Build the slug → absolute-path lookup before the write loop so that
   // rewriteComponentLinks() (called inside escapeMdxPlaceholders) can convert
   // bare-slug markdown links in guideline JSON content to absolute doc paths.
-  renderMdx.buildSlugToPathMap(registry, groupCounts, SECTION_DIRS, DEFAULT_SECTION_DIR, slugifyCategory);
+  renderMdx.buildSlugToPathMap(registry, groupCounts, SECTION_DIRS, DEFAULT_SECTION_DIR, slugifyCategory, writesPage);
 
   // Derive the stranded-guideline slugs: authored guidance whose component the
   // registry no longer publishes, so no page exists to link to. Must run after
@@ -520,6 +526,17 @@ function main() {
       "(guidance with no published component; inbound links degrade to plain text)" +
       (strandedSlugs.length ? ": " + strandedSlugs.join(", ") : ""),
   );
+  // An alias whose target has no page is a warning, not a failure: the resolver
+  // degrades or flags the links through it, and the remedy depends on whether
+  // the key has guidance of its own, which the line says.
+  var deadAliases = renderMdx.deriveDeadAliases(guidelineSlugs);
+  if (deadAliases.length) {
+    console.warn(
+      "generate-component-pages: WARNING " + deadAliases.length + " SLUG_ALIASES " +
+        "entr" + (deadAliases.length === 1 ? "y" : "ies") + " whose target has no page " +
+        "(scripts/lib/render-mdx.cjs):\n  " + deadAliases.join("\n  "),
+    );
+  }
 
   // Section→content-family-page map for renderRelatedPatterns (docs #content
   // split). Derived directly from the vendored writing/patterns/product.md
@@ -572,15 +589,13 @@ function main() {
   Object.entries(registry.components).forEach(function (pair) {
     var slug = pair[0];
     var entry = pair[1];
-    if (!entry.category) { skipped++; return; }
-    if (EXCLUDED_CATEGORIES.has(entry.category)) {
-      excluded++;
-      return;
-    }
-    if (COLLECTION_CATEGORIES.has(entry.category)) {
+    if (!writesPage(entry)) {
+      // Counted by reason for the summary line only; the gate is writesPage.
+      if (!entry.category) skipped++;
+      else if (EXCLUDED_CATEGORIES.has(entry.category)) excluded++;
       // Rendered inline via the category's collection MDX
-      // (src/content/docs/categories/<slug>.mdx) — no per-component MDX.
-      collection++;
+      // (src/content/docs/categories/<slug>.mdx); no per-component MDX.
+      else collection++;
       return;
     }
 
@@ -707,23 +722,10 @@ function main() {
   //   /<base>/usage/  → /<base>/#when-to-use  (When to use heading on Overview)
   // Destinations stay base-agnostic (root-absolute); astro.config.mjs prefixes
   // them with the configured site base at the consumption point.
+  // One redirect pair per page, read off the slug→path map: it already holds
+  // exactly the pages this run writes, with their nesting resolved.
   var redirects = {};
-  Object.entries(registry.components).forEach(function (pair) {
-    var slug = pair[0];
-    var entry = pair[1];
-    if (!entry.category) return;
-    if (EXCLUDED_CATEGORIES.has(entry.category)) return;
-    if (COLLECTION_CATEGORIES.has(entry.category)) return;
-    var sd = SECTION_DIRS[entry.section] || DEFAULT_SECTION_DIR;
-    var catSlug = slugifyCategory(entry.category);
-    var parts = [sd, catSlug];
-    if (entry.group) {
-      var groupSlug = slugifyCategory(entry.group);
-      var key = catSlug + "::" + groupSlug;
-      if (groupSlug && groupCounts[key] > 1) parts.push(groupSlug);
-    }
-    parts.push(slug);
-    var base = "/" + parts.join("/") + "/";
+  Object.values(renderMdx.getSlugToPathMap()).forEach(function (base) {
     redirects[base + "design/"] = base + "#anatomy";
     redirects[base + "usage/"]  = base + "#when-to-use";
   });
