@@ -1,17 +1,25 @@
 ---
 title: Patterns
-description: Composite UX patterns combining multiple components — coming soon.
+description: How Actian's products compose components into recognisable page shapes, and where those descriptions live.
 ---
 
 import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
 import PageMetadata from "../components/PageMetadata.astro";
 
-<StarlightPage frontmatter={{ title: "Patterns", description: "Composite UX patterns combining multiple components — coming soon." }}>
-  <PageMetadata slug="patterns" source="(roadmap placeholder)" schema={1} />
+<StarlightPage frontmatter={{ title: "Patterns", description: "How Actian's products compose components into recognisable page shapes, and where those descriptions live." }}>
+  <PageMetadata slug="patterns" source="(design team working material)" schema={1} />
 
-  Patterns are reusable UX recipes composed of multiple components — for example, "data table with filter rail + bulk-action toolbar + empty state" is a Pattern, not a Component.
+  A pattern is a page shape rather than a part: several components composed into something a user recognises, such as a filter rail beside a result list with a bulk-action bar above it. "Faceted browse" is a pattern; the checkbox inside it is a component.
 
-  This section is a roadmap placeholder. Patterns will be added once the component layer stabilizes.
+  ## Where patterns live
 
-  Initial candidates: empty states, error states, loading states, pagination, search-with-filters, bulk actions, confirmation flows.
+  Patterns describe how Actian's own products behave, and they are working material for the design team rather than a public reference. They are maintained alongside the application context in the design system's knowledge layer, where they are reviewed and corrected by the people who own them, and they ground the screens the team generates.
+
+  This site publishes what a reader can look up and apply directly: every component, the foundations, the content guidance, and the accessibility requirements.
+
+  ## What to read here instead
+
+  **Components** in the sidebar for the parts a pattern is built from, each with its own usage guidance, and **Foundations** for the colour, type, spacing and motion decisions underneath them.
+
+  For how to write the copy inside these shapes, empty states, forms, notifications, onboarding, validation messages and wizards, see [content patterns](/content/patterns).
 </StarlightPage>
