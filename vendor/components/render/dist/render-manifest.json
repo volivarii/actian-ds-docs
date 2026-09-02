@@ -1,9 +1,10 @@
 {
-  "schemaVersion": "1.1.0",
+  "schemaVersion": "1.2.0",
   "generatedBy": "scripts/render/derive-canonical.js",
   "cem": "custom-elements.json",
   "css": "render.css",
   "fontsCss": "render-fonts.css",
+  "pageCss": "body{margin:0;padding:24px;background:#fff}",
   "renders": [
     {
       "slug": "action-bar",
@@ -18,7 +19,7 @@
       "tagName": "zen-alert-banner",
       "group": "Feedback",
       "fragment": "fragments/alert-banner.html",
-      "tokensConsumed": 16,
+      "tokensConsumed": 22,
       "source": "rendered"
     },
     {
