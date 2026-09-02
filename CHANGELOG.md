@@ -14,6 +14,20 @@ site's content or behavior.
 
 ### Changed
 
+- **The Patterns page says where patterns live instead of promising them.** It read "this section is a
+  roadmap placeholder, patterns will be added once the component layer stabilizes", and listed generic
+  candidates (empty states, pagination, bulk actions). Meanwhile the design system has 31 authored UX
+  patterns and 4 page recipes captured from Studio and Explorer, and this site already vendors every one
+  of them into its own build tree without reading them. So the page told a reader the opposite of the
+  truth about the thing sitting in the build.
+
+  They are not coming here. A pattern describes how Actian's own products behave, which is working
+  material the design team reviews and corrects, not a public reference a reader looks something up in;
+  the surface for them is the knowledge editor, where seeing one and fixing one are the same screen. The
+  page now says what a pattern is, that they live with the team, and what this site publishes instead.
+  The two em dashes it carried are gone with it.
+
+
 - **Correct an overstated claim shipped in #212.** The confidence page said usage "reads high on every
   page". It reads high on every page that HAS usage guidance; a component page generated from a registry
   entry with no usage domain still reads low, which the very next bullet on that page says. Caught
