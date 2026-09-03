@@ -270,13 +270,66 @@
   var DIGRAM_ITEM_TYPE_TOKENS = {
     Field: "--zen-color-success-50",
   };
+  // Captured Tag-Name text colors, one per Item type
+  // (components/dist/anatomy/digram-item-types.json, the "Tag-Name" node's
+  // appearance.variants). Generated from that capture, not hand-picked.
+  //
+  // These exist because the background alone does NOT separate the family: six
+  // backgrounds are shared by two or three types, and five pairs that share a
+  // background carry DIFFERENT text colors in Figma. Rendering only the
+  // background made those pairs byte-identical, so asking for `Custom 5`
+  // returned something indistinguishable from `Data product` (#550, #641).
+  // Where the capture gives the two the same text color too -- `Custom 3` and
+  // `Custom 6`, `Custom 2` and `Data process` -- they still render alike, and
+  // that is Figma's answer rather than a gap.
+  var DIGRAM_ITEM_TYPE_TEXT = {
+    "Custom 2": "#a82743",
+    "Custom 3": "#3c515a",
+    "Custom 4": "#5c61a7",
+    "Custom 5": "#003786",
+    "Custom 6": "#3c515a",
+    "Custom 7": "#006563",
+    "Custom 8": "#007e7b",
+    "Custom 9": "#216b57",
+    "Custom 10": "#098900",
+    "Custom 11": "#475500",
+    "Custom 12": "#5a6b00",
+    "Custom 13": "#475500",
+    "Custom 14": "#677b00",
+    "Custom 16": "#626752",
+    "Data process": "#a82743",
+    "Data product": "#3c515a",
+    Dataset: "#00547d",
+    Field: "#145f04",
+    "Glossary 1": "#a76605",
+    "Glossary 2": "#a76605",
+    "Glossary 3": "#937148",
+    "Glossary 4": "#b78a55",
+    "Glossary 5": "#937148",
+    "Output port": "#3c515a",
+    "Use case": "#755d40",
+    Visualization: "#7900cb",
+  };
+  // The two the capture binds to a token; the rest are raw in Figma too (#551).
+  var DIGRAM_ITEM_TYPE_TEXT_TOKENS = {
+    Field: "--zen-color-success-800",
+    "Glossary 1": "--zen-color-warning-800",
+    "Glossary 2": "--zen-color-warning-800",
+  };
   function digramItemTypeStyle(itemType) {
     var bg =
       DIGRAM_ITEM_TYPE_COLORS[itemType] || DIGRAM_ITEM_TYPE_COLORS.Category;
     var token = DIGRAM_ITEM_TYPE_TOKENS[itemType];
-    return token
+    var style = token
       ? "background:var(" + token + ", " + bg + ")"
       : "background:" + bg;
+    var fg = DIGRAM_ITEM_TYPE_TEXT[itemType];
+    if (fg) {
+      var fgToken = DIGRAM_ITEM_TYPE_TEXT_TOKENS[itemType];
+      style +=
+        ";color:" + (fgToken ? "var(" + fgToken + ", " + fg + ")" : fg);
+    }
+    return style;
   }
 
   // Captured resolved-appearance colors for digram-topic's 10 "Type" values
@@ -872,6 +925,15 @@
 
         case "search": {
           var searchCls = "ds-search";
+          // Type was rendering as nothing: Global header, Explorer home and
+          // Inline emitted byte-identical markup (#550). The capture
+          // (anatomy/search.json appearance.variants) separates two of the
+          // three -- Explorer home takes a primary border, Inline the default
+          // one -- against Global header, which is the captured default and so
+          // keeps the base rule. Search/Multiple carries no fact and gets none.
+          var searchType = String(v.Type || "").toLowerCase();
+          if (searchType === "explorer home") searchCls += " ds-search--emphasis";
+          if (searchType === "inline") searchCls += " ds-search--inline";
           // Accept the kit's typo "Dsiabled" as well as the canonical spelling.
           if (v.State === "Disabled" || v.State === "Dsiabled") {
             searchCls += " is-disabled";
@@ -1372,6 +1434,28 @@
 
         case "breadcrumb": {
           var crumbItems = parseItems(props.Items, "Home, Section, Page");
+          // The registry publishes digram-item-types as a nested component of
+          // breadcrumb, and the default capture shows one per crumb but the
+          // first: a small item-type badge carrying the record's initials. It is
+          // per-crumb CONTENT (which record each crumb names), so it is
+          // positional, one entry per crumb, and an empty entry means that crumb
+          // has none. No badges given -> the crumbs render exactly as the plain
+          // links they were.
+          //
+          // An ARRAY is accepted alongside the comma string (the shape `table`'s
+          // Rows already uses) because parseItems drops empty entries, so only
+          // the array form can say "this crumb has no badge" -- which the
+          // default capture needs: `Home` carries none and every crumb after it
+          // does.
+          var crumbBadges = Array.isArray(props.Badges)
+            ? props.Badges
+            : props.Badges === undefined
+              ? []
+              : parseItems(props.Badges, "");
+          // One item type for the row, not one per crumb: in the capture every
+          // badge is the same type. Absent -> digram-item-types' own documented
+          // fallback, rather than a type invented here.
+          var crumbBadgeType = props.BadgeType ? String(props.BadgeType) : "";
           var crumbSep =
             '<span class="ds-breadcrumbs__sep">' +
             renderIcon("arrow-left", { rotate: 180 }) +
@@ -1382,12 +1466,27 @@
               var crumbCls = "ds-breadcrumbs__crumb";
               if (isLast) crumbCls += " ds-breadcrumbs__crumb--current";
               var tag = isLast ? "span" : "a";
+              // String(): Badges is flow data, and a non-string entry would
+              // throw on .trim() -- caught by the interpreter's never-throws
+              // seam, but at the cost of degrading the whole breadcrumb to a
+              // graceful chip over one bad cell.
+              var badge = String(crumbBadges[i] || "").trim();
+              var badgeHtml = badge
+                ? renderDSComponent({
+                    dsSlug: "digram-item-types",
+                    variant:
+                      "Size=XS" +
+                      (crumbBadgeType ? ", Item type=" + crumbBadgeType : ""),
+                    props: { Initials: badge },
+                  })
+                : "";
               return (
                 "<" +
                 tag +
                 ' class="' +
                 crumbCls +
                 '">' +
+                badgeHtml +
                 esc(label) +
                 "</" +
                 tag +
@@ -1607,21 +1706,67 @@
           // default variant (Type=Info), so the message mirrors the type name.
           // matrix.js supplies the per-Type value; this is the no-props fallback.
           var alertMsg = esc(props.Message || "Info");
+          // The registry publishes `Show Icon`, `Show action` and
+          // `Show close button` as BOOLEAN component properties, all defaulting
+          // to true, and the isolated default capture shows all three. The
+          // renderer implemented only the icon, and that one unconditionally.
+          // Reading the published default means a caller passing no props gets
+          // what Figma documents, and a caller turning one off gets the
+          // component without it -- a slot, not a fixture.
+          // `!== false` is this renderer's default-TRUE idiom (see
+          // props["Leading icon show"] on text-input), and the literal bracket
+          // reads are what derive-contract's BRACKET_READ picks up, so all three
+          // appear in the published contract rather than only in the code.
+          var alertIconHtml =
+            props["Show Icon"] !== false
+              ? '<span class="ds-alert__icon">' +
+                renderIcon(alertIconSlug) +
+                "</span>"
+              : "";
+          // An ordinary DS button: it needs no positional CSS of its own, and a
+          // modifier class with no rule behind it is the thing this renderer
+          // already refuses to emit elsewhere.
+          //
+          // The LABEL is not defaulted. Figma's own default reads "Button",
+          // which is placeholder text, and a literal fallback here would hand
+          // that word to every caller who asked for no optional parts -- the
+          // specimen-vs-runtime defect the sparse-render ratchet exists to
+          // block. So the boolean gates the slot and the caller names it; the
+          // gallery's "Button" lives in matrix.js, where the specimen belongs
+          // and the caller keeps the choice.
+          var alertActionHtml =
+            props["Show action"] !== false && props.Action
+              ? '<button class="ds-button ds-button--tertiary">' +
+                esc(props.Action) +
+                "</button>"
+              : "";
+          var alertCloseHtml =
+            props["Show close button"] !== false
+              ? '<button class="ds-alert__close" aria-label="Dismiss">' +
+                renderIcon("close") +
+                "</button>"
+              : "";
+          var alertActionsHtml =
+            alertActionHtml || alertCloseHtml
+              ? '<div class="ds-alert__actions">' +
+                alertActionHtml +
+                alertCloseHtml +
+                "</div>"
+              : "";
           return (
             '<div class="' +
             alertCls +
             '" role="' +
             alertRole +
             '">' +
-            '<span class="ds-alert__icon">' +
-            renderIcon(alertIconSlug) +
-            "</span>" +
+            alertIconHtml +
             '<div class="ds-alert__content">' +
             alertTitleHtml +
             '<p class="ds-alert__message">' +
             alertMsg +
             "</p>" +
             "</div>" +
+            alertActionsHtml +
             "</div>"
           );
         }
@@ -2031,13 +2176,37 @@
               renderIcon("catalog") +
               "</span>"
             : "";
+          // Type is a real axis and it was rendering as nothing: all five values
+          // emitted byte-identical markup, so asking for Dropdown returned
+          // Selectable (#550). The capture
+          // (anatomy/interactive-tag.json, appearance.variants) distinguishes
+          // three of them, and only those three are honoured here -- Dismissible
+          // and Selectable carry no distinguishing fact, so inventing one would
+          // be the guess that #641 exists to stop.
+          var tiType = String(v.Type || "").toLowerCase();
+          if (tiType === "dropdown-expanded")
+            tiCls += " ds-interactive-tag--dropdown-expanded";
+          if (tiType === "selectable-selected")
+            tiCls += " ds-interactive-tag--selectable-selected";
           // Trailing control defaults on (interactive = removable); honor false.
+          // The capture gives the dropdown types a caret instead of the remove
+          // control: Trailing icon = arrow-down / arrow-up.
           var tiShowTrail = props["Trailing icon show"] !== false;
-          var tiTrail = tiShowTrail
-            ? '<button class="ds-interactive-tag__remove" type="button" aria-label="Remove">' +
-              renderIcon("close") +
-              "</button>"
-            : "";
+          var tiCaret =
+            tiType === "dropdown"
+              ? "arrow-down"
+              : tiType === "dropdown-expanded"
+                ? "arrow-up"
+                : null;
+          var tiTrail = !tiShowTrail
+            ? ""
+            : tiCaret
+              ? '<span class="ds-interactive-tag__icon ds-interactive-tag__icon--trail">' +
+                renderIcon(tiCaret) +
+                "</span>"
+              : '<button class="ds-interactive-tag__remove" type="button" aria-label="Remove">' +
+                renderIcon("close") +
+                "</button>";
           return (
             '<span class="' +
             tiCls +
@@ -2667,8 +2836,22 @@
           // props override the labels.
           var sfPrimary = esc(props.Primary || "Save");
           var sfSecondary = esc(props.Secondary || "Cancel");
+          // The default capture pins a destructive action to the leading edge.
+          // The registry publishes no boolean for it, so it is CONTENT, not a
+          // documented toggle: the slot renders only when a caller supplies a
+          // label. .ds-action-bar's justify-content stays flex-end and the slot
+          // carries margin-right:auto, so a bar with no destructive action lays
+          // out exactly as before.
+          var sfLeading = props.Destructive
+            ? '<div class="ds-action-bar__leading">' +
+              '<button class="ds-button ds-button--critical-secondary">' +
+              esc(props.Destructive) +
+              "</button>" +
+              "</div>"
+            : "";
           return (
             '<div class="ds-action-bar">' +
+            sfLeading +
             '<div class="ds-action-bar__actions">' +
             '<button class="ds-button ds-button--secondary">' +
             sfSecondary +
