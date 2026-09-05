@@ -116,3 +116,52 @@ test("the Code tab's renderer order puts the render before the placeholders", ()
       "opens on 'pending'.",
   );
 });
+
+// The three tests above read the generated MDX. That is necessary and not
+// sufficient: the page can reference <CanonicalRender /> while the component
+// resolves no fragment and renders nothing, which is exactly what happened
+// when its path resolution was changed from process.cwd() to import.meta.url.
+// The MDX was unchanged, every assertion above stayed green, and the built
+// site lost all 56 examples. So the last word has to be on the BUILT html.
+//
+// CI runs `npm test` after `npm run build` for this reason (see build.yml), so
+// dist is present there. A missing dist is reported as a failure rather than
+// skipped: a check that passes when its subject is absent is the failure it
+// was written to prevent.
+const DIST = path.join(ROOT, "dist");
+
+test("the built site actually ships the rendered examples", () => {
+  assert.ok(
+    fs.existsSync(DIST),
+    "dist/ is missing, so this assertion cannot be made. Run `npm run build` " +
+      "first; CI runs the suite after the build for exactly this reason. This " +
+      "is a failure and not a skip on purpose.",
+  );
+
+  const built = [];
+  (function walk(dir) {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) walk(p);
+      else if (e.name === "index.html" && path.basename(path.dirname(p)) === "code") {
+        built.push(p);
+      }
+    }
+  })(path.join(DIST, "components"));
+
+  assert.ok(built.length > 0, "fixture sanity: the build produced Code tab pages");
+
+  const drawn = built.filter((f) =>
+    fs.readFileSync(f, "utf8").includes('id="fidelity-root"'),
+  ).length;
+  const expected = codeTabs().filter((t) => hasFragment(t.slug)).length;
+
+  assert.equal(
+    drawn,
+    expected,
+    "Every Code tab whose slug has a vendored fragment must carry the render in " +
+      "the shipped HTML. " + drawn + " of an expected " + expected + " do. A " +
+      "count of 0 with the MDX assertions green means the component resolved no " +
+      "fragment and failed silently.",
+  );
+});

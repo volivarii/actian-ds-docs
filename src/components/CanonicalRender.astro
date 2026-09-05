@@ -14,8 +14,17 @@
 // Fonts: render-fonts.css (345KB of base64 woff2) is deliberately NOT shipped.
 // --zen-font-family-text is "Roboto", sans-serif, so the example falls back to
 // the reader's sans face. Honest, not pixel-perfect.
-import fs from "node:fs";
-import path from "node:path";
+// Read through Vite's own resolver rather than the filesystem. Two earlier
+// attempts got this wrong in opposite directions: process.cwd() happened to
+// work but silently depends on where the build was invoked, and import.meta.url
+// resolves into the bundle at build time, not into src/, so every example
+// vanished and the page rendered as if no fragment existed. A glob is resolved
+// by Vite relative to THIS file, at build time, and a typo in the path is a
+// build error instead of a missing picture.
+const FRAGMENTS = import.meta.glob(
+  "../../vendor/components/render/dist/fragments/*.html",
+  { query: "?raw", import: "default", eager: true },
+) as Record<string, string>;
 
 interface Props {
   slug: string;
@@ -24,18 +33,11 @@ interface Props {
 
 const { slug, name } = Astro.props;
 
-const fragmentFile = path.resolve(
-  process.cwd(),
-  "vendor/components/render/dist/fragments",
-  `${slug}.html`,
+const fragmentKey = Object.keys(FRAGMENTS).find(
+  (k) => k.endsWith("/" + slug + ".html"),
 );
 
-let markup: string | null = null;
-try {
-  markup = fs.readFileSync(fragmentFile, "utf8").trim() || null;
-} catch {
-  markup = null;
-}
+const markup = fragmentKey ? (FRAGMENTS[fragmentKey] || "").trim() || null : null;
 
 // render.css is class-scoped throughout (zero bare-element rules, checked), so
 // loading it on the page cannot restyle the docs chrome around it.
