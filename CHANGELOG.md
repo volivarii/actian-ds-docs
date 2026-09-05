@@ -14,7 +14,8 @@ site's content or behavior.
 
 ### Added
 
-- **Every component whose render this site already vendors now draws it on its Code tab.**
+- **Every component whose render this site already vendors now draws it on its Code tab**
+  ([#235](https://github.com/volivarii/actian-ds-docs/pull/235)).
   `actian-ds-knowledge` derives a canonical HTML render per component and ships it in the vendor
   snapshot at `vendor/components/render/dist/fragments/`, with the stylesheet that paints it. 56 of
   those fragments were sitting in this repo's own build tree, referenced by nothing, while all 74
@@ -64,13 +65,15 @@ site's content or behavior.
 
 ### Fixed
 
-- **The homepage's first number said 333 components; there are 74.** It counted every entry in the
-  DS Kit registry, which is 74 components plus 158 icons, 100 brand assets and one other resource,
+- **The homepage's first number said 333 components; there are 74**
+  ([#235](https://github.com/volivarii/actian-ds-docs/pull/235)). It counted every entry in the
+  DS Kit registry, which is 74 components plus 153 icons, 100 brand assets and 6 others,
   while the category grid immediately below it summed to 74. The page contradicted itself within one
   screen, on the first figure a reader sees. The card now counts the `Components` section and its
   sub-line accounts for the rest of the 333.
 
-- **A grey slab across the homepage hero.** The stats row draws its hairline separators as a grey
+- **A grey slab across the homepage hero**
+  ([#235](https://github.com/volivarii/actian-ds-docs/pull/235)). The stats row draws its hairline separators as a grey
   background showing through a 1px grid gap. Starlight's markdown rule gives every adjacent sibling a
   16px top margin, which applied to four of the five cards, so each stretched 16px short of its grid
   row and the ground showed through as a bar. The row now carries Starlight's own `not-content`
