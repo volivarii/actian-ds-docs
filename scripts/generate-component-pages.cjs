@@ -804,7 +804,7 @@ function main() {
     // means the snapshot predates the render dist. Say so rather than emitting
     // pages that link a stylesheet which 404s.
     console.warn(
-      "generate-component-pages: vendor render.css missing — rendered examples " +
+      "generate-component-pages: vendor render.css missing, so rendered examples " +
         "will be unstyled. Refresh the vendor snapshot.",
     );
   }
