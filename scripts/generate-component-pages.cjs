@@ -788,7 +788,9 @@ function main() {
 
   // Mirror the canonical render stylesheet into public/ so CanonicalRender.astro
   // can link it. render.css is class-scoped throughout (no bare-element rules),
-  // so it cannot restyle the docs chrome on the pages that load it.
+  // so it cannot restyle the docs chrome through the cascade. Breakout is a
+  // separate matter: `.ds-modal-backdrop` is class-scoped and `position: fixed`,
+  // and CanonicalRender.astro bounds it with `contain: layout` on the stage.
   // render-fonts.css is NOT mirrored: 345KB of base64 woff2, and
   // --zen-font-family-text falls back to sans-serif without it.
   var vendorRenderCss = path.resolve(

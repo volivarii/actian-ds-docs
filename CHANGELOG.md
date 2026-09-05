@@ -22,11 +22,20 @@ site's content or behavior.
   Code tabs said "Per-component token documentation pending" and stopped there. The site shipped the
   pictures and drew none of them. A Code tab now opens on the live component, with its markup behind
   a disclosure, above the two placeholders. `render.css` is mirrored into `public/render/` alongside
-  the existing media mirror; it is class-scoped throughout, so it cannot restyle the docs chrome.
-  `render-fonts.css` is deliberately not shipped (345KB of base64 woff2), so an example falls back to
-  the reader's sans face: honest, not pixel-perfect. A slug with no vendored fragment shows nothing
-  rather than an empty frame, and `tests/generator/code-tab-renders-the-component.test.cjs` asserts
-  both halves of that.
+  the existing media mirror. `render-fonts.css` is deliberately not shipped (345KB of base64 woff2),
+  so an example falls back to the reader's sans face: honest, not pixel-perfect. A slug with no
+  vendored fragment shows nothing rather than an empty frame, and
+  `tests/generator/code-tab-renders-the-component.test.cjs` asserts both halves of that.
+
+  Two things the fragments carry are for the screenshot harness they were authored against, not for
+  a reader's browser, and the page has to refuse both. Every fragment ends with an inline `<script>`
+  that stamps `data-fidelity-ready` once fonts settle; `set:html` is raw injection, so that script
+  would have run on all 56 published pages. It is stripped. And `.ds-modal-backdrop` is
+  `position: fixed; inset: 0`, which positions against the viewport rather than the example frame:
+  the modal page shipped a full-page scrim over the docs nav, sidebar and content. The stage now
+  sets `contain: layout`, making it the containing block for fixed descendants. Class-scoping the
+  sheet prevents the cascade reaching the docs chrome; it does not prevent an element breaking out
+  of the frame, and this changelog entry claimed otherwise until the modal page was opened.
 
 ### Changed
 

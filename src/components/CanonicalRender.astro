@@ -37,10 +37,21 @@ const fragmentKey = Object.keys(FRAGMENTS).find(
   (k) => k.endsWith("/" + slug + ".html"),
 );
 
-const markup = fragmentKey ? (FRAGMENTS[fragmentKey] || "").trim() || null : null;
+// Every fragment ends with a <script> that stamps data-fidelity-ready on
+// <html> once fonts settle. That is instrumentation for the knowledge repo's
+// headless screenshot harness and means nothing here, but set:html is raw
+// injection, so it would execute in every reader's browser on every Code tab.
+// Strip it: the docs site renders the markup, it does not run the oracle.
+const raw = fragmentKey ? FRAGMENTS[fragmentKey] || "" : "";
+const markup = raw.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "").trim() || null;
 
 // render.css is class-scoped throughout (zero bare-element rules, checked), so
-// loading it on the page cannot restyle the docs chrome around it.
+// loading it cannot restyle the docs chrome through the cascade. That is a
+// narrower guarantee than it sounds: `.ds-modal-backdrop` is class-scoped AND
+// `position: fixed; inset: 0`, so the modal fragment's five backdrops would
+// escape any ordinary ancestor and cover the whole page. The stage below sets
+// `contain: layout`, which makes it the containing block for fixed descendants,
+// so breakout is bounded by the stage rather than by the selector's spelling.
 const BASE = import.meta.env.BASE_URL.replace(/\/?$/, "");
 ---
 
@@ -67,6 +78,10 @@ const BASE = import.meta.env.BASE_URL.replace(/\/?$/, "");
     margin: 1.5rem 0;
   }
   .canonical-render__stage {
+    /* Containing block for `position: fixed` descendants (the modal backdrop).
+       `layout` and not `paint`: paint would also clip, and an example that
+       overflows its stage should scroll, not be cut off. */
+    contain: layout;
     padding: 24px;
     border: 1px solid var(--docs-border-default, #d8d8de);
     border-radius: 4px;

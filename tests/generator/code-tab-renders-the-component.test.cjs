@@ -165,3 +165,83 @@ test("the built site actually ships the rendered examples", () => {
       "fragment and failed silently.",
   );
 });
+
+// Two things the fragments carry that the site must not inherit wholesale.
+// Both were found by an independent review of this PR, not by the tests above,
+// and both are properties of the vendored artifact rather than of our markup:
+// the fragments are authored for an isolated screenshot harness, so they carry
+// its instrumentation and its positioning assumptions.
+const VENDOR_CSS = path.join(
+  ROOT, "vendor", "components", "render", "dist", "render.css",
+);
+const STAGE_COMPONENT = path.join(ROOT, "src", "components", "CanonicalRender.astro");
+
+test("the fidelity harness's script never reaches a reader's browser", () => {
+  const fragments = fs
+    .readdirSync(FRAGMENT_DIR)
+    .filter((f) => f.endsWith(".html"));
+  const withScript = fragments.filter((f) =>
+    /<script\b/i.test(fs.readFileSync(path.join(FRAGMENT_DIR, f), "utf8")),
+  );
+  assert.ok(
+    withScript.length > 0,
+    "fixture sanity: this guard exists because the vendored fragments carry an " +
+      "inline <script> (it stamps data-fidelity-ready for the screenshot " +
+      "harness). If upstream stopped shipping it, revisit rather than delete.",
+  );
+
+  assert.ok(fs.existsSync(DIST), "dist/ is missing; run `npm run build` first.");
+  const leaked = [];
+  (function walk(dir) {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) walk(p);
+      else if (e.name === "index.html" && path.basename(path.dirname(p)) === "code") {
+        if (fs.readFileSync(p, "utf8").includes("data-fidelity-ready")) leaked.push(p);
+      }
+    }
+  })(path.join(DIST, "components"));
+
+  assert.deepEqual(
+    leaked,
+    [],
+    "set:html is raw injection, so a <script> in a fragment executes on the " +
+      "live site. These pages ship the harness's instrumentation to readers.",
+  );
+});
+
+test("the stage contains any fixed-position descendant the sheet can produce", () => {
+  const css = fs.readFileSync(VENDOR_CSS, "utf8");
+  const fixedRules = (css.match(/position:\s*fixed/g) || []).length;
+  assert.ok(
+    fixedRules > 0,
+    "fixture sanity: this guard exists because render.css contains at least one " +
+      "`position: fixed` rule (.ds-modal-backdrop). If that is gone upstream, " +
+      "the containing block is no longer load-bearing and this can be revisited.",
+  );
+
+  // Read the DECLARATION, not the file. The first cut of this guard matched
+  // /contain: layout/ anywhere in the component, and the comment above the rule
+  // explaining why the declaration is there kept it green after the declaration
+  // itself was deleted. So: pull the one rule's body, strip its comments, and
+  // match a real declaration terminated by a semicolon.
+  const source = fs.readFileSync(STAGE_COMPONENT, "utf8");
+  const rule = source.match(/\.canonical-render__stage\s*{([^}]*)}/);
+  assert.ok(
+    rule,
+    "`.canonical-render__stage` has no rule in CanonicalRender.astro; the stage " +
+      "element was renamed or its styles moved, so re-derive what establishes " +
+      "the containing block before touching this guard.",
+  );
+  const stage = rule[1].replace(/\/\*[\s\S]*?\*\//g, "");
+  assert.match(
+    stage,
+    /contain:\s*layout\s*;/,
+    "`.canonical-render__stage` must establish a containing block for fixed " +
+      "descendants. Without it the modal fragment's backdrops position against " +
+      "the viewport and cover the whole docs page, nav and all. Class-scoping " +
+      "the sheet prevents cascade leakage, not breakout: `.ds-modal-backdrop` " +
+      "is class-scoped AND `position: fixed; inset: 0`.",
+  );
+});
+
