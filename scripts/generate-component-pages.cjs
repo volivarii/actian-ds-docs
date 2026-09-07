@@ -59,6 +59,7 @@ var VALID_RENDERER_KEYS = new Set([
   "designSections",
   "a11yRefs",
   "globalA11yLink",
+  "canonicalRender",
   "tokensPlaceholder",
   "apiPlaceholder",
   "resources",
@@ -144,6 +145,22 @@ function renderGlobalA11yLink() {
   return "## Cross-cutting accessibility\n\nSee the full <a href={`" + base + "accessibility`}>WCAG 2.2 AA guidance</a> for criteria that apply to every component.";
 }
 
+// The canonical render is a real artifact this repo already vendors; emit the
+// component only when the fragment exists, so a slug without one gets nothing
+// rather than an empty frame. CanonicalRender.astro reads the file itself and
+// also no-ops on a miss, which is belt and braces on purpose: the two checks
+// answer different questions (should the page carry the block at all, vs is
+// the file readable at build time).
+var RENDER_FRAGMENT_DIR = path.resolve(
+  __dirname, "..", "vendor", "components", "render", "dist", "fragments",
+);
+function renderCanonicalRender(slug, entry) {
+  if (!fs.existsSync(path.join(RENDER_FRAGMENT_DIR, slug + ".html"))) return "";
+  var name = (entry && entry.name) || "";
+  return "## Rendered example\n\n<CanonicalRender slug=\"" + slug + "\"" +
+    (name ? " name={" + JSON.stringify(name) + "}" : "") + " />";
+}
+
 function renderTokensPlaceholder() {
   return "## Tokens\n\nPer-component token documentation pending. See the <a href={`${import.meta.env.BASE_URL.replace(/\\/?$/, '/')}foundations/color`}>foundations tokens</a> for the full scale.";
 }
@@ -190,6 +207,7 @@ function renderTabMdx(ctx) {
     "Anatomy", "VariantMatrix", "MotionPattern", "AccessibilityRefs",
     "PageMetadata", "StubFooter", "DoDont", "Callout", "TermList",
     "ComponentTabs", "ConfidenceChip", "MediaAsset", "Media",
+    "CanonicalRender",
   ].map(function (name) {
     return 'import ' + name + ' from "' + ctx.importPrefix + "/" + name + '.astro";';
   }).join("\n");
@@ -284,6 +302,7 @@ function buildComponent(slug, entry, guideline, defaults, registry, opts) {
     designSections:        function () { return renderMdx.renderDesignSections(entry, defaults, guideline, slug, WARNINGS); },
     a11yRefs:              function () { return renderMdx.renderA11yRefs(defaults); },
     globalA11yLink:        function () { return renderGlobalA11yLink(); },
+    canonicalRender:       function () { return renderCanonicalRender(slug, entry); },
     tokensPlaceholder:     function () { return renderTokensPlaceholder(); },
     apiPlaceholder:        function () { return renderApiPlaceholder(entry); },
     resources:             function () { return renderMdx.renderResources(slug, entry, registry, guideline); },
@@ -765,6 +784,31 @@ function main() {
       }
     });
     console.log("generate-component-pages: mirrored " + count + " vendor media files → public/media/");
+  }
+
+  // Mirror the canonical render stylesheet into public/ so CanonicalRender.astro
+  // can link it. render.css is class-scoped throughout (no bare-element rules),
+  // so it cannot restyle the docs chrome through the cascade. Breakout is a
+  // separate matter: `.ds-modal-backdrop` is class-scoped and `position: fixed`,
+  // and CanonicalRender.astro bounds it with `contain: layout` on the stage.
+  // render-fonts.css is NOT mirrored: 345KB of base64 woff2, and
+  // --zen-font-family-text falls back to sans-serif without it.
+  var vendorRenderCss = path.resolve(
+    __dirname, "..", "vendor", "components", "render", "dist", "render.css",
+  );
+  if (fs.existsSync(vendorRenderCss)) {
+    var publicRenderDir = path.resolve(__dirname, "..", "public", "render");
+    fs.mkdirSync(publicRenderDir, { recursive: true });
+    fs.copyFileSync(vendorRenderCss, path.join(publicRenderDir, "render.css"));
+    console.log("generate-component-pages: mirrored render.css → public/render/");
+  } else {
+    // Not fatal: the fragments and the sheet ship together, so a missing sheet
+    // means the snapshot predates the render dist. Say so rather than emitting
+    // pages that link a stylesheet which 404s.
+    console.warn(
+      "generate-component-pages: vendor render.css missing, so rendered examples " +
+        "will be unstyled. Refresh the vendor snapshot.",
+    );
   }
 
   console.log(
