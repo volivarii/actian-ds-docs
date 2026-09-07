@@ -10,18 +10,32 @@ import EcosystemDiagram from "../../components/EcosystemDiagram.astro";
 import "../../styles/homepage.css";
 
 export const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
-export const totalDsKit = Object.keys(dskit.components).length;
-export const categorizedDsKit = Object.values(dskit.components).filter((c) => c.category).length;
+export const kitEntries = Object.values(dskit.components);
+export const totalDsKit = kitEntries.length;
+// The card below says "components", so it has to count components. It used
+// to count every registry entry, which is 333 against the 74 the category
+// grid directly underneath it sums to.
+export const bySection = (name) => kitEntries.filter((c) => c.section === name).length;
+export const componentCount = bySection("Components");
+// Icons count by CATEGORY, not by section: the "Foundations" section holds 153
+// icons AND the 5 grid components, so counting the section would overstate
+// icons and hide the grids. Everything the three named figures do not cover is
+// derived as the remainder, so the four always sum to the total and no figure
+// here can drift from the registry.
+export const iconCount = kitEntries.filter((c) => c.category === "Icons").length;
+export const brandAssetCount = bySection("Brand Assets");
+export const otherKitCount =
+  totalDsKit - componentCount - iconCount - brandAssetCount;
 
 Reference for the Actian Design System — foundations, components, accessibility, and content guidelines. Knowledge owns content; this site renders it.
 
 ## At a glance
 
-<div class="stats-row">
+<div class="stats-row not-content">
   <div class="stat-card">
-    <div class="stat-card__number">{totalDsKit}</div>
-    <div class="stat-card__label">DS Kit components</div>
-    <div class="stat-card__sub">{categorizedDsKit} categorized · {totalDsKit - categorizedDsKit} uncategorized</div>
+    <div class="stat-card__number">{componentCount}</div>
+    <div class="stat-card__label">Components</div>
+    <div class="stat-card__sub">of {totalDsKit} kit entries · {iconCount} icons · {brandAssetCount} brand assets · {otherKitCount} other</div>
   </div>
   <div class="stat-card">
     <div class="stat-card__number">{Object.keys(categories.categories || {}).length}</div>
@@ -112,7 +126,7 @@ Reference for the Actian Design System — foundations, components, accessibilit
   </a>
   <a class="feature-card" href={`${base}inventory/`}>
     <h3>Inventory</h3>
-    <p>All {totalDsKit} DS Kit components — icons gallery, categorized + uncategorized.</p>
+    <p>All {totalDsKit} DS Kit entries: {componentCount} components, {iconCount} icons, {brandAssetCount} brand assets, {otherKitCount} other.</p>
   </a>
   <a class="feature-card" href={`${base}state/`}>
     <h3>State</h3>

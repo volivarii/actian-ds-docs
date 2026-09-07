@@ -1,0 +1,109 @@
+---
+// CanonicalRender: the component, drawn, on its own Code tab.
+//
+// actian-ds-knowledge derives a canonical HTML render for every component it
+// can draw and ships it in the vendor snapshot as
+// vendor/components/render/dist/fragments/<slug>.html, alongside the
+// stylesheet that paints it. 56 of those fragments have been sitting in this
+// repo's own tree, referenced by nothing, while all 74 Code tabs said
+// "Per-component token documentation pending" and nothing else.
+//
+// The markup is read at build time, so a slug with no fragment renders
+// nothing at all rather than an empty frame or a promise.
+//
+// Fonts: render-fonts.css (345KB of base64 woff2) is deliberately NOT shipped.
+// --zen-font-family-text is "Roboto", sans-serif, so the example falls back to
+// the reader's sans face. Honest, not pixel-perfect.
+// Read through Vite's own resolver rather than the filesystem. Two earlier
+// attempts got this wrong in opposite directions: process.cwd() happened to
+// work but silently depends on where the build was invoked, and import.meta.url
+// resolves into the bundle at build time, not into src/, so every example
+// vanished and the page rendered as if no fragment existed. A glob is resolved
+// by Vite relative to THIS file, at build time, and a typo in the path is a
+// build error instead of a missing picture.
+const FRAGMENTS = import.meta.glob(
+  "../../vendor/components/render/dist/fragments/*.html",
+  { query: "?raw", import: "default", eager: true },
+) as Record<string, string>;
+
+interface Props {
+  slug: string;
+  name?: string;
+}
+
+const { slug, name } = Astro.props;
+
+const fragmentKey = Object.keys(FRAGMENTS).find(
+  (k) => k.endsWith("/" + slug + ".html"),
+);
+
+// Every fragment ends with a <script> that stamps data-fidelity-ready on
+// <html> once fonts settle. That is instrumentation for the knowledge repo's
+// headless screenshot harness and means nothing here, but set:html is raw
+// injection, so it would execute in every reader's browser on every Code tab.
+// Strip it: the docs site renders the markup, it does not run the oracle.
+const raw = fragmentKey ? FRAGMENTS[fragmentKey] || "" : "";
+const markup = raw.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "").trim() || null;
+
+// render.css is class-scoped throughout (zero bare-element rules, checked), so
+// loading it cannot restyle the docs chrome through the cascade. That is a
+// narrower guarantee than it sounds: `.ds-modal-backdrop` is class-scoped AND
+// `position: fixed; inset: 0`, so the modal fragment's five backdrops would
+// escape any ordinary ancestor and cover the whole page. The stage below sets
+// `contain: layout`, which makes it the containing block for fixed descendants,
+// so breakout is bounded by the stage rather than by the selector's spelling.
+const BASE = import.meta.env.BASE_URL.replace(/\/?$/, "");
+---
+
+{
+  markup && (
+    <div class="canonical-render not-content">
+      <link rel="stylesheet" href={`${BASE}/render/render.css`} />
+      <div class="canonical-render__stage" set:html={markup} />
+      <details class="canonical-render__source">
+        <summary>Markup</summary>
+        <pre><code>{markup}</code></pre>
+      </details>
+      <p class="canonical-render__note">
+        Derived from the Figma capture by actian-ds-knowledge and vendored with
+        this site. {name || slug} renders here from the same markup and
+        stylesheet the plugin uses.
+      </p>
+    </div>
+  )
+}
+
+<style>
+  .canonical-render {
+    margin: 1.5rem 0;
+  }
+  .canonical-render__stage {
+    /* Containing block for `position: fixed` descendants (the modal backdrop).
+       `layout` and not `paint`: paint would also clip, and an example that
+       overflows its stage should scroll, not be cut off. */
+    contain: layout;
+    padding: 24px;
+    border: 1px solid var(--docs-border-default, #d8d8de);
+    border-radius: 4px;
+    background: var(--docs-color-bg-default, #fff);
+    overflow-x: auto;
+  }
+  .canonical-render__source {
+    margin-top: 8px;
+  }
+  .canonical-render__source summary {
+    cursor: pointer;
+    font-size: 0.8125rem;
+    color: var(--docs-color-text-secondary, #55555f);
+  }
+  .canonical-render__source pre {
+    max-height: 24rem;
+    overflow: auto;
+    font-size: 0.75rem;
+  }
+  .canonical-render__note {
+    margin-top: 8px;
+    font-size: 0.75rem;
+    color: var(--docs-color-text-secondary, #55555f);
+  }
+</style>

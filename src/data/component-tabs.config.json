@@ -4,7 +4,11 @@
       "slug": "overview",
       "label": "Overview",
       "isIndex": true,
-      "domains": ["design", "behavior", "usage"],
+      "domains": [
+        "design",
+        "behavior",
+        "usage"
+      ],
       "renderers": [
         "overview",
         "mediaPreview",
@@ -17,20 +21,33 @@
     {
       "slug": "content",
       "label": "Content",
-      "domains": ["content"],
-      "renderers": ["contentDomain"]
+      "domains": [
+        "content"
+      ],
+      "renderers": [
+        "contentDomain"
+      ]
     },
     {
       "slug": "accessibility",
       "label": "Accessibility",
       "domains": [],
-      "renderers": ["a11yRefs", "globalA11yLink"]
+      "renderers": [
+        "a11yRefs",
+        "globalA11yLink"
+      ]
     },
     {
       "slug": "code",
       "label": "Code",
-      "domains": ["tokens"],
-      "renderers": ["tokensPlaceholder", "apiPlaceholder"]
+      "domains": [
+        "tokens"
+      ],
+      "renderers": [
+        "canonicalRender",
+        "tokensPlaceholder",
+        "apiPlaceholder"
+      ]
     }
   ]
 }

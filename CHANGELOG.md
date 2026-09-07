@@ -12,6 +12,31 @@ site's content or behavior.
 
 ## [Unreleased]
 
+### Added
+
+- **Every component whose render this site already vendors now draws it on its Code tab**
+  ([#235](https://github.com/volivarii/actian-ds-docs/pull/235)).
+  `actian-ds-knowledge` derives a canonical HTML render per component and ships it in the vendor
+  snapshot at `vendor/components/render/dist/fragments/`, with the stylesheet that paints it. 56 of
+  those fragments were sitting in this repo's own build tree, referenced by nothing, while all 74
+  Code tabs said "Per-component token documentation pending" and stopped there. The site shipped the
+  pictures and drew none of them. A Code tab now opens on the live component, with its markup behind
+  a disclosure, above the two placeholders. `render.css` is mirrored into `public/render/` alongside
+  the existing media mirror. `render-fonts.css` is deliberately not shipped (345KB of base64 woff2),
+  so an example falls back to the reader's sans face: honest, not pixel-perfect. A slug with no
+  vendored fragment shows nothing rather than an empty frame, and
+  `tests/generator/code-tab-renders-the-component.test.cjs` asserts both halves of that.
+
+  Two things the fragments carry are for the screenshot harness they were authored against, not for
+  a reader's browser, and the page has to refuse both. Every fragment ends with an inline `<script>`
+  that stamps `data-fidelity-ready` once fonts settle; `set:html` is raw injection, so that script
+  would have run on all 56 published pages. It is stripped. And `.ds-modal-backdrop` is
+  `position: fixed; inset: 0`, which positions against the viewport rather than the example frame:
+  the modal page shipped a full-page scrim over the docs nav, sidebar and content. The stage now
+  sets `contain: layout`, making it the containing block for fixed descendants. Class-scoping the
+  sheet prevents the cascade reaching the docs chrome; it does not prevent an element breaking out
+  of the frame, and this changelog entry claimed otherwise until the modal page was opened.
+
 ### Changed
 
 - **The Patterns page says where patterns live instead of promising them.** It read "this section is a
@@ -48,6 +73,20 @@ site's content or behavior.
   `draft` to `approved` move a design-lead sign-off, because in this instance it was not one.
 
 ### Fixed
+
+- **The homepage's first number said 333 components; there are 74**
+  ([#235](https://github.com/volivarii/actian-ds-docs/pull/235)). It counted every entry in the
+  DS Kit registry, which is 74 components plus 153 icons, 100 brand assets and 6 others,
+  while the category grid immediately below it summed to 74. The page contradicted itself within one
+  screen, on the first figure a reader sees. The card now counts the `Components` section and its
+  sub-line accounts for the rest of the 333.
+
+- **A grey slab across the homepage hero**
+  ([#235](https://github.com/volivarii/actian-ds-docs/pull/235)). The stats row draws its hairline separators as a grey
+  background showing through a 1px grid gap. Starlight's markdown rule gives every adjacent sibling a
+  16px top margin, which applied to four of the five cards, so each stretched 16px short of its grid
+  row and the ground showed through as a bar. The row now carries Starlight's own `not-content`
+  escape hatch, which is what that hatch is for.
 
 - **A component link resolves to the slug's own page before any alias, and the site deploys again on
   knowledge v0.34.150.** ([#222](https://github.com/volivarii/actian-ds-docs/pull/222)) Knowledge
